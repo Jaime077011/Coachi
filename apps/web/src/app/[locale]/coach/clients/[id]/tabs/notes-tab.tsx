@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/coachi/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
@@ -23,6 +24,7 @@ export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNo
   const tCommon = useTranslations("common");
   const fmt = useFmt();
   const queryClient = useQueryClient();
+  const canEdit = useCan()("client_edit");
   const [text, setText] = useState("");
   const [tags, setTags] = useState<NoteTag[]>([]);
   const [pinned, setPinned] = useState(false);
@@ -73,35 +75,37 @@ export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNo
         <EyeOffIcon className="size-4" aria-hidden />
         {t("onlyYou")}
       </p>
-      <form
-        className="flex flex-col gap-3 rounded-lg border bg-card p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (text.trim()) add.mutate();
-        }}
-      >
-        <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={t("notePlaceholder")} aria-label={t("addNote")} />
-        <div className="flex flex-wrap items-center gap-2">
-          {noteTag.options.map((tag) => (
-            <Toggle
-              key={tag}
-              size="sm"
-              pressed={tags.includes(tag)}
-              onPressedChange={(on) => setTags((ts) => (on ? [...ts, tag] : ts.filter((x) => x !== tag)))}
-              className="h-9 rounded-full border px-3 data-[state=on]:border-primary data-[state=on]:bg-primary/12 data-[state=on]:text-primary"
-            >
-              {t(`tag_${tag}`)}
+      {canEdit && (
+        <form
+          className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (text.trim()) add.mutate();
+          }}
+        >
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={t("notePlaceholder")} aria-label={t("addNote")} />
+          <div className="flex flex-wrap items-center gap-2">
+            {noteTag.options.map((tag) => (
+              <Toggle
+                key={tag}
+                size="sm"
+                pressed={tags.includes(tag)}
+                onPressedChange={(on) => setTags((ts) => (on ? [...ts, tag] : ts.filter((x) => x !== tag)))}
+                className="h-9 rounded-full border px-3 data-[state=on]:border-primary data-[state=on]:bg-primary/12 data-[state=on]:text-primary"
+              >
+                {t(`tag_${tag}`)}
+              </Toggle>
+            ))}
+            <Toggle size="sm" pressed={pinned} onPressedChange={setPinned} className="h-9 gap-1 rounded-full border px-3 data-[state=on]:text-primary">
+              <PinIcon className="size-4" aria-hidden />
+              {t("pin")}
             </Toggle>
-          ))}
-          <Toggle size="sm" pressed={pinned} onPressedChange={setPinned} className="h-9 gap-1 rounded-full border px-3 data-[state=on]:text-primary">
-            <PinIcon className="size-4" aria-hidden />
-            {t("pin")}
-          </Toggle>
-          <Button type="submit" size="sm" className="ms-auto" disabled={!text.trim() || add.isPending}>
-            {t("addNote")}
-          </Button>
-        </div>
-      </form>
+            <Button type="submit" size="sm" className="ms-auto" disabled={!text.trim() || add.isPending}>
+              {t("addNote")}
+            </Button>
+          </div>
+        </form>
+      )}
 
       {visible.length === 0 ? (
         <EmptyState icon={NotebookPenIcon} title={t("noNotes")} />
@@ -126,16 +130,18 @@ export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNo
                     <span className="ms-auto text-xs text-hint">{fmt.relative(n.created_at)}</span>
                   </div>
                   <p className="whitespace-pre-line">{n.text}</p>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => togglePin.mutate(n)}>
-                      {n.pinned ? <PinOffIcon data-icon="inline-start" /> : <PinIcon data-icon="inline-start" />}
-                      {n.pinned ? t("unpin") : t("pin")}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => remove(n)}>
-                      <Trash2Icon data-icon="inline-start" />
-                      {t("deleteNote")}
-                    </Button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => togglePin.mutate(n)}>
+                        {n.pinned ? <PinOffIcon data-icon="inline-start" /> : <PinIcon data-icon="inline-start" />}
+                        {n.pinned ? t("unpin") : t("pin")}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => remove(n)}>
+                        <Trash2Icon data-icon="inline-start" />
+                        {t("deleteNote")}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </li>

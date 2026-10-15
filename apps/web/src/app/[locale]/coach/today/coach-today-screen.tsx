@@ -23,6 +23,7 @@ import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCan } from "@/hooks/use-can";
 import { useMe } from "@/hooks/use-session";
 import { Link } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
@@ -40,6 +41,21 @@ export function CoachTodayScreen() {
   const t = useTranslations("coachToday");
   const { coachId } = useMe();
   const [adding, setAdding] = useState(false);
+  const can = useCan();
+  const newPlan = can("plans_edit") && (
+    <Button variant="secondary" asChild>
+      <Link href="/coach/plans">
+        <ClipboardPlusIcon data-icon="inline-start" />
+        {t("newPlan")}
+      </Link>
+    </Button>
+  );
+  const addClient = can("clients_invite") && (
+    <Button onClick={() => setAdding(true)}>
+      <UserPlusIcon data-icon="inline-start" />
+      {t("addClient")}
+    </Button>
+  );
   const today = useQuery({ queryKey: qk.coachToday(coachId), queryFn: () => api.clients.coachToday(coachId), enabled: !!coachId });
 
   return (
@@ -49,31 +65,17 @@ export function CoachTodayScreen() {
         className="mb-0"
         action={
           <div className="hidden gap-2 sm:flex">
-            <Button variant="secondary" asChild>
-              <Link href="/coach/plans">
-                <ClipboardPlusIcon data-icon="inline-start" />
-                {t("newPlan")}
-              </Link>
-            </Button>
-            <Button onClick={() => setAdding(true)}>
-              <UserPlusIcon data-icon="inline-start" />
-              {t("addClient")}
-            </Button>
+            {newPlan}
+            {addClient}
           </div>
         }
       />
-      <div className="grid grid-cols-2 gap-2 sm:hidden">
-        <Button onClick={() => setAdding(true)}>
-          <UserPlusIcon data-icon="inline-start" />
-          {t("addClient")}
-        </Button>
-        <Button variant="secondary" asChild>
-          <Link href="/coach/plans">
-            <ClipboardPlusIcon data-icon="inline-start" />
-            {t("newPlan")}
-          </Link>
-        </Button>
-      </div>
+      {(addClient || newPlan) && (
+        <div className="grid auto-cols-fr grid-flow-col gap-2 sm:hidden">
+          {addClient}
+          {newPlan}
+        </div>
+      )}
 
       <QueryState query={today}>
         {(data) => (

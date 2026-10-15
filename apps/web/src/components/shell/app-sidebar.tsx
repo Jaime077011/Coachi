@@ -17,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useCan } from "@/hooks/use-can";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isActive, navSets, type NavSet } from "./nav-config";
 
@@ -34,7 +35,8 @@ function SidebarWithPath({ nav }: { nav: NavSet }) {
 }
 
 function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }) {
-  const groups = navSets[nav].sidebar;
+  const can = useCan();
+  const groups = navSets[nav].sidebar.map((items) => items.filter((item) => !item.permission || can(item.permission)));
   const t = useTranslations("nav");
   const tShell = useTranslations("shell");
   const locale = useLocale();

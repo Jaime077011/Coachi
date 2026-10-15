@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { SectionTitle } from "@/components/coachi/screen-header";
 import { StatBlock } from "@/components/coachi/stats";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useFmt } from "@/lib/format";
@@ -19,6 +20,7 @@ export function OverviewTab({ clientId, data }: { clientId: string; data: Client
   const t = useTranslations("clientFile");
   const fmt = useFmt();
   const progress = useQuery({ queryKey: qk.progress(clientId), queryFn: () => api.clients.progress(clientId) });
+  const canEdit = useCan()("client_edit");
   const [word, setWord] = useState("");
   const pin = useMutation({
     mutationFn: () => api.journey.addCoachMessage(clientId, word.trim()),
@@ -82,21 +84,23 @@ export function OverviewTab({ clientId, data }: { clientId: string; data: Client
         )}
       </section>
 
-      <section className="lg:col-span-2">
-        <SectionTitle>{t("coachWord")}</SectionTitle>
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (word.trim()) pin.mutate();
-          }}
-        >
-          <Input value={word} onChange={(e) => setWord(e.target.value)} placeholder={t("coachWordPlaceholder")} aria-label={t("coachWord")} maxLength={300} />
-          <Button type="submit" variant="secondary" disabled={!word.trim() || pin.isPending} aria-label={t("coachWord")}>
-            <MessageCircleHeartIcon />
-          </Button>
-        </form>
-      </section>
+      {canEdit && (
+        <section className="lg:col-span-2">
+          <SectionTitle>{t("coachWord")}</SectionTitle>
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (word.trim()) pin.mutate();
+            }}
+          >
+            <Input value={word} onChange={(e) => setWord(e.target.value)} placeholder={t("coachWordPlaceholder")} aria-label={t("coachWord")} maxLength={300} />
+            <Button type="submit" variant="secondary" disabled={!word.trim() || pin.isPending} aria-label={t("coachWord")}>
+              <MessageCircleHeartIcon />
+            </Button>
+          </form>
+        </section>
+      )}
     </div>
   );
 }

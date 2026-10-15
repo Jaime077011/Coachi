@@ -12,6 +12,7 @@ import type {
   ClientDetails,
   CoachClient,
   CoachNote,
+  CoachPackage,
   CoachProfile,
   CoachRequest,
   CoachResult,
@@ -49,6 +50,7 @@ const KIND = {
   profile: "a1",
   org: "b1",
   member: "b2",
+  package: "d4",
   plan: "c1",
   feature: "c2",
   sub: "c3",
@@ -108,6 +110,9 @@ const people: Person[] = [
   { name: "أحمد رضا", phone: "+201111111107", language: "ar", role: "client" }, // 14
   { name: "ندى عادل", phone: "+201111111108", language: "ar", role: "client" }, // 15
   { name: "زياد شريف", phone: "+201111111109", language: "ar", role: "client" }, // 16 no coach yet
+  { name: "كوتش هشام مجدي", phone: "+201007778899", language: "ar", role: "coach" }, // 17 Ahmed's head coach
+  { name: "Coach Salma Nabil", phone: "+201008889900", language: "en", role: "coach" }, // 18 Ahmed's team coach
+  { name: "مروة سعيد", phone: "+201009990011", language: "ar", role: "coach" }, // 19 Ahmed's assistant
 ];
 
 export const profiles: Profile[] = people.map((p, i) => ({
@@ -131,6 +136,13 @@ export const DEMO = {
   clientId: uid(KIND.client, 1),
   /** Client with no coach yet: sees the directory as home. */
   loneClientId: uid(KIND.client, 9),
+  /** Ahmed's team, by role. The dev switcher signs in as one of them. */
+  members: {
+    owner: { memberId: uid(KIND.member, 1), profileId: uid(KIND.profile, 2) },
+    head_coach: { memberId: uid(KIND.member, 7), profileId: uid(KIND.profile, 17) },
+    coach: { memberId: uid(KIND.member, 8), profileId: uid(KIND.profile, 18) },
+    assistant: { memberId: uid(KIND.member, 9), profileId: uid(KIND.profile, 19) },
+  },
 } as const;
 
 // ---------------------------------------------------------------- orgs + billing
@@ -146,13 +158,24 @@ export const organizations: Organization[] = coachPeople.map((p, i) => ({
   ...created(100 - i * 5),
 }));
 
-export const orgMembers: OrgMember[] = coachPeople.map((p, i) => ({
-  id: uid(KIND.member, i + 1),
-  org_id: uid(KIND.org, i + 1),
-  profile_id: uid(KIND.profile, p),
-  role: "owner",
-  ...created(100 - i * 5),
-}));
+export const orgMembers: OrgMember[] = [
+  ...coachPeople.map((p, i) => ({
+    id: uid(KIND.member, i + 1),
+    org_id: uid(KIND.org, i + 1),
+    profile_id: uid(KIND.profile, p),
+    role: "owner" as const,
+    status: "active" as const,
+    ...created(100 - i * 5),
+  })),
+  ...(["head_coach", "coach", "assistant"] as const).map((role, i) => ({
+    id: DEMO.members[role].memberId,
+    org_id: DEMO.orgId,
+    profile_id: DEMO.members[role].profileId,
+    role,
+    status: "active" as const,
+    ...created(60 - i * 15),
+  })),
+];
 
 export const plans: Plan[] = [
   { id: uid(KIND.plan, 1), name: "Trial", price_piasters: 0, currency: "EGP", days: 14, ...created(150) },
@@ -162,16 +185,19 @@ export const plans: Plan[] = [
 
 const featureRows: [number, PlanFeature["key"], PlanFeature["value"]][] = [
   [1, "client_limit", 5],
+  [1, "team_seats", 0],
   [1, "nutrition", true],
   [1, "directory_listing", false],
   [1, "ai_credits", 0],
   [1, "branded_app", false],
   [2, "client_limit", 20],
+  [2, "team_seats", 1],
   [2, "nutrition", true],
   [2, "directory_listing", true],
   [2, "ai_credits", 0],
   [2, "branded_app", false],
   [3, "client_limit", null],
+  [3, "team_seats", 5],
   [3, "nutrition", true],
   [3, "directory_listing", true],
   [3, "ai_credits", 0],
@@ -228,9 +254,20 @@ export const payments: Payment[] = [
 
 // ---------------------------------------------------------------- directory
 
+type LandingSeed = Pick<CoachProfile, "slug" | "headline" | "page_published" | "show_team">;
+
 const coachBios: Omit<
   CoachProfile,
-  "id" | "org_id" | "profile_id" | "name" | "photo_url" | "created_at" | "updated_at" | "deleted_at"
+  | "id"
+  | "org_id"
+  | "profile_id"
+  | "name"
+  | "photo_url"
+  | "created_at"
+  | "updated_at"
+  | "deleted_at"
+  | keyof LandingSeed
+  | "cover_url"
 >[] = [
   {
     bio: "كوتش أونلاين وفي الجيم من 8 سنين. متخصص في خسارة الدهون وبناء العضل من غير حرمان. خطط أكل مصرية تقدر تمشي عليها.",
@@ -342,14 +379,49 @@ const coachBios: Omit<
   },
 ];
 
+const landingSeeds: LandingSeed[] = [
+  { slug: "ahmed-samir", headline: "خسارة دهون وبناء عضل بأكل مصري تقدر تكمل عليه", page_published: true, show_team: true },
+  { slug: "mariam-lifts", headline: "Get strong. Lose fat. Feel at home in the gym.", page_published: true, show_team: false },
+  { slug: "mahmoud-hassan", headline: "ارفع أرقامك في السكوات والبنش والديدليفت", page_published: true, show_team: false },
+  { slug: "nour-moves", headline: "Move without pain again", page_published: false, show_team: false },
+  { slug: "yasmin-fit", headline: null, page_published: true, show_team: false }, // expired: page not available
+  { slug: "karim-performance", headline: "Faster, stronger, injury-free all season", page_published: true, show_team: false },
+];
+
 export const coachProfiles: CoachProfile[] = coachBios.map((bio, i) => ({
   id: uid(KIND.coach, i + 1),
   org_id: uid(KIND.org, i + 1),
   profile_id: uid(KIND.profile, coachPeople[i]!),
   name: people[coachPeople[i]! - 1]!.name,
   photo_url: null,
+  cover_url: null,
   ...bio,
+  ...landingSeeds[i]!,
   ...created(100 - i * 5),
+}));
+
+type PackageSeed = [coach: number, name: string, egp: number, weeks: number, includes: string[], highlighted?: boolean];
+
+const packageSeeds: PackageSeed[] = [
+  [1, "شهر أونلاين", 1500, 4, ["خطة تمرين", "خطة أكل مصري", "متابعة أسبوعية"]],
+  [1, "3 شهور أونلاين", 4000, 12, ["خطة تمرين", "خطة أكل مصري", "متابعة أسبوعية", "تعديل الخطة كل شهر", "رد على واتساب"], true],
+  [1, "3 شهور في الجيم", 7500, 12, ["3 حصص في الأسبوع في الجيم", "خطة أكل", "قياسات كل أسبوعين"]],
+  [2, "Strong Start (1 month)", 1200, 4, ["Training plan", "Form check videos", "Weekly check-in"]],
+  [2, "Full Glow-Up (3 months)", 3200, 12, ["Training plan", "Nutrition plan", "Weekly check-in", "WhatsApp support"], true],
+  [6, "Season prep", 3500, 8, ["Speed and power program", "2 sessions a week", "Injury prevention"]],
+];
+
+export const coachPackages: CoachPackage[] = packageSeeds.map(([coach, name, egp, weeks, includes, highlighted], i) => ({
+  id: uid(KIND.package, i + 1),
+  org_id: uid(KIND.org, coach),
+  coach_id: uid(KIND.coach, coach),
+  name,
+  price_piasters: egp * 100,
+  weeks,
+  includes,
+  highlighted: highlighted ?? false,
+  order: i,
+  ...created(30),
 }));
 
 export const coachResults: CoachResult[] = [];
@@ -366,6 +438,8 @@ export const coachRequests: CoachRequest[] = [
     contact_by: "whatsapp",
     status: "sent",
     reply: null,
+    source: "directory",
+    package_id: null,
     ...created(3),
   },
   {
@@ -379,6 +453,8 @@ export const coachRequests: CoachRequest[] = [
     contact_by: "app",
     status: "sent",
     reply: null,
+    source: "landing",
+    package_id: uid(KIND.package, 2),
     ...created(0),
   },
 ];
@@ -415,6 +491,15 @@ export const clients: Client[] = clientSeeds.map((c, i) => ({
   ...created(c.joinedDaysAgo),
 }));
 
+/** Which team member works with each of Ahmed's clients (by client number). */
+const assignedTo: Record<number, string> = {
+  1: DEMO.members.assistant.memberId,
+  2: DEMO.members.assistant.memberId,
+  3: DEMO.members.coach.memberId,
+  4: DEMO.members.coach.memberId,
+  5: DEMO.members.head_coach.memberId,
+};
+
 export const coachClients: CoachClient[] = clientSeeds.slice(0, 8).map((c, i) => ({
   id: uid(KIND.link, i + 1),
   org_id: DEMO.orgId,
@@ -424,6 +509,7 @@ export const coachClients: CoachClient[] = clientSeeds.slice(0, 8).map((c, i) =>
   status: c.status === "paused" ? "paused" : "active",
   started_at: daysAgo(c.joinedDaysAgo),
   ended_at: null,
+  assigned_member_id: assignedTo[i + 1] ?? null,
   ...created(c.joinedDaysAgo),
 }));
 
@@ -508,6 +594,7 @@ export const coachNotes: CoachNote[] = [
     id: uid(KIND.note, 1),
     coach_id: DEMO.coachId,
     client_id: DEMO.clientId,
+    author_id: DEMO.coachProfileId,
     text: "كتف يمين: بلاش ضغط كتف بالبار فوق الراس، استخدم دمبل بزاوية. راجع بعد 4 أسابيع.",
     tags: ["injury"],
     pinned: true,
@@ -517,6 +604,7 @@ export const coachNotes: CoachNote[] = [
     id: uid(KIND.note, 2),
     coach_id: DEMO.coachId,
     client_id: DEMO.clientId,
+    author_id: DEMO.coachProfileId,
     text: "شغله بيزيد آخر الشهر، بيفوّت تمرين الخميس. خلي الخميس اختياري.",
     tags: ["work"],
     pinned: false,
@@ -526,6 +614,7 @@ export const coachNotes: CoachNote[] = [
     id: uid(KIND.note, 3),
     coach_id: DEMO.coachId,
     client_id: DEMO.clientId,
+    author_id: DEMO.coachProfileId,
     text: "متحمس جدا بعد ما نزل أول 5 كيلو. شجعه على الصور.",
     tags: ["mindset"],
     pinned: false,
@@ -538,6 +627,8 @@ export const invites: Invite[] = [
     id: uid(KIND.invite, 1),
     org_id: DEMO.orgId,
     coach_id: DEMO.coachId,
+    kind: "client",
+    member_role: null,
     code: "AHMED-NADA-7Q",
     name: "ندى عادل",
     phone: "+201111111108",

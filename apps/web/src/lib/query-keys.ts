@@ -24,6 +24,10 @@ export const qk = {
   coachProfile: (coachId: string) => ["coach-profile", coachId] as const,
   coachForm: (coachId: string) => ["coach-form", coachId] as const,
   subscription: (orgId: string) => ["subscription", orgId] as const,
+  team: (orgId: string) => ["team", orgId] as const,
+  teamMembers: (orgId: string) => ["team-members", orgId] as const,
+  coachPackages: (coachId: string) => ["coach-packages", coachId] as const,
+  landing: (slug: string) => ["landing", slug] as const,
   // Admin
   adminOverview: ["admin-overview"] as const,
   adminCoaches: ["admin-coaches"] as const,

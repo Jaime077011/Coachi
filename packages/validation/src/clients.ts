@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { orgRole } from "./auth-orgs";
 import {
   base,
   date,
@@ -34,6 +35,8 @@ export const coachClient = orgScoped.extend({
   status: z.enum(["active", "paused", "ended"]),
   started_at: timestamp,
   ended_at: timestamp.nullable(),
+  /** The team member working with this client (org_members.id). null = owner and head coaches only. */
+  assigned_member_id: id.nullable(),
 });
 export type CoachClient = z.infer<typeof coachClient>;
 
@@ -82,6 +85,8 @@ export type NoteTag = z.infer<typeof noteTag>;
 export const coachNote = base.extend({
   coach_id: id,
   client_id: id,
+  /** The person who wrote it (profiles.id): the owner or a team member. */
+  author_id: id.nullable(),
   text: z.string().min(1).max(4000),
   tags: z.array(noteTag),
   pinned: z.boolean(),
@@ -91,8 +96,12 @@ export type CoachNote = z.infer<typeof coachNote>;
 export const newCoachNote = coachNote.pick({ client_id: true, text: true, tags: true, pinned: true });
 export type NewCoachNote = z.infer<typeof newCoachNote>;
 
+/** One table for both invite links: a client joining the coach, or a helper joining his team. */
 export const invite = orgScoped.extend({
   coach_id: id,
+  kind: z.enum(["client", "team"]),
+  /** Team invites only. */
+  member_role: orgRole.nullable(),
   code: z.string().min(6).max(32),
   name: z.string(),
   phone,
@@ -120,6 +129,8 @@ export const clientSummary = z.object({
   adherence_done: z.number().int().nonnegative(),
   adherence_planned: z.number().int().nonnegative(),
   needs_attention: z.boolean(),
+  /** Team member working with this client, if any. */
+  assigned_to: z.object({ member_id: id, name: z.string() }).nullable(),
 });
 export type ClientSummary = z.infer<typeof clientSummary>;
 
@@ -134,5 +145,6 @@ export const clientFile = z.object({
   details: clientDetails.nullable(),
   notes: z.array(coachNote),
   started_at: timestamp,
+  assigned_member_id: id.nullable(),
 });
 export type ClientFile = z.infer<typeof clientFile>;

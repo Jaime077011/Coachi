@@ -8,6 +8,7 @@ import { SectionTitle } from "@/components/coachi/screen-header";
 import { EmptyState, ListSkeleton } from "@/components/coachi/states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCan } from "@/hooks/use-can";
 import { useMe } from "@/hooks/use-session";
 import { Link } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
@@ -19,6 +20,7 @@ export function PlansTab({ clientId, onAssign }: { clientId: string; onAssign: (
   const tNb = useTranslations("nutritionBuilder");
   const fmt = useFmt();
   const { coachId } = useMe();
+  const canEdit = useCan()("plans_edit");
   const programs = useQuery({ queryKey: qk.programs(coachId), queryFn: () => api.training.programs(coachId), enabled: !!coachId });
   const nutrition = useQuery({ queryKey: qk.nutritionPlans(coachId), queryFn: () => api.nutrition.plans(coachId), enabled: !!coachId });
 
@@ -26,7 +28,7 @@ export function PlansTab({ clientId, onAssign }: { clientId: string; onAssign: (
   const program = programs.data?.find((p) => p.client_id === clientId);
   const plans = nutrition.data?.filter((p) => p.client_id === clientId) ?? [];
 
-  const assign = (
+  const assign = canEdit && (
     <Button variant="secondary" onClick={onAssign}>
       <ClipboardPlusIcon data-icon="inline-start" />
       {t("assignPlan")}
@@ -48,12 +50,14 @@ export function PlansTab({ clientId, onAssign }: { clientId: string; onAssign: (
                   {program.starts_on && ` · ${fmt.date(program.starts_on, "short")}`}
                 </p>
               </div>
-              <Button asChild size="sm" variant="secondary">
-                <Link href={`/coach/plans/workout/${program.id}`}>
-                  <PencilIcon data-icon="inline-start" />
-                  {tPlans("edit")}
-                </Link>
-              </Button>
+              {canEdit && (
+                <Button asChild size="sm" variant="secondary">
+                  <Link href={`/coach/plans/workout/${program.id}`}>
+                    <PencilIcon data-icon="inline-start" />
+                    {tPlans("edit")}
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -74,12 +78,14 @@ export function PlansTab({ clientId, onAssign }: { clientId: string; onAssign: (
                       {tNb(p.day_type)} · {fmt.kcal(p.targets.kcal)}
                     </p>
                   </div>
-                  <Button asChild size="sm" variant="secondary">
-                    <Link href={`/coach/plans/nutrition/${p.id}`}>
-                      <PencilIcon data-icon="inline-start" />
-                      {tPlans("edit")}
-                    </Link>
-                  </Button>
+                  {canEdit && (
+                    <Button asChild size="sm" variant="secondary">
+                      <Link href={`/coach/plans/nutrition/${p.id}`}>
+                        <PencilIcon data-icon="inline-start" />
+                        {tPlans("edit")}
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}

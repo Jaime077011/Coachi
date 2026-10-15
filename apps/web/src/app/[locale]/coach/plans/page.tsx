@@ -1,5 +1,10 @@
+import { RequirePermission } from "@/components/coach/require-permission";
 import { PlansScreen } from "./plans-screen";
 
 export default function Page() {
-  return <PlansScreen />;
+  return (
+    <RequirePermission permission="plans_edit">
+      <PlansScreen />
+    </RequirePermission>
+  );
 }

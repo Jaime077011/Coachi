@@ -2,8 +2,8 @@
 
 import { api } from "@coachi/core";
 import type { ClientFile } from "@coachi/validation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { ClipboardPlusIcon, MailWarningIcon, MessageCircleIcon } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClipboardPlusIcon, MailWarningIcon, MessageCircleIcon, UserRoundCogIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
@@ -14,8 +14,11 @@ import { BackLink } from "@/components/coachi/screen-header";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCan } from "@/hooks/use-can";
+import { useMe } from "@/hooks/use-session";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { initials } from "@/lib/initials";
 import { qk } from "@/lib/query-keys";
@@ -49,6 +52,7 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
   const requested = search.get("tab") as Tab | null;
   const tab: Tab = requested && tabs.includes(requested) ? requested : "overview";
   const [assigning, setAssigning] = useState(false);
+  const can = useCan();
   const resend = useMutation({
     mutationFn: async () => {
       await new Promise((r) => setTimeout(r, 300));
@@ -84,12 +88,16 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
               </a>
             </Button>
           )}
-          <Button className="flex-1 sm:flex-none" onClick={() => setAssigning(true)}>
-            <ClipboardPlusIcon data-icon="inline-start" />
-            {t("assignPlan")}
-          </Button>
+          {can("plans_edit") && (
+            <Button className="flex-1 sm:flex-none" onClick={() => setAssigning(true)}>
+              <ClipboardPlusIcon data-icon="inline-start" />
+              {t("assignPlan")}
+            </Button>
+          )}
         </div>
       </header>
+
+      <AssignedTo clientId={clientId} memberId={data.assigned_member_id} editable={can("clients_assign")} />
 
       {intakePending && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-info/40 bg-info/12 p-3">
@@ -134,6 +142,55 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
       </Tabs>
 
       <AssignTemplateDialog clientId={clientId} open={assigning} onOpenChange={setAssigning} />
+    </div>
+  );
+}
+
+/** Which team member works with this client. Owners and head coaches can change it. */
+function AssignedTo({ clientId, memberId, editable }: { clientId: string; memberId: string | null; editable: boolean }) {
+  const t = useTranslations("team");
+  const { orgId } = useMe();
+  const queryClient = useQueryClient();
+  const members = useQuery({ queryKey: qk.teamMembers(orgId), queryFn: () => api.team.members(orgId), enabled: !!orgId });
+  const helpers = members.data?.filter((m) => m.role !== "owner") ?? [];
+  const assign = useMutation({
+    mutationFn: (next: string | null) => api.team.assign(clientId, next),
+    onSuccess: (_, next) => {
+      const name = helpers.find((m) => m.member_id === next)?.name;
+      toast.success(name ? t("assignedToast", { name }) : t("unassignedToast"));
+      void queryClient.invalidateQueries({ queryKey: qk.clientFile(clientId) });
+      void queryClient.invalidateQueries({ queryKey: ["clients"] });
+      void queryClient.invalidateQueries({ queryKey: qk.team(orgId) });
+    },
+  });
+
+  // A solo coach has no team: nothing to show.
+  if (helpers.length === 0) return null;
+  const current = helpers.find((m) => m.member_id === memberId);
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-3 py-2 text-sm">
+      <UserRoundCogIcon className="size-5 text-muted-foreground" aria-hidden />
+      <span className="font-semibold" id="assigned-label">
+        {t("assignedTo")}
+      </span>
+      {editable ? (
+        <Select value={memberId ?? "none"} onValueChange={(v) => assign.mutate(v === "none" ? null : v)} disabled={assign.isPending}>
+          <SelectTrigger className="h-10 min-w-48 flex-1 sm:flex-none" aria-labelledby="assigned-label">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">{t("unassigned")}</SelectItem>
+            {helpers.map((m) => (
+              <SelectItem key={m.member_id} value={m.member_id}>
+                {m.name} · {t(`role_${m.role}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <span>{current ? <bdi>{current.name}</bdi> : t("unassigned")}</span>
+      )}
     </div>
   );
 }

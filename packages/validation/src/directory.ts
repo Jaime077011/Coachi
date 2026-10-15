@@ -4,6 +4,32 @@ import { base, goal, id, locale, orgScoped, piasters, url } from "./common";
 export const specialty = z.enum(["fat_loss", "muscle", "womens_training", "sports", "rehab", "strength"]);
 export const coachingMode = z.enum(["online", "in_person", "both"]);
 
+/** The coach's landing page link: coachi.app/c/<slug>. Lowercase letters, numbers, and dashes. */
+export const slug = z
+  .string()
+  .min(3)
+  .max(40)
+  .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/, "slug");
+
+/** What the coach sells, shown on his landing page. */
+export const coachPackage = orgScoped.extend({
+  coach_id: id,
+  name: z.string().min(1).max(60),
+  price_piasters: piasters,
+  weeks: z.number().int().min(1).max(52),
+  includes: z.array(z.string().min(1).max(80)).max(8),
+  highlighted: z.boolean(),
+  order: z.number().int().nonnegative(),
+});
+export type CoachPackage = z.infer<typeof coachPackage>;
+
+/** The packages editor saves the whole list at once. */
+export const packageInput = coachPackage.pick({ name: true, price_piasters: true, weeks: true, includes: true, highlighted: true }).extend({
+  id: id.optional(),
+});
+export type PackageInput = z.infer<typeof packageInput>;
+export const MAX_PACKAGES = 4;
+
 /** Public coach profile, kept apart from private data. */
 export const coachProfile = orgScoped.extend({
   profile_id: id,
@@ -25,6 +51,12 @@ export const coachProfile = orgScoped.extend({
   open_for_clients: z.boolean(),
   listed: z.boolean(),
   featured: z.boolean(),
+  // Landing page at /c/<slug>
+  slug,
+  headline: z.string().max(120).nullable(),
+  cover_url: url.nullable(),
+  page_published: z.boolean(),
+  show_team: z.boolean(),
 });
 export type CoachProfile = z.infer<typeof coachProfile>;
 
@@ -54,6 +86,7 @@ export const coachResult = base.extend({
 export type CoachResult = z.infer<typeof coachResult>;
 
 export const requestStatus = z.enum(["sent", "accepted", "declined"]);
+export const requestSource = z.enum(["directory", "landing"]);
 
 /** A request shares only name, goal, and a short message. The intake form comes after accept. */
 export const coachRequest = base.extend({
@@ -67,6 +100,8 @@ export const coachRequest = base.extend({
   contact_by: z.enum(["app", "whatsapp"]),
   status: requestStatus,
   reply: z.string().max(300).nullable(),
+  source: requestSource,
+  package_id: id.nullable(),
 });
 export type CoachRequest = z.infer<typeof coachRequest>;
 
@@ -75,6 +110,8 @@ export const sendRequest = z.object({
   goal,
   message: z.string().max(300),
   contact_by: z.enum(["app", "whatsapp"]),
+  source: requestSource.optional(),
+  package_id: id.nullable().optional(),
 });
 export type SendRequest = z.infer<typeof sendRequest>;
 

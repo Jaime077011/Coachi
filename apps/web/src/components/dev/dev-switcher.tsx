@@ -2,11 +2,14 @@
 
 import {
   getMockDataState,
+  getMockMemberRole,
   resetMockDatabase,
   getMockRole,
   setMockDataState,
+  setMockMemberRole,
   setMockRole,
   type MockDataState,
+  type MockMemberRole,
   type MockRole,
 } from "@coachi/core";
 import type { Locale } from "@coachi/i18n";
@@ -25,6 +28,7 @@ import { roleHome } from "@/lib/roles";
 export function DevSwitcher() {
   const t = useTranslations("dev");
   const tRoles = useTranslations("roles");
+  const tTeam = useTranslations("team");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -34,12 +38,20 @@ export function DevSwitcher() {
   // Stored in localStorage, so unknown on the server (null) until the client renders.
   const role = useSyncExternalStore(subscribe, getMockRole, () => null);
   const dataState = useSyncExternalStore(subscribe, getMockDataState, () => null);
+  const memberRole = useSyncExternalStore(subscribe, getMockMemberRole, () => null);
 
   const changeRole = (next: MockRole) => {
     setMockRole(next);
     notify();
     queryClient.clear();
     router.push(roleHome[next]);
+  };
+
+  const changeMember = (next: MockMemberRole) => {
+    setMockMemberRole(next);
+    notify();
+    queryClient.clear();
+    router.push(roleHome.coach);
   };
 
   const changeData = (next: MockDataState) => {
@@ -78,6 +90,24 @@ export function DevSwitcher() {
             <ToggleGroupItem value="super_admin">{tRoles("admin")}</ToggleGroupItem>
           </ToggleGroup>
         </Row>
+        {role === "coach" && (
+          <Row label={t("teamRole")}>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={memberRole ?? ""}
+              onValueChange={(v) => v && changeMember(v as MockMemberRole)}
+              className="flex-wrap"
+            >
+              {(["owner", "head_coach", "coach", "assistant"] as const).map((r) => (
+                <ToggleGroupItem key={r} value={r}>
+                  {tTeam(`role_${r}`)}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </Row>
+        )}
         <Row label={t("language")}>
           <ToggleGroup
             type="single"

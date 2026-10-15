@@ -1,4 +1,4 @@
-import type { LoginRequest, Session, VerifyCode } from "@coachi/validation";
+import type { LoginRequest, OrgRole, Session, VerifyCode } from "@coachi/validation";
 
 export type InviteLanding = {
   code: string;
@@ -6,6 +6,9 @@ export type InviteLanding = {
   coach_photo_url: string | null;
   coach_logo_url: string | null;
   expired: boolean;
+  /** "team" = a helper joining the coach's team with member_role. */
+  kind: "client" | "team";
+  member_role: OrgRole | null;
 };
 
 export interface AuthApi {
@@ -16,4 +19,6 @@ export interface AuthApi {
   verifyCode(input: VerifyCode): Promise<Session>;
   signOut(): Promise<void>;
   getInvite(code: string): Promise<InviteLanding>;
+  /** After login from a team invite: joins the coach's team with the invite's role. */
+  acceptTeamInvite(code: string): Promise<void>;
 }

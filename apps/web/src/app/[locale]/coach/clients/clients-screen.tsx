@@ -16,7 +16,9 @@ import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCan } from "@/hooks/use-can";
 import { useMe } from "@/hooks/use-session";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
@@ -31,11 +33,15 @@ export function ClientsScreen() {
   const t = useTranslations("clients");
   const tParts = useTranslations("parts");
   const tAdd = useTranslations("addClient");
+  const tTeam = useTranslations("team");
+  const can = useCan();
   const fmt = useFmt();
   const router = useRouter();
   const { coachId } = useMe();
   const [filter, setFilter] = useState<Filter>("active");
   const [search, setSearch] = useState("");
+  /** "all", "none" (unassigned), or a team member id. */
+  const [member, setMember] = useState("all");
   const [adding, setAdding] = useState(false);
   const list = useQuery({ queryKey: qk.clients(coachId), queryFn: () => api.clients.list(coachId), enabled: !!coachId });
 
@@ -44,7 +50,12 @@ export function ClientsScreen() {
       .filter((c) =>
         filter === "all" ? true : filter === "attention" ? c.needs_attention : filter === "active" ? c.status === "active" || c.status === "invited" : c.status === "paused",
       )
-      .filter((c) => !search || c.name.toLowerCase().includes(search.trim().toLowerCase()));
+      .filter((c) => !search || c.name.toLowerCase().includes(search.trim().toLowerCase()))
+      .filter((c) => member === "all" || (member === "none" ? !c.assigned_to : c.assigned_to?.member_id === member));
+
+  const rows = list.data ?? [];
+  const assignees = [...new Map(rows.flatMap((c) => (c.assigned_to ? [[c.assigned_to.member_id, c.assigned_to.name] as const] : []))).entries()];
+  const hasTeam = assignees.length > 0;
 
   const lastWorkout = (c: ClientSummary) => (c.last_workout_at ? fmt.relative(c.last_workout_at) : t("never"));
   const status = (c: ClientSummary) =>
@@ -78,6 +89,16 @@ export function ClientsScreen() {
       cell: (c) => <AdherenceBar done={c.adherence_done} planned={c.adherence_planned} />,
     },
     { key: "last", header: t("col_last"), sortValue: (c) => c.last_workout_at, cell: (c) => <span className="tabular-nums">{lastWorkout(c)}</span> },
+    ...(hasTeam
+      ? [
+          {
+            key: "team",
+            header: tTeam("assignedTo"),
+            sortValue: (c: ClientSummary) => c.assigned_to?.name ?? null,
+            cell: (c: ClientSummary) => (c.assigned_to ? <bdi>{c.assigned_to.name}</bdi> : <span className="text-hint">{tTeam("unassigned")}</span>),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -86,10 +107,12 @@ export function ClientsScreen() {
         title={t("title")}
         className="mb-2"
         action={
-          <Button onClick={() => setAdding(true)} className="max-sm:size-12 max-sm:px-0" aria-label={tAdd("title")}>
-            <UserPlusIcon data-icon="inline-start" />
-            <span className="max-sm:sr-only">{tAdd("title")}</span>
-          </Button>
+          can("clients_invite") && (
+            <Button onClick={() => setAdding(true)} className="max-sm:size-12 max-sm:px-0" aria-label={tAdd("title")}>
+              <UserPlusIcon data-icon="inline-start" />
+              <span className="max-sm:sr-only">{tAdd("title")}</span>
+            </Button>
+          )
         }
       />
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -102,9 +125,27 @@ export function ClientsScreen() {
             ))}
           </TabsList>
         </Tabs>
-        <div className="relative lg:w-72">
-          <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
-          <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
+        <div className="flex flex-col gap-3 sm:flex-row lg:items-center">
+          {hasTeam && can("clients_assign") && (
+            <Select value={member} onValueChange={setMember}>
+              <SelectTrigger className="h-11 sm:w-48" aria-label={tTeam("filterLabel")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{tTeam("filterAll")}</SelectItem>
+                <SelectItem value="none">{tTeam("unassigned")}</SelectItem>
+                {assignees.map(([id, name]) => (
+                  <SelectItem key={id} value={id}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="relative flex-1 lg:w-72 lg:flex-none">
+            <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
+            <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
+          </div>
         </div>
       </div>
 
@@ -114,12 +155,15 @@ export function ClientsScreen() {
         empty={
           <EmptyState
             icon={UsersRoundIcon}
-            title={t("emptyTitle")}
+            title={can("clients_invite") ? t("emptyTitle") : tTeam("noAssignedTitle")}
+            body={can("clients_invite") ? undefined : tTeam("noAssignedBody")}
             action={
-              <Button onClick={() => setAdding(true)}>
-                <UserPlusIcon data-icon="inline-start" />
-                {tAdd("title")}
-              </Button>
+              can("clients_invite") && (
+                <Button onClick={() => setAdding(true)}>
+                  <UserPlusIcon data-icon="inline-start" />
+                  {tAdd("title")}
+                </Button>
+              )
             }
           />
         }
@@ -145,6 +189,12 @@ export function ClientsScreen() {
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {c.goal ? tParts(`goalName.${c.goal}`) : "—"} · {c.plan_name ?? t("noPlan")}
+                          {hasTeam && c.assigned_to && (
+                            <>
+                              {" · "}
+                              <bdi>{c.assigned_to.name}</bdi>
+                            </>
+                          )}
                         </p>
                         <div className="flex items-center justify-between gap-2">
                           <AdherenceBar done={c.adherence_done} planned={c.adherence_planned} />

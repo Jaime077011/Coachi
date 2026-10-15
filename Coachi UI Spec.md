@@ -56,7 +56,7 @@ The client uses Coachi on a phone, often mid-workout with one hand. Every screen
 
 | Screen | What's on it | Built from | Empty and special states |
 | --- | --- | --- | --- |
-| Join | Invite landing with the coach's name, photo, and logo. Email login (magic link) | Card, Form, Input, Button | Expired invite: say so and show a "Find a coach" button |
+| Join | Invite landing with the coach's name, photo, and logo. Phone code login, email magic link as fallback. Team invites say "Coach Ahmed invited you to his team as Assistant" and land in the coach dashboard | Card, Form, Input, Button | Expired invite: say so and show a "Find a coach" button |
 | Intake form | 4 short steps: goal, body, health, food. Progress bar on top, Back and Next at the bottom | Form, Progress, RadioGroup, ToggleGroup chips, Textarea | Saves each step, so leaving and coming back continues where he stopped |
 | Find a coach | Search, filter chips (goal, city, online, women coaches, price), coach cards. Home screen while he has no coach | Input, ToggleGroup, CoachCard | No results: "No coaches match. Clear filters" |
 | Coach page | Photo, bio, specialties, results, prices, certificates. Sticky bottom bar: Send request + WhatsApp | ScrollArea, Carousel, Badge, Drawer for the request form | Request sent: the bar changes to "Request sent" with its status |
@@ -90,10 +90,32 @@ The coach checks clients on his phone and builds plans on a laptop. Every screen
 | Requests | New requests from the directory: name, goal, message. Accept, Decline with a reply, WhatsApp | Card, Button, Drawer for the reply | No requests: tip to complete the public profile |
 | Library | Exercises and foods tabs, shared + his own, add his own with video link | Tabs, DataTable, Form | Search finds nothing: "Add it as your own" |
 | Check-in form | Pick questions from a list or write new ones, drag to reorder, choose the day | Sortable list, Select, Switch | Starter set of 5 questions ready to use |
-| Public profile | Edit form on one side, live preview of his coach card and page on the other (stacked on phone). Open for new clients switch | Form, Switch, CoachCard preview | Waiting for approval: info note |
+| Public profile | Edit form on one side, live preview of his coach card and page on the other (stacked on phone). Open for new clients switch. Landing page card on top: his link with Copy, Open, Share on WhatsApp; page on/off; link, headline, show team. Packages editor (up to 4): name, price, weeks, what's included, Most popular | Form, Switch, CoachCard preview, Card | Waiting for approval: info note (directory only; the landing page works without approval). Link taken: field error |
+| Team | Seats used (2 of 5) with a bar. Members: photo, name, role chip, assigned clients, status. Invite helper, change role, remove. A "What each role can do" card | Card, Progress, Avatar, Select, ResponsiveDialog, RadioGroup | No helpers: "Add your first team member". No seats on the plan: note + Renew on WhatsApp. Owner only |
+| Invite helper | Name, phone, role (each role with one line on what it can do), then an invite link with Copy and Share on WhatsApp | Drawer (phone) / Dialog (laptop), Form, RadioGroup | Seats full: clear note + Renew on WhatsApp |
 | Subscription | Plan, client limit, end date, Renew on WhatsApp | Card, Progress, Button | Ending soon: warning chip. Expired: read-only mode banner |
 
-**Coach navigation:** phone tab bar with Today, Clients, Plans, Requests, More (Library, Check-in form, Profile, Subscription, Settings). Laptop: a side menu with all of these.
+**Coach navigation:** phone tab bar with Today, Clients, Plans, Requests, More (Library, Check-in form, Profile, Team, Subscription, Settings). Laptop: a side menu with all of these.
+
+**Team members see less.** The menu shows only what the helper's role allows (an assistant has no Plans or Requests tab). Opening a hidden screen by link shows "Only the account owner can open this". In the client file, read-only roles see no edit buttons, never disabled ones. Owners and head coaches see an "Assigned to" field in the client file header and a team filter on the clients list.
+
+## Coach landing page
+
+The coach's public page at `/c/<link>`. No login, no app shell: it is a marketing page, opened from Instagram and WhatsApp on a phone. It follows the brand like the app (dark first, Anton numbers, red only for the main action) and works in Arabic and English with a language switch on top.
+
+| Part | What's on it | Built from | Special states |
+| --- | --- | --- | --- |
+| Top bar | Coach's logo or name, language switch | Button, ToggleGroup | |
+| Hero | Cover image (or plain Ink), photo, name, headline, city, mode, years. Start with me (primary) + WhatsApp | Avatar, Badge, Button | Closed for new clients: "Not taking new clients right now", WhatsApp only |
+| About and specialties | Bio, specialty chips | Badge | |
+| Packages | Up to 4 cards: name, price, weeks, what's included, "Most popular" border. Choose → request | Card | No packages: section hidden, price range shown in the hero |
+| Results | Before and after pairs with captions | Carousel | None: section hidden |
+| Team | Photos, names, and roles | Avatar | Hidden unless the coach turns it on |
+| Facts | Gym, languages, certificates, Instagram | | |
+| Start with me | Drawer (phone) / Dialog (laptop): package, goal, message, contact by, then phone or email login if signed out | ResponsiveDialog, LoginForm | Sent: "Request sent. Coach Ahmed will reply soon" + Open the app. Coach viewing his own page: a preview bar with Edit page instead |
+| Footer | "Made with Coachi" | Logo | |
+
+Not available (page off, subscription ended, link not found): "This page isn't available" with a Find a coach button. Sticky Start with me bar at the bottom on phone once the hero scrolls away. Page title and share preview use the coach's name, headline, and photo.
 
 ## Super admin screens
 
@@ -105,7 +127,7 @@ You run the business from a laptop, but every screen still works on a phone for 
 | Coaches | Table: name, phone, plan, clients, status chip, end date, last active. Filters by status. Row opens the coach panel | DataTable, StatusChip, Sheet (side panel) | Search finds nothing: clear filters |
 | Coach panel | Details, client count, payment history, notes. Actions: Extend, Pause, Change plan, Support mode, Delete | Sheet, Tabs, DropdownMenu | Delete asks you to type the coach's name to confirm |
 | Record payment | Coach, amount in EGP, method, date, receipt photo. Shows the new end date before you save | Dialog, Combobox, Select, Calendar, PhotoSlot | Saved: toast "Payment saved. Active until 14 Dec" |
-| Plans | Your plans with price and features. Edit features as switches and number fields | Card, Form, Switch, Input | Changing a plan with coaches on it shows how many are affected |
+| Plans | Your plans with price and features (client limit, team seats, switches). Edit features as switches and number fields | Card, Form, Switch, Input | Changing a plan with coaches on it shows how many are affected |
 | Directory | Waiting for approval queue (approve or hide), featured coaches, reply rate per coach | Tabs, Card, Switch, Badge | Queue empty: "No coaches waiting" |
 | Libraries | Shared exercises and foods, bilingual names, video links | DataTable, Form | Missing Arabic or English name: warning chip |
 | Audit log | Every admin action and support-mode session, filter by person and date | DataTable, Calendar range | Read only |

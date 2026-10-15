@@ -1,4 +1,5 @@
 import type { Messages } from "@coachi/i18n";
+import type { TeamPermission } from "@coachi/validation";
 import {
   BookUserIcon,
   CalendarDaysIcon,
@@ -16,13 +17,15 @@ import {
   TrophyIcon,
   UserRoundIcon,
   UsersRoundIcon,
+  UsersIcon,
   type LucideIcon,
 } from "lucide-react";
 
 type Nav = Messages["nav"];
 export type NavKey = { [R in keyof Nav]: `${R & string}.${keyof Nav[R] & string}` }[keyof Nav];
 
-export type NavItem = { href: string; label: NavKey; icon: LucideIcon };
+/** `permission`: coach team roles without it don't see the item. */
+export type NavItem = { href: string; label: NavKey; icon: LucideIcon; permission?: TeamPermission };
 
 /** Client: 4 tabs. Meals and check-in open from Today, so the bar stays short. */
 export const clientTabs: NavItem[] = [
@@ -36,15 +39,16 @@ export const clientTabs: NavItem[] = [
 export const coachTabs: NavItem[] = [
   { href: "/coach/today", label: "coach.today", icon: HouseIcon },
   { href: "/coach/clients", label: "coach.clients", icon: UsersRoundIcon },
-  { href: "/coach/plans", label: "coach.plans", icon: ClipboardListIcon },
-  { href: "/coach/requests", label: "coach.requests", icon: InboxIcon },
+  { href: "/coach/plans", label: "coach.plans", icon: ClipboardListIcon, permission: "plans_edit" },
+  { href: "/coach/requests", label: "coach.requests", icon: InboxIcon, permission: "requests" },
 ];
 
 export const coachMore: NavItem[] = [
   { href: "/coach/library", label: "coach.library", icon: LibraryBigIcon },
-  { href: "/coach/check-in-form", label: "coach.checkInForm", icon: ListChecksIcon },
-  { href: "/coach/profile", label: "coach.profile", icon: IdCardIcon },
-  { href: "/coach/subscription", label: "coach.subscription", icon: CreditCardIcon },
+  { href: "/coach/check-in-form", label: "coach.checkInForm", icon: ListChecksIcon, permission: "checkin_form" },
+  { href: "/coach/profile", label: "coach.profile", icon: IdCardIcon, permission: "profile" },
+  { href: "/coach/team", label: "coach.team", icon: UsersIcon, permission: "team" },
+  { href: "/coach/subscription", label: "coach.subscription", icon: CreditCardIcon, permission: "subscription" },
 ];
 
 export const adminNav: NavItem[] = [

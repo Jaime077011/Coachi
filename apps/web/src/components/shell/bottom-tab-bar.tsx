@@ -10,6 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useCan } from "@/hooks/use-can";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { isActive, navSets, type NavSet } from "./nav-config";
@@ -35,7 +36,10 @@ function TabBarWithPath(props: Props) {
 
 function TabBarView({ nav, className, pathname }: Props & { pathname: string | null }) {
   // A set with `more` gets a 5th "More" tab that opens those items in a bottom sheet.
-  const { tabs: items, more } = navSets[nav];
+  const can = useCan();
+  const allowed = (item: { permission?: Parameters<typeof can>[0] }) => !item.permission || can(item.permission);
+  const items = navSets[nav].tabs.filter(allowed);
+  const more = navSets[nav].more?.filter(allowed);
   const t = useTranslations("nav");
   const tShell = useTranslations("shell");
   const [moreOpen, setMoreOpen] = useState(false);

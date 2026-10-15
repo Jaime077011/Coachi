@@ -80,6 +80,33 @@ Three roles, each with its own dashboard. A coach only ever sees his own clients
 - Only active coaches approved by the super admin show in the directory.
 - Super admin "support mode" shows a red bar at the top and every action is logged.
 
+### Coach team (added Oct 15)
+
+A coach can run a small team: helpers who work inside his account on his clients. The coach who owns the account is the **owner**. He picks a role for each helper, and the role decides what the helper can do. Helpers log in like anyone else (phone code or email) and land in the coach dashboard.
+
+| Action | Owner | Head coach | Coach | Assistant |
+| --- | --- | --- | --- | --- |
+| See clients | All | All | Assigned to him | Assigned to him |
+| Invite clients, answer requests | Yes | Yes | No | No |
+| Assign clients to team members | Yes | Yes | No | No |
+| Edit the client file and notes | Yes | Yes | Assigned | No (read only) |
+| Build, edit, and assign plans and templates | Yes | Yes | Assigned | No |
+| Read and reply to check-ins | Yes | Yes | Assigned | Assigned |
+| Add own library items | Yes | Yes | Yes | No |
+| Edit the check-in form | Yes | Yes | No | No |
+| Edit the public profile and landing page | Yes | No | No | No |
+| Invite, change, or remove team members | Yes | No | No | No |
+| See and renew the subscription | Yes | No | No | No |
+
+**Rules**
+
+- Team size comes from the plan: a `team_seats` feature (for example Trial 0, Basic 1, Pro 5). Pending invites count as seats. When the coach hits the limit he sees a clear note with Renew on WhatsApp.
+- The owner adds a helper with name, phone, and role. The app makes an invite link to send on WhatsApp, the same way as client invites.
+- Each client has at most one assigned team member (or none, meaning only the owner and head coaches work on him). The client sees his coach's name and brand, not the helper's.
+- Removing a helper never deletes anything: his clients go back to unassigned, and his notes and plans stay.
+- A helper belongs to one coach's team at a time.
+- When the subscription ends, helpers get the same read-only mode as the owner.
+
 ## Super admin dashboard
 
 You run the business from here. Coaches pay you by hand, and you switch their access on and off in two clicks.
@@ -106,7 +133,7 @@ You run the business from here. Coaches pay you by hand, and you switch their ac
 **Subscriptions (manual)**
 
 - Plans you define, for example: Trial (14 days, 5 clients), Basic (20 clients), Pro (unlimited)
-- Each plan has: name, price in EGP, client limit, length in days
+- Each plan has: name, price in EGP, client limit, team seats, length in days
 - Record a payment: coach, amount, method (InstaPay, cash, bank, Vodafone Cash), date, note, optional receipt photo. Saving it extends the end date
 - Auto status: Ending soon at 7 days left, Expired after the end date
 
@@ -195,6 +222,26 @@ Intake form: the client fills the profile, health and food parts when he joins. 
 - Public coach profile (what clients see in the directory): photo, name, short bio, specialties (fat loss, muscle, women's training, sports, rehab), city, online or in-person or both, gym name, languages, years of experience, certificates, price range in EGP, before and after results (with client permission), Instagram and WhatsApp
 - Open for new clients: on or off. Off hides the request button
 - Logo (shown to his clients), subscription status and end date, renew button that opens WhatsApp to you
+
+**Landing page (added Oct 15)**
+
+Every coach gets his own public page at `coachi.app/c/<his-link>`, to put in his Instagram bio and send on WhatsApp. Anyone can open it with no login, and search engines can find it.
+
+- Sections: cover and photo, name, a one-line headline, city, online or in person, years of experience; About; Specialties; Packages; Results (with client permission); Team (if he turns it on); gym, languages, and certificates; a final "Start with me" button
+- **Packages:** what he sells, for example "3 months online coaching". Each has a name, price in EGP, length in weeks, a short list of what's included, and an optional "Most popular" highlight. Up to 4
+- **Start with me:** the visitor picks a package (optional), logs in with phone or email, and sends a request. It reaches the coach's Requests inbox marked "From your page" with the package name. WhatsApp button next to it
+- The coach picks his link (letters, numbers, dashes, unique) and turns the page on or off. Copy, Open, and Share on WhatsApp buttons in the profile editor
+- The page shows only when it is on and his subscription is active or in trial. Otherwise visitors see "This page isn't available" with a link to find another coach
+- The landing page doesn't need directory approval: it's his own page. Showing in the directory still does
+- Same content as the in-app coach page in the directory, so he edits it once
+
+**Team (added Oct 15)**
+
+- Members list: photo, name, role, assigned clients count, status (active, invited)
+- Seats used against the plan's `team_seats`
+- Invite a helper (name, phone, role), change role, remove (with confirm)
+- Assign a client to a team member from the client file or the clients list; filter clients by team member
+- See "Coach team" under Roles and access for what each role can do
 
 ## Client dashboard
 
@@ -344,7 +391,7 @@ Every screen goes through the core modules, never straight to the database. Slow
 1. **One app, split into modules.** One Next.js app now, but code lives in modules: auth and orgs, billing and plans, directory, clients and notes, training, nutrition, journey, check-ins, notifications, admin. Each module owns its tables and functions. Modules call each other's functions, never each other's tables. Later, any module can move out on its own.
 2. **Backend first, in Supabase.** Business rules live in Supabase: row rules, database functions (RPC), and Edge Functions for heavier work. The web app now and the mobile app later call the same backend, with the same Zod checks and types. Next.js server actions are only for web-only things, like admin tools. Nothing the client or coach needs may live only in Next.js.
 3. **Organizations from day one.** Every coach works inside an organization. A solo coach = an organization of one. Later a gym adds many coaches, a head coach, and assistants with no data changes. Every row carries org\_id, and security rules check membership.
-4. **Plan features, not fixed limits.** Plans give features: client\_limit, nutrition, directory\_listing, ai\_credits, branded\_app. Code asks "can this org do X?" in one place. When payments come, only the subscription source changes, not the checks.
+4. **Plan features, not fixed limits.** Plans give features: client\_limit, team\_seats, nutrition, directory\_listing, ai\_credits, branded\_app. Code asks "can this org do X?" in one place. When payments come, only the subscription source changes, not the checks.
 5. **Coach and client linked by their own table.** coach\_clients keeps start, end, and status. This gives full history, coach switching, and later more than one coach per client (trainer + nutritionist).
 6. **Events and background jobs.** Important actions write an event (workout\_logged, request\_sent, checkin\_sent). A job worker (Inngest or Trigger.dev) reacts: milestones, streaks, daily stats, notifications. The app stays fast, and AI, WhatsApp, or reports plug in later as new listeners.
 7. **Fast dashboards with summary tables.** Jobs keep daily\_client\_stats and journey numbers up to date, so the coach home and journey page don't scan every set ever logged. Indexes on (org\_id, client\_id, date).
@@ -388,20 +435,21 @@ Every main table also has id (uuid), org\_id where it applies, created\_at, upda
 | --- | --- | --- | --- |
 | Auth + orgs | profiles | role, name, phone, avatar, language, time\_zone | One login for any role |
 | Auth + orgs | organizations | name, type (solo, gym), logo, city | Gyms with many coaches later |
-| Auth + orgs | org\_members | org\_id, profile\_id, role (owner, head\_coach, coach, assistant) | Teams without a rewrite |
+| Auth + orgs | org\_members | org\_id, profile\_id, role (owner, head\_coach, coach, assistant), status (active, removed) | Coach teams with roles |
 | Billing | plans | name, price\_piasters, currency, days | Prices in any currency |
-| Billing | plan\_features | plan\_id, key, value (client\_limit, nutrition, directory\_listing, ai\_credits, branded\_app) | New plans = new rows, no code |
+| Billing | plan\_features | plan\_id, key, value (client\_limit, team\_seats, nutrition, directory\_listing, ai\_credits, branded\_app) | New plans = new rows, no code |
 | Billing | subscriptions | org\_id, plan\_id, status, starts\_at, ends\_at, source (manual, paymob later) | Payments plug in later |
 | Billing | payments | org\_id, amount\_piasters, method, paid\_at, note, receipt\_url | Manual now, gateway later |
 | Billing | feature\_flags | org\_id, key, on | Test features with one coach first |
-| Directory | coach\_profiles | profile\_id, org\_id, bio, specialties, city, mode, gym, languages, years, certificates, price range, instagram, whatsapp, open\_for\_clients, listed, featured | Public profile kept apart from private data |
+| Directory | coach\_profiles | profile\_id, org\_id, bio, specialties, city, mode, gym, languages, years, certificates, price range, instagram, whatsapp, open\_for\_clients, listed, featured, slug (unique), headline, cover\_url, page\_published, show\_team | Public profile and landing page kept apart from private data |
+| Directory | coach\_packages | org\_id, coach\_id, name, price\_piasters, weeks, includes, highlighted, order | What the coach sells, on his landing page |
 | Directory | coach\_results | coach\_id, before\_url, after\_url, caption, client\_ok | Results with permission |
-| Directory | coach\_requests | client\_id, coach\_id, goal, message, contact\_by, status, reply | Directory sign-ups |
+| Directory | coach\_requests | client\_id, coach\_id, goal, message, contact\_by, status, reply, source (directory, landing), package\_id | Directory and landing page sign-ups |
 | Clients | clients | profile\_id, status, goal, target\_weight, target\_date | The client himself |
-| Clients | coach\_clients | org\_id, coach\_id, client\_id, role (trainer, nutrition), status, started\_at, ended\_at | History, switching, more than one coach |
+| Clients | coach\_clients | org\_id, coach\_id, client\_id, role (trainer, nutrition), status, started\_at, ended\_at, assigned\_member\_id | History, switching, team assignment |
 | Clients | client\_details | client\_id, age, gender, height, activity, training days, place, equipment, injuries, health notes, food likes and dislikes, meals per day, supplements | The client file |
-| Clients | coach\_notes | coach\_id, client\_id, text, tags, pinned | Private notes, AI-ready later |
-| Clients | invites | org\_id, coach\_id, code, expires\_at, used\_by | Invite links |
+| Clients | coach\_notes | coach\_id, client\_id, author\_id, text, tags, pinned | Private notes (who wrote it), AI-ready later |
+| Clients | invites | org\_id, coach\_id, kind (client, team), member\_role, code, expires\_at, used\_by | Client and team invite links |
 | Training | exercises | org\_id (null = shared), name\_ar, name\_en, muscle, equipment, video\_url | Shared + own library |
 | Training | programs | org\_id, coach\_id, client\_id (null = template), name, weeks, starts\_on, version | Templates and copies |
 | Training | program\_days | program\_id, week, day, title | Weeks and days |
@@ -444,6 +492,8 @@ Don't build for stage 3 now. Build so each step is a small change, not a rewrite
 - Row Level Security on every table, with tests that try to read another org's data and must fail
 - A coach reads only his org's rows. A client reads only his own rows and his assigned plans
 - Anyone signed in can read only the public fields of listed, active coaches
+- Anyone, signed in or not, can read a published landing page (public profile fields, packages, results, team names and roles) of an active coach, and nothing else
+- Team members are checked by their org\_members role: coaches and assistants read only the clients assigned to them. Row rules use the same role table as the app (`teamPermissions` in `packages/validation`), with tests that a helper can't open an unassigned client
 - Admin and support actions run on the server only, and every one writes to audit\_log
 - Rate limits on login, sign-up, and coach requests
 - Progress photos in a private bucket, opened only with short-lived signed links

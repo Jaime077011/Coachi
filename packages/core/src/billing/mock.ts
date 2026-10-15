@@ -1,5 +1,6 @@
 import type { BillingApi } from "./api";
 import { coachClients, payments, planFeatures, plans, subscriptions } from "../mock/data";
+import { activeMembers } from "../mock/session";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 
 const DAY = 86_400_000;
@@ -40,6 +41,11 @@ export const mockBilling: BillingApi = {
         plan: plans.find((p) => p.id === subscription.plan_id)!,
         client_limit: typeof limit === "number" ? limit : null,
         client_count: coachClients.filter((l) => l.org_id === orgId && !l.ended_at).length,
+        team_seats: (() => {
+          const seats = featureValue(subscription.plan_id, "team_seats");
+          return typeof seats === "number" ? seats : null;
+        })(),
+        team_count: activeMembers(orgId).filter((m) => m.role !== "owner").length,
         days_left: Math.ceil((Date.parse(subscription.ends_at) - Date.now()) / DAY),
       };
     }),

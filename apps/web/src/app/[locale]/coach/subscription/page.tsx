@@ -1,5 +1,10 @@
+import { RequirePermission } from "@/components/coach/require-permission";
 import { SubscriptionScreen } from "./subscription-screen";
 
 export default function Page() {
-  return <SubscriptionScreen />;
+  return (
+    <RequirePermission permission="subscription">
+      <SubscriptionScreen />
+    </RequirePermission>
+  );
 }

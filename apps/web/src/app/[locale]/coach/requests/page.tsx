@@ -1,5 +1,10 @@
+import { RequirePermission } from "@/components/coach/require-permission";
 import { RequestsScreen } from "./requests-screen";
 
 export default function Page() {
-  return <RequestsScreen />;
+  return (
+    <RequirePermission permission="requests">
+      <RequestsScreen />
+    </RequirePermission>
+  );
 }

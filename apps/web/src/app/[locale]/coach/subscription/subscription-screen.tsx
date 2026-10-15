@@ -62,6 +62,12 @@ export function SubscriptionScreen() {
                     </div>
                     {s.client_limit !== null && <Progress value={(s.client_count / s.client_limit) * 100} aria-label={t("clients")} />}
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{t("teamSeats")}</span>
+                    <span className="tabular-nums">
+                      {s.team_seats === null ? t("unlimited", { count: s.team_count }) : t("clientsOf", { count: s.team_count, limit: s.team_seats })}
+                    </span>
+                  </div>
                   <div>
                     <p className="font-semibold">{t("endsOn", { date: fmt.date(s.subscription.ends_at, "long") })}</p>
                     {s.days_left > 0 && <p className="text-sm text-muted-foreground">{t("daysLeft", { count: s.days_left })}</p>}

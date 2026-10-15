@@ -15,6 +15,7 @@ import {
   workoutLogs,
 } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { uniqueSlug } from "../mock/session";
 
 const DAY = 86_400_000;
 
@@ -75,7 +76,7 @@ export const mockAdmin: AdminApi = {
       const orgId = newId();
       profiles.push({ ...stamp, id: profileId, role: "coach", name: input.name, phone: input.phone, email: input.email ?? null, avatar_url: null, language: "ar", time_zone: "Africa/Cairo" });
       organizations.push({ ...stamp, id: orgId, name: input.name, type: "solo", logo_url: null, city: null });
-      orgMembers.push({ ...stamp, id: newId(), org_id: orgId, profile_id: profileId, role: "owner" });
+      orgMembers.push({ ...stamp, id: newId(), org_id: orgId, profile_id: profileId, role: "owner", status: "active" });
       subscriptions.push({ ...stamp, id: newId(), org_id: orgId, plan_id: input.plan_id, status: "trial", starts_at: input.starts_at, ends_at: input.ends_at, source: "manual" });
       const coach = {
         ...stamp,
@@ -100,6 +101,11 @@ export const mockAdmin: AdminApi = {
         open_for_clients: false,
         listed: false,
         featured: false,
+        slug: uniqueSlug(input.name),
+        headline: null,
+        cover_url: null,
+        page_published: false,
+        show_team: false,
       };
       coachProfiles.push(coach);
       log("coach.add", `coach:${input.name}`);

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { coachProfile, coachRequest, coachResult } from "./directory";
+import { orgRole } from "./auth-orgs";
+import { coachPackage, coachProfile, coachRequest, coachResult } from "./directory";
 import { date, id, timestamp, url, weightKg } from "./common";
 import { plan, planFeature, subscription, subscriptionStatus } from "./billing";
 import { exercise, program, programDay, programExercise } from "./training";
@@ -153,10 +154,21 @@ export type ClientProgress = z.infer<typeof clientProgress>;
 
 export const coachPage = z.object({
   profile: coachProfile,
+  packages: z.array(coachPackage),
   results: z.array(coachResult),
   my_request: coachRequest.nullable(),
 });
 export type CoachPage = z.infer<typeof coachPage>;
+
+/** The public landing page: only public fields, readable with no login. */
+export const coachLanding = z.object({
+  profile: coachProfile.omit({ listed: true, featured: true }),
+  packages: z.array(coachPackage),
+  results: z.array(coachResult),
+  /** Empty unless the coach turns "show team" on. */
+  team: z.array(z.object({ name: z.string(), role: orgRole, avatar_url: url.nullable() })),
+});
+export type CoachLanding = z.infer<typeof coachLanding>;
 
 
 // ---------------------------------------------------------------- billing + admin
@@ -173,6 +185,8 @@ export const coachSubscriptionView = z.object({
   plan,
   client_limit: z.number().int().nullable(),
   client_count: z.number().int().nonnegative(),
+  team_seats: z.number().int().nullable(),
+  team_count: z.number().int().nonnegative(),
   days_left: z.number().int(),
 });
 export type CoachSubscriptionView = z.infer<typeof coachSubscriptionView>;

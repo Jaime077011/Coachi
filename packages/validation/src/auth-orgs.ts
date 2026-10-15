@@ -24,11 +24,15 @@ export const organization = base.extend({
 });
 export type Organization = z.infer<typeof organization>;
 
+/** Team roles inside a coach's org. What each can do lives in team.ts. */
 export const orgRole = z.enum(["owner", "head_coach", "coach", "assistant"]);
+export type OrgRole = z.infer<typeof orgRole>;
 
 export const orgMember = orgScoped.extend({
   profile_id: id,
   role: orgRole,
+  /** Removed members keep their row, so notes and plans still show who wrote them. */
+  status: z.enum(["active", "removed"]),
 });
 export type OrgMember = z.infer<typeof orgMember>;
 
@@ -53,5 +57,8 @@ export const session = z.object({
   coach_id: id.nullable(),
   /** Set when the role is client. */
   client_id: id.nullable(),
+  /** Coach side: the signed-in person's team membership. The owner is a member too. */
+  member_id: id.nullable(),
+  member_role: orgRole.nullable(),
 });
 export type Session = z.infer<typeof session>;

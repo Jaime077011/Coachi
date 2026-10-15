@@ -1,13 +1,14 @@
 "use client";
 
-import { api } from "@coachi/core";
-import { coachingMode, specialty, type CoachProfile } from "@coachi/validation";
+import { api, ApiError } from "@coachi/core";
+import { coachingMode, slug as slugSchema, specialty, type CoachPackage, type CoachProfile } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { HourglassIcon, Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CoachCard } from "@/components/coachi/coach-card";
+import { PackageCard } from "@/components/coachi/package-card";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
 import { Button } from "@/components/ui/button";
@@ -18,41 +19,74 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useMe } from "@/hooks/use-session";
 import { qk } from "@/lib/query-keys";
+import { LandingSettings } from "./landing-settings";
+import { PackagesEditor, fromDrafts, toDraft, type PackageDraft } from "./packages-editor";
 
 export function ProfileScreen() {
   const t = useTranslations("profile");
   const { coachId } = useMe();
   const profile = useQuery({ queryKey: qk.coachProfile(coachId), queryFn: () => api.directory.myProfile(coachId), enabled: !!coachId });
+  const packages = useQuery({ queryKey: qk.coachPackages(coachId), queryFn: () => api.directory.myPackages(coachId), enabled: !!coachId });
   return (
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} />
-      <QueryState query={profile}>{(p) => <ProfileForm initial={p} />}</QueryState>
+      <QueryState query={profile}>
+        {(p) => (
+          <QueryState query={packages}>
+            {(list) => <ProfileForm initial={p} initialPackages={list} />}
+          </QueryState>
+        )}
+      </QueryState>
     </div>
   );
 }
 
-function ProfileForm({ initial }: { initial: CoachProfile }) {
+function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; initialPackages: CoachPackage[] }) {
   const t = useTranslations("profile");
   const tParts = useTranslations("parts");
   const tCp = useTranslations("coachPage");
   const queryClient = useQueryClient();
   const [p, setP] = useState(initial);
   const [certs, setCerts] = useState(initial.certificates.join(", "));
+  const [drafts, setDrafts] = useState<PackageDraft[]>(() => initialPackages.map(toDraft));
+  const [savedSlug, setSavedSlug] = useState(initial.slug);
+  const [slugError, setSlugError] = useState<"invalid" | "taken" | null>(null);
   const set = <K extends keyof CoachProfile>(key: K, value: CoachProfile[K]) => setP((x) => ({ ...x, [key]: value }));
   const egp = (piasters: number | null) => (piasters == null ? "" : String(piasters / 100));
   const toPiasters = (v: string) => (v.trim() === "" ? null : Math.round(Number(v) * 100) || null);
 
   const save = useMutation({
-    mutationFn: () =>
-      api.directory.updateProfile(p.id, {
+    mutationFn: async () => {
+      const saved = await api.directory.updateProfile(p.id, {
         ...p,
         certificates: certs.split(/[,،]/).map((c) => c.trim()).filter(Boolean),
-      }),
-    onSuccess: () => {
+      });
+      const packages = await api.directory.savePackages(p.id, fromDrafts(drafts));
+      return { saved, packages };
+    },
+    onSuccess: ({ saved, packages }) => {
       toast.success(t("saved"));
+      setSavedSlug(saved.slug);
+      setDrafts(packages.map(toDraft));
+      queryClient.setQueryData(qk.coachPackages(p.id), packages);
       void queryClient.invalidateQueries({ queryKey: qk.coachProfile(p.id) });
+      void queryClient.invalidateQueries({ queryKey: qk.landing(saved.slug) });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.message === "slug_taken") setSlugError("taken");
+      else toast.error(t("saveFailed"));
     },
   });
+
+  const submit = () => {
+    if (!slugSchema.safeParse(p.slug).success) {
+      setSlugError("invalid");
+      document.getElementById("slug")?.focus();
+      return;
+    }
+    setSlugError(null);
+    save.mutate();
+  };
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -60,9 +94,19 @@ function ProfileForm({ initial }: { initial: CoachProfile }) {
         className="flex flex-col gap-5"
         onSubmit={(e) => {
           e.preventDefault();
-          save.mutate();
+          submit();
         }}
       >
+        <LandingSettings
+          value={p}
+          savedSlug={savedSlug}
+          slugError={slugError}
+          onChange={(patch) => {
+            if ("slug" in patch) setSlugError(null);
+            setP((x) => ({ ...x, ...patch }));
+          }}
+        />
+
         {!p.listed && (
           <p className="flex gap-2 rounded-lg bg-info/12 p-3 text-sm text-info">
             <HourglassIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -155,6 +199,7 @@ function ProfileForm({ initial }: { initial: CoachProfile }) {
         <F id="certs" label={t("certificates")}>
           <Input id="certs" value={certs} onChange={(e) => setCerts(e.target.value)} />
         </F>
+        <PackagesEditor drafts={drafts} onChange={setDrafts} />
         <Button type="submit" size="lg" className="w-full sm:w-fit" disabled={save.isPending}>
           {save.isPending && <Loader2Icon className="animate-spin" />}
           {t("save")}
@@ -167,7 +212,10 @@ function ProfileForm({ initial }: { initial: CoachProfile }) {
           <SectionTitle className="mb-0">{t("preview")}</SectionTitle>
           <p className="text-sm text-muted-foreground">{t("previewBody")}</p>
           <CoachCard coach={p} />
-          {p.bio && <p className="rounded-lg border bg-card p-4 text-sm leading-relaxed">{p.bio}</p>}
+          {p.bio && <p dir="auto" className="rounded-lg border bg-card p-4 text-sm leading-relaxed">{p.bio}</p>}
+          {fromDrafts(drafts).map((pkg, i) => (
+            <PackageCard key={i} pkg={pkg} className={pkg.highlighted ? "mt-3" : undefined} />
+          ))}
         </div>
       </aside>
     </div>

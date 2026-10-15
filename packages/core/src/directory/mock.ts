@@ -1,7 +1,27 @@
-import type { CoachCard } from "@coachi/validation";
+import { MAX_PACKAGES, type CoachCard } from "@coachi/validation";
 import type { DirectoryApi } from "./api";
-import { DEMO, clients, coachClients, coachProfiles, coachRequests, coachResults, profiles } from "../mock/data";
+import {
+  DEMO,
+  clients,
+  coachClients,
+  coachPackages,
+  coachProfiles,
+  coachRequests,
+  coachResults,
+  profiles,
+  subscriptions,
+} from "../mock/data";
 import { ApiError, getMockRole, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { activeMembers, requireMember } from "../mock/session";
+
+const packagesOf = (coachId: string) =>
+  coachPackages.filter((p) => p.coach_id === coachId && !p.deleted_at).sort((a, b) => a.order - b.order);
+
+/** The landing page shows only while the coach can work: trial, active, or ending soon. */
+const isActiveCoach = (orgId: string) => {
+  const status = subscriptions.find((s) => s.org_id === orgId)?.status;
+  return status === "trial" || status === "active" || status === "ending_soon";
+};
 
 const toCard = (c: (typeof coachProfiles)[number]): CoachCard => ({
   id: c.id,
@@ -54,10 +74,31 @@ export const mockDirectory: DirectoryApi = {
   get: (coachId) =>
     mockRead(() => ({
       profile: findCoach(coachId),
+      packages: packagesOf(coachId),
       results: coachResults.filter((r) => r.coach_id === coachId),
       my_request:
         coachRequests.find((r) => r.coach_id === coachId && r.client_id === browsingClientId()) ?? null,
     })),
+
+  landing: (slug) =>
+    mockRead(() => {
+      const coach = coachProfiles.find((c) => c.slug === slug.toLowerCase() && !c.deleted_at);
+      if (!coach || !coach.page_published || !isActiveCoach(coach.org_id)) throw new ApiError("not_found");
+      const { listed: _listed, featured: _featured, ...profile } = coach;
+      return {
+        profile,
+        packages: packagesOf(coach.id),
+        results: coachResults.filter((r) => r.coach_id === coach.id),
+        team: coach.show_team
+          ? activeMembers(coach.org_id)
+              .filter((m) => m.role !== "owner")
+              .map((m) => {
+                const p = profiles.find((x) => x.id === m.profile_id)!;
+                return { name: p.name, role: m.role, avatar_url: p.avatar_url };
+              })
+          : [],
+      };
+    }),
 
   sendRequest: (input) =>
     mockWrite(() => {
@@ -65,6 +106,8 @@ export const mockDirectory: DirectoryApi = {
       const client = clients.find((c) => c.id === clientId)!;
       const request = {
         ...input,
+        source: input.source ?? ("directory" as const),
+        package_id: input.package_id ?? null,
         id: newId(),
         client_id: clientId,
         client_name: profiles.find((p) => p.id === client.profile_id)!.name,
@@ -83,15 +126,18 @@ export const mockDirectory: DirectoryApi = {
 
   inbox: (coachId) =>
     mockRead(
-      () =>
-        coachRequests
+      () => {
+        requireMember("requests");
+        return coachRequests
           .filter((r) => r.coach_id === coachId)
-          .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+          .sort((a, b) => b.created_at.localeCompare(a.created_at));
+      },
       [],
     ),
 
   answer: (requestId, accept, reply) =>
     mockWrite(() => {
+      requireMember("requests");
       const request = coachRequests.find((r) => r.id === requestId);
       if (!request) throw new ApiError("not_found");
       request.status = accept ? "accepted" : "declined";
@@ -105,9 +151,31 @@ export const mockDirectory: DirectoryApi = {
 
   updateProfile: (coachId, patch) =>
     mockWrite(() => {
+      requireMember("profile");
       const coach = findCoach(coachId);
+      if (patch.slug && coachProfiles.some((c) => c.id !== coachId && c.slug === patch.slug)) {
+        throw new ApiError("invalid", "slug_taken");
+      }
       Object.assign(coach, patch, { updated_at: nowIso() });
       return coach;
+    }),
+
+  myPackages: (coachId) => mockRead(() => packagesOf(coachId), []),
+
+  savePackages: (coachId, input) =>
+    mockWrite(() => {
+      requireMember("profile");
+      if (input.length > MAX_PACKAGES) throw new ApiError("invalid", "too_many_packages");
+      const coach = findCoach(coachId);
+      const keep = new Set(input.map((p) => p.id).filter(Boolean));
+      for (const old of packagesOf(coachId)) if (!keep.has(old.id)) old.deleted_at = nowIso();
+      input.forEach((p, order) => {
+        const existing = p.id ? coachPackages.find((x) => x.id === p.id && x.coach_id === coachId) : undefined;
+        const fields = { name: p.name, price_piasters: p.price_piasters, weeks: p.weeks, includes: p.includes, highlighted: p.highlighted, order };
+        if (existing) Object.assign(existing, fields, { updated_at: nowIso() });
+        else coachPackages.push({ ...fields, id: newId(), org_id: coach.org_id, coach_id: coachId, created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
+      });
+      return packagesOf(coachId);
     }),
 };
 
@@ -123,6 +191,6 @@ function linkClient(request: (typeof coachRequests)[number]) {
   }
   const coach = coachProfiles.find((c) => c.id === request.coach_id)!;
   if (!coachClients.some((l) => l.client_id === client.id && l.coach_id === coach.id && !l.ended_at)) {
-    coachClients.push({ ...stamp, id: newId(), org_id: coach.org_id, coach_id: coach.id, client_id: client.id, role: "trainer", status: "active", started_at: nowIso(), ended_at: null });
+    coachClients.push({ ...stamp, id: newId(), org_id: coach.org_id, coach_id: coach.id, client_id: client.id, role: "trainer", status: "active", started_at: nowIso(), ended_at: null, assigned_member_id: null });
   }
 }

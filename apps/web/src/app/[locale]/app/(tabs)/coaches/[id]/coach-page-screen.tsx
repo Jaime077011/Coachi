@@ -1,23 +1,20 @@
 "use client";
 
 import { api } from "@coachi/core";
-import type { CoachPage, Goal, SendRequest } from "@coachi/validation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AtSignIcon, AwardIcon, BuildingIcon, LanguagesIcon, Loader2Icon, MapPinIcon, MessageCircleIcon, SendIcon } from "lucide-react";
+import type { CoachPage } from "@coachi/validation";
+import { useQuery } from "@tanstack/react-query";
+import { AtSignIcon, AwardIcon, BuildingIcon, LanguagesIcon, MapPinIcon, MessageCircleIcon, SendIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
-import { toast } from "sonner";
 import { cityName } from "@/components/coachi/coach-card";
 import { QueryState } from "@/components/coachi/query-state";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { PackageCard } from "@/components/coachi/package-card";
+import { RequestDialog } from "@/components/coachi/request-dialog";
 import { BackLink, SectionTitle } from "@/components/coachi/screen-header";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useFmt } from "@/lib/format";
 import { initials } from "@/lib/initials";
 import { qk } from "@/lib/query-keys";
@@ -35,8 +32,14 @@ function CoachProfileView({ data }: { data: CoachPage }) {
   const t = useTranslations("coachPage");
   const tParts = useTranslations("parts");
   const tCommon = useTranslations("common");
+  const tLanding = useTranslations("landing");
   const fmt = useFmt();
   const [requesting, setRequesting] = useState(false);
+  const [packageId, setPackageId] = useState<string | null>(null);
+  const request = (pkg: string | null) => {
+    setPackageId(pkg);
+    setRequesting(true);
+  };
   const c = data.profile;
 
   return (
@@ -103,6 +106,17 @@ function CoachProfileView({ data }: { data: CoachPage }) {
         )}
       </section>
 
+      {data.packages.length > 0 && (
+        <section>
+          <SectionTitle>{tLanding("packages")}</SectionTitle>
+          <div className="flex flex-col gap-5 pt-2">
+            {data.packages.map((p) => (
+              <PackageCard key={p.id} pkg={p} onChoose={c.open_for_clients && !data.my_request ? () => request(p.id) : undefined} />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <SectionTitle>{t("results")}</SectionTitle>
         {data.results.length === 0 ? <p className="text-sm text-muted-foreground">{t("noResults")}</p> : null}
@@ -116,7 +130,7 @@ function CoachProfileView({ data }: { data: CoachPage }) {
               {t(`status_${data.my_request.status}`)}
             </StatusChip>
           ) : c.open_for_clients ? (
-            <Button className="flex-1" onClick={() => setRequesting(true)}>
+            <Button className="flex-1" onClick={() => request(null)}>
               <SendIcon data-icon="inline-start" className="rtl:-scale-x-100" />
               {t("sendRequest")}
             </Button>
@@ -136,7 +150,15 @@ function CoachProfileView({ data }: { data: CoachPage }) {
         </div>
       </div>
 
-      <RequestDialog coachId={c.id} coachName={c.name} open={requesting} onOpenChange={setRequesting} />
+      <RequestDialog
+        coachId={c.id}
+        coachName={c.name}
+        packages={data.packages}
+        packageId={packageId}
+        source="directory"
+        open={requesting}
+        onOpenChange={setRequesting}
+      />
     </div>
   );
 }
@@ -150,84 +172,5 @@ function Fact({ icon: Icon, label, children }: { icon: React.ElementType; label:
         <p className="font-semibold">{children}</p>
       </div>
     </div>
-  );
-}
-
-const goals: Goal[] = ["fat_loss", "muscle", "strength", "health"];
-
-function RequestDialog({
-  coachId,
-  coachName,
-  open,
-  onOpenChange,
-}: {
-  coachId: string;
-  coachName: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const t = useTranslations("coachPage");
-  const tParts = useTranslations("parts");
-  const queryClient = useQueryClient();
-  const [goal, setGoal] = useState<Goal>("fat_loss");
-  const [message, setMessage] = useState("");
-  const [contactBy, setContactBy] = useState<SendRequest["contact_by"]>("whatsapp");
-
-  const send = useMutation({
-    mutationFn: () => api.directory.sendRequest({ coach_id: coachId, goal, message: message.trim(), contact_by: contactBy }),
-    onSuccess: () => {
-      onOpenChange(false);
-      toast.success(t("sentToast"));
-      void queryClient.invalidateQueries({ queryKey: qk.coachPage(coachId) });
-    },
-  });
-
-  return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t("requestTitle", { coach: coachName })}
-      description={t("requestBody")}
-      footer={
-        <Button className="w-full sm:w-auto" disabled={send.isPending} onClick={() => send.mutate()}>
-          {send.isPending && <Loader2Icon className="animate-spin" />}
-          {t("send")}
-        </Button>
-      }
-    >
-      <div className="flex flex-col gap-5 pb-2">
-        <div className="flex flex-col gap-2">
-          <Label>{t("goal")}</Label>
-          <ToggleGroup type="single" variant="outline" value={goal} onValueChange={(v) => v && setGoal(v as Goal)} className="grid w-full grid-cols-2">
-            {goals.map((g) => (
-              <ToggleGroupItem key={g} value={g} className="h-11">
-                {tParts(`goalName.${g}`)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="req-msg">{t("message")}</Label>
-          <Textarea id="req-msg" maxLength={300} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t("messagePlaceholder")} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>{t("contactBy")}</Label>
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            value={contactBy}
-            onValueChange={(v) => v && setContactBy(v as SendRequest["contact_by"])}
-            className="w-full"
-          >
-            <ToggleGroupItem value="whatsapp" className="h-11 flex-1">
-              {t("contactWhatsapp")}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="app" className="h-11 flex-1">
-              {t("contactApp")}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-      </div>
-    </ResponsiveDialog>
   );
 }

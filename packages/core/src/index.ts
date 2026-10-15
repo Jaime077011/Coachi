@@ -10,6 +10,7 @@ import type { ClientsApi } from "./clients/api";
 import type { DirectoryApi } from "./directory/api";
 import type { JourneyApi } from "./journey/api";
 import type { NutritionApi } from "./nutrition/api";
+import type { TeamApi } from "./team/api";
 import type { TrainingApi } from "./training/api";
 import { mockAdmin } from "./admin/mock";
 import { mockAuth } from "./auth/mock";
@@ -19,12 +20,14 @@ import { mockClients } from "./clients/mock";
 import { mockDirectory } from "./directory/mock";
 import { mockJourney } from "./journey/mock";
 import { mockNutrition } from "./nutrition/mock";
+import { mockTeam } from "./team/mock";
 import { mockTraining } from "./training/mock";
 import "./mock/persist";
 
 export type Api = {
   auth: AuthApi;
   clients: ClientsApi;
+  team: TeamApi;
   directory: DirectoryApi;
   training: TrainingApi;
   nutrition: NutritionApi;
@@ -42,6 +45,7 @@ export const dataSource: DataSource = process.env.NEXT_PUBLIC_DATA_SOURCE === "s
 export const api: Api = {
   auth: mockAuth,
   clients: mockClients,
+  team: mockTeam,
   directory: mockDirectory,
   training: mockTraining,
   nutrition: mockNutrition,
@@ -60,13 +64,17 @@ export type { DirectoryApi } from "./directory/api";
 export type { JourneyApi, NewBodyMetric } from "./journey/api";
 export type { MealLogInput, NewFood, NutritionApi } from "./nutrition/api";
 export type { NewExercise, SetInput, TrainingApi } from "./training/api";
+export type { TeamApi, TeamMemberOption } from "./team/api";
 export {
   ApiError,
   getMockDataState,
+  getMockMemberRole,
   getMockRole,
   setMockDataState,
+  setMockMemberRole,
   setMockRole,
   type MockDataState,
+  type MockMemberRole,
   type MockRole,
 } from "./mock/runtime";
 export { resetMockDatabase } from "./mock/persist";

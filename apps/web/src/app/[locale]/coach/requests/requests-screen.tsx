@@ -3,7 +3,7 @@
 import { api } from "@coachi/core";
 import type { CoachRequest } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckIcon, InboxIcon, Loader2Icon, MessageCircleIcon, XIcon } from "lucide-react";
+import { CheckIcon, GlobeIcon, InboxIcon, Loader2Icon, MessageCircleIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { ScreenHeader } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip } from "@/components/coachi/status-chip";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -115,6 +116,9 @@ function RequestCard({ request: r, busy, onAccept, onDecline }: { request: Coach
   const t = useTranslations("requests");
   const tParts = useTranslations("parts");
   const fmt = useFmt();
+  const { coachId } = useMe();
+  const packages = useQuery({ queryKey: qk.coachPackages(coachId), queryFn: () => api.directory.myPackages(coachId), enabled: !!coachId && !!r.package_id });
+  const packageName = packages.data?.find((p) => p.id === r.package_id)?.name;
   return (
     <li>
       <Card>
@@ -125,6 +129,12 @@ function RequestCard({ request: r, busy, onAccept, onDecline }: { request: Coach
                 <bdi>{r.client_name}</bdi>
               </p>
               <p className="text-xs text-hint">{t("received", { when: fmt.relative(r.created_at) })}</p>
+              {r.source === "landing" && (
+                <Badge variant="outline" className="mt-1.5 gap-1 border-primary/40 text-primary">
+                  <GlobeIcon aria-hidden />
+                  {packageName ? t("fromPageWithPackage", { name: packageName }) : t("fromPage")}
+                </Badge>
+              )}
             </div>
             {r.status !== "sent" && (
               <StatusChip tone={r.status === "accepted" ? "success" : "neutral"}>{t(`status_${r.status}`)}</StatusChip>

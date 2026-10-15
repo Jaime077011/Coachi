@@ -51,6 +51,7 @@ function PlanCard({ data }: { data: PlanWithFeatures }) {
   });
 
   const limit = value("client_limit");
+  const seats = value("team_seats");
   return (
     <Card>
       <CardHeader>
@@ -81,6 +82,27 @@ function PlanCard({ data }: { data: PlanWithFeatures }) {
             />
             <label className="flex items-center gap-2 text-sm">
               <Switch checked={limit === null} onCheckedChange={(on) => update.mutate({ key: "client_limit", value: on ? null : 20 })} />
+              {t("unlimited")}
+            </label>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={`seats-${data.plan.id}`}>{t("teamSeats")}</Label>
+          <div className="flex items-center gap-3">
+            <Input
+              id={`seats-${data.plan.id}`}
+              dir="ltr"
+              inputMode="numeric"
+              className="h-10 w-24 tabular-nums"
+              disabled={seats === null}
+              defaultValue={typeof seats === "number" ? seats : ""}
+              onBlur={(e) => {
+                const n = Math.max(0, Number(e.target.value) || 0);
+                if (n !== seats) update.mutate({ key: "team_seats", value: n });
+              }}
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={seats === null} onCheckedChange={(on) => update.mutate({ key: "team_seats", value: on ? null : 1 })} />
               {t("unlimited")}
             </label>
           </div>

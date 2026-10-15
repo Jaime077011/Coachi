@@ -9,6 +9,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/use-can";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,6 +93,7 @@ function Section({ clientId, details, fields }: { clientId: string; details: Cli
   const t = useTranslations("clientFile");
   const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
+  const canEdit = useCan()("client_edit");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Partial<Record<Key, string>>>({});
 
@@ -136,24 +138,26 @@ function Section({ clientId, details, fields }: { clientId: string; details: Cli
           ),
         )}
       </dl>
-      <div className="flex gap-2">
-        {editing ? (
-          <>
-            <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
-              {save.isPending && <Loader2Icon className="animate-spin" />}
-              {t("saveEdit")}
+      {canEdit && (
+        <div className="flex gap-2">
+          {editing ? (
+            <>
+              <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}>
+                {save.isPending && <Loader2Icon className="animate-spin" />}
+                {t("saveEdit")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => (setEditing(false), setDraft({}))}>
+                {tCommon("cancel")}
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+              <PencilIcon data-icon="inline-start" />
+              {t("edit")}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => (setEditing(false), setDraft({}))}>
-              {tCommon("cancel")}
-            </Button>
-          </>
-        ) : (
-          <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
-            <PencilIcon data-icon="inline-start" />
-            {t("edit")}
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

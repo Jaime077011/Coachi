@@ -12,6 +12,8 @@ export type Plan = z.infer<typeof plan>;
 /** Plans give features, not fixed limits. Code asks "can this org do X?" in one place. */
 export const featureKey = z.enum([
   "client_limit",
+  /** Helpers on the coach's team, owner not counted. */
+  "team_seats",
   "nutrition",
   "directory_listing",
   "ai_credits",

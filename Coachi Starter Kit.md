@@ -103,9 +103,10 @@ coachi/
 
 | Area | Path | Layout |
 | --- | --- | --- |
-| Login and join | `/login`, `/join/[code]` | Plain, centered |
+| Login and join | `/login`, `/join/[code]` (client and team invites) | Plain, centered |
+| Coach landing page (public) | `/c/[slug]` | Its own page, no shell, no login |
 | Client | `/app/today`, `/app/plan`, `/app/journey`, `/app/me`, `/app/workout/[dayId]`, `/app/meals`, `/app/check-in`, `/app/intake`, `/app/coaches`, `/app/coaches/[id]` | Bottom tab bar |
-| Coach | `/coach/today`, `/coach/clients`, `/coach/clients/[id]`, `/coach/plans`, `/coach/plans/workout/[id]`, `/coach/plans/nutrition/[id]`, `/coach/requests`, `/coach/library`, `/coach/check-in-form`, `/coach/profile`, `/coach/subscription` | Tab bar on phone, sidebar on laptop |
+| Coach | `/coach/today`, `/coach/clients`, `/coach/clients/[id]`, `/coach/plans`, `/coach/plans/workout/[id]`, `/coach/plans/nutrition/[id]`, `/coach/requests`, `/coach/library`, `/coach/check-in-form`, `/coach/profile`, `/coach/team`, `/coach/subscription` | Tab bar on phone, sidebar on laptop |
 | Super admin | `/admin/overview`, `/admin/coaches`, `/admin/plans`, `/admin/directory`, `/admin/libraries`, `/admin/audit`, `/admin/settings` | Sidebar |
 | Dev only | `/dev/kit` | Plain |
 
@@ -174,7 +175,9 @@ Build the client screens first, because they're the core of the product and the 
 - [ ] Requests
 - [ ] Library (exercises, foods)
 - [ ] Check-in form builder
-- [ ] Public profile with live preview
+- [ ] Public profile with live preview, landing page settings, and packages editor
+- [ ] Landing page `/c/[slug]` (public, request with login)
+- [ ] Team: members, invite helper, roles, seats; assign clients; menus and edit buttons follow the role
 - [ ] Subscription
 
 **Super admin screens**
@@ -275,12 +278,12 @@ npx supabase db push         # send migrations to staging, then production
 
 | Days | Work |
 | --- | --- |
-| 18 | Auth and orgs: profiles, organizations, org\_members, roles. Email login with magic link. Middleware sends each role to its area |
+| 18 | Auth and orgs: profiles, organizations, org\_members with team roles, roles. Phone code and email magic link login. Middleware sends each role to its area. Team invites |
 | 19 | Billing: plans, plan\_features, subscriptions, payments. Swap the super admin screens |
-| 20 | Clients: clients, coach\_clients, client\_details, coach\_notes, invites. Swap the coach client screens |
+| 20 | Clients: clients, coach\_clients (with assigned\_member\_id), client\_details, coach\_notes, invites. Row rules by team role. Swap the coach client screens and Team |
 | 21 | Training: exercises, programs, days, workout and set logs. Swap the builder and workout mode |
 | 22 | Nutrition: foods, plans, meals, items, meal logs. Swap the builder and meals |
-| 23 | Progress, check-ins, directory, requests. Swap those screens |
+| 23 | Progress, check-ins, directory, coach\_packages, requests. Public read of published landing pages. Swap those screens and `/c/[slug]` (server-rendered for search engines) |
 | 24 | Journey: events table, Inngest jobs for milestones, streaks, daily stats |
 | 25 | Storage buckets: avatars and logos (public), progress photos and receipts (private, signed links). Offline sync of sets with Dexie |
 | 26 | Seed data: 150 exercises, 200 Egyptian foods, starter templates, a demo coach. Turn `NEXT_PUBLIC_DATA_SOURCE` to `supabase` everywhere |
@@ -307,6 +310,7 @@ Real people, real phones, real data. Launch when your friend and his clients can
 - [ ] Watch them use it once without helping. Fix every place they stop
 - [ ] Phone checklist from the UI Spec, all ticked
 - [ ] Security check: log in as one coach and try to open another coach's client by URL. It must fail
+- [ ] Security check: log in as an assistant and try to open an unassigned client or edit a plan. It must fail
 - [ ] Backups on, Sentry alerts to your email, PostHog dashboard for daily active clients
 - [ ] Arm icon credit on the About page (game-icons.net, CC BY 3.0)
 - [ ] Launch to 3 to 5 coaches

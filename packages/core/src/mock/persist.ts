@@ -5,7 +5,7 @@
 import * as data from "./data";
 import { onMockWrite } from "./runtime";
 
-const VERSION = 2;
+const VERSION = 3;
 const KEY = `coachi.mock.db.v${VERSION}`;
 
 const tables = Object.entries(data as Record<string, unknown>).filter(

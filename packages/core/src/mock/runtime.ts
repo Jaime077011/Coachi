@@ -53,6 +53,29 @@ export function setMockRole(role: MockRole) {
   }
 }
 
+export type MockMemberRole = "owner" | "head_coach" | "coach" | "assistant";
+
+const MEMBER_KEY = "coachi.dev.memberRole";
+
+/** Coach role only: which member of the demo coach's team is signed in. */
+export function getMockMemberRole(): MockMemberRole {
+  try {
+    const stored = globalThis.localStorage?.getItem(MEMBER_KEY);
+    if (stored === "head_coach" || stored === "coach" || stored === "assistant") return stored;
+  } catch {
+    // Fall through to the default.
+  }
+  return "owner";
+}
+
+export function setMockMemberRole(role: MockMemberRole) {
+  try {
+    globalThis.localStorage?.setItem(MEMBER_KEY, role);
+  } catch {
+    // Ignore.
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     public code: "network" | "not_found" | "forbidden" | "limit_reached" | "invalid",
