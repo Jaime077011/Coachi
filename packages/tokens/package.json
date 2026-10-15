@@ -1,0 +1,17 @@
+{
+  "name": "@coachi/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./theme.css"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@coachi/typescript-config": "workspace:*",
+    "typescript": "7.0.2"
+  }
+}

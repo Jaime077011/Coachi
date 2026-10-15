@@ -1,0 +1,109 @@
+/**
+ * Shared behavior for every mock module: a small delay so loading states show, and a
+ * "data state" the dev switcher can flip to test empty, error, and slow screens.
+ */
+
+export type MockDataState = "normal" | "empty" | "error" | "slow";
+
+const STORAGE_KEY = "coachi.dev.dataState";
+let dataState: MockDataState = readStoredState();
+
+function readStoredState(): MockDataState {
+  try {
+    const stored = globalThis.localStorage?.getItem(STORAGE_KEY);
+    if (stored === "empty" || stored === "error" || stored === "slow") return stored;
+  } catch {
+    // Storage can be blocked (private mode); fall back to normal.
+  }
+  return "normal";
+}
+
+export function getMockDataState(): MockDataState {
+  return dataState;
+}
+
+export function setMockDataState(next: MockDataState) {
+  dataState = next;
+  try {
+    globalThis.localStorage?.setItem(STORAGE_KEY, next);
+  } catch {
+    // Ignore: the state still applies for this page view.
+  }
+}
+
+export type MockRole = "client" | "coach" | "super_admin";
+
+const ROLE_KEY = "coachi.dev.role";
+
+export function getMockRole(): MockRole {
+  try {
+    const stored = globalThis.localStorage?.getItem(ROLE_KEY);
+    if (stored === "client" || stored === "super_admin") return stored;
+  } catch {
+    // Fall through to the default.
+  }
+  return "coach";
+}
+
+export function setMockRole(role: MockRole) {
+  try {
+    globalThis.localStorage?.setItem(ROLE_KEY, role);
+  } catch {
+    // Ignore.
+  }
+}
+
+export class ApiError extends Error {
+  constructor(
+    public code: "network" | "not_found" | "forbidden" | "limit_reached" | "invalid",
+    message: string = code,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Wraps a mock read. `empty` is what the call returns when the dev switcher is on "Empty".
+ * Writes pass `empty` as undefined so they still work in the empty state.
+ */
+export async function mockRead<T>(produce: () => T, empty?: T): Promise<T> {
+  await sleep(dataState === "slow" ? 2500 : 250 + Math.random() * 250);
+  if (dataState === "error") throw new ApiError("network");
+  if (dataState === "empty" && empty !== undefined) return structuredClone(empty);
+  return structuredClone(produce());
+}
+
+/** Auth reads ignore the dev data state: "error" and "empty" are for testing screens, not login. */
+export async function mockAuthRead<T>(produce: () => T): Promise<T> {
+  await sleep(150);
+  return structuredClone(produce());
+}
+
+let afterWrite: (() => void) | null = null;
+/** Lets the persistence layer save the mock database after every write. */
+export function onMockWrite(fn: () => void) {
+  afterWrite = fn;
+}
+
+export async function mockWrite<T>(produce: () => T): Promise<T> {
+  await sleep(dataState === "slow" ? 2500 : 300);
+  if (dataState === "error") throw new ApiError("network");
+  const result = structuredClone(produce());
+  afterWrite?.();
+  return result;
+}
+
+export const newId = () => crypto.randomUUID();
+export const nowIso = () => new Date().toISOString();
+
+export const daysAgo = (days: number, hour = 9) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(hour, 0, 0, 0);
+  return d.toISOString();
+};
+
+export const dateOnly = (iso: string) => iso.slice(0, 10);

@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@coachi/tokens/theme.css";
+
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-hint: var(--hint);
+  --color-disabled: var(--disabled);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Display (Anton / Badeen Display) for big moments, UI (Archivo / Cairo) for everything else. */
+  --font-sans: var(--coachi-font-ui);
+  --font-heading: var(--coachi-font-ui);
+  --font-display: var(--coachi-font-display);
+  --font-stat: var(--font-anton), "Anton", sans-serif;
+
+  /* Brand corners: inputs 8, buttons 12, cards 16, sheets 24. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
+  --radius-4xl: 40px;
+
+  --shadow-card: var(--card-shadow);
+}
+
+/* Fire gradient: progress, streaks, milestones, the mark. Never behind text. */
+@utility bg-fire {
+  background-image: var(--fire);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    line-height: 1.55;
+  }
+  :lang(ar) body {
+    line-height: 1.8;
+  }
+  /* Lucide icons: outline, 1.75 px stroke (Brand Guidelines > Touch and icons). */
+  .lucide {
+    stroke-width: 1.75;
+  }
+  /* 16 px minimum so iPhone Safari doesn't zoom into fields. */
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}

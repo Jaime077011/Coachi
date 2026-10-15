@@ -1,0 +1,20 @@
+{
+  "name": "@coachi/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@coachi/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@coachi/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "typescript": "7.0.2"
+  }
+}
