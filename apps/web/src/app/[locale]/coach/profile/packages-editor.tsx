@@ -39,7 +39,7 @@ export const fromDrafts = (drafts: PackageDraft[]): PackageInput[] =>
       highlighted: d.highlighted,
     }));
 
-/** What the coach sells, up to MAX_PACKAGES. Only one can be "Most popular". */
+/** What the coach sells, up to MAX_PACKAGES. Only one can be "Most popular". The title comes from the section around it. */
 export function PackagesEditor({ drafts, onChange }: { drafts: PackageDraft[]; onChange: (next: PackageDraft[]) => void }) {
   const t = useTranslations("landing");
   const update = (i: number, patch: Partial<PackageDraft>) =>
@@ -58,16 +58,15 @@ export function PackagesEditor({ drafts, onChange }: { drafts: PackageDraft[]; o
 
   return (
     <div className="flex flex-col gap-3">
-      <div>
-        <Label className="text-[15px] font-semibold">{t("packages")}</Label>
-        <p className="text-sm text-muted-foreground">{t("packagesBody", { max: MAX_PACKAGES })}</p>
-      </div>
       {drafts.map((d, i) => (
-        <fieldset key={d.key} className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+        <fieldset key={d.key} className="flex flex-col gap-3 rounded-lg border bg-background p-4 has-[[role=switch][data-state=checked]]:border-primary">
           <legend className="sr-only">{d.name || t("packageN", { n: i + 1 })}</legend>
+          <p aria-hidden className="text-xs font-bold tracking-[0.12em] text-hint uppercase">
+            {t("packageN", { n: i + 1 })}
+          </p>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`pk-name-${d.key}`}>{t("packageName")}</Label>
-            <Input id={`pk-name-${d.key}`} maxLength={60} value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder={t("packageNamePlaceholder")} />
+            <Input id={`pk-name-${d.key}`} dir="auto" maxLength={60} value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder={t("packageNamePlaceholder")} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
@@ -112,8 +111,8 @@ export function PackagesEditor({ drafts, onChange }: { drafts: PackageDraft[]; o
       {drafts.length < MAX_PACKAGES && (
         <Button
           type="button"
-          variant="secondary"
-          className="w-fit"
+          variant="outline"
+          className="h-12 w-full border-2 border-dashed"
           onClick={() => onChange([...drafts, { key: crypto.randomUUID(), name: "", egp: "", weeks: "4", includes: "", highlighted: false }])}
         >
           <PlusIcon data-icon="inline-start" />

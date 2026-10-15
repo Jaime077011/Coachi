@@ -33,7 +33,7 @@ export function LandingSettings({
   const url = `${origin}/${locale}/c/${savedSlug}`;
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
+    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-3">
           <GlobeIcon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
@@ -106,10 +106,12 @@ export function LandingSettings({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="headline">{t("headline")}</Label>
-        <Input id="headline" maxLength={120} value={value.headline ?? ""} onChange={(e) => onChange({ headline: e.target.value || null })} placeholder={t("headlinePlaceholder")} />
+        <Input id="headline" dir="auto" maxLength={120} value={value.headline ?? ""} onChange={(e) => onChange({ headline: e.target.value || null })} placeholder={t("headlinePlaceholder")} />
       </div>
 
-      <ImageField label={t("cover")} shape="wide" value={value.cover_url} onChange={(url) => onChange({ cover_url: url })} />
+      <div id="f-cover">
+        <ImageField label={t("cover")} shape="wide" value={value.cover_url} onChange={(url) => onChange({ cover_url: url })} />
+      </div>
 
       <div className="flex items-center justify-between gap-4">
         <div>
