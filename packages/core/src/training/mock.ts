@@ -2,6 +2,7 @@ import type { ProgramFull } from "@coachi/validation";
 import type { TrainingApi } from "./api";
 import { DEMO, exercises, programDays, programExercises, programs, setLogs, workoutLogs } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { requireActiveSubscription, requireMember } from "../mock/session";
 
 const stamp = () => ({ created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
 
@@ -63,6 +64,7 @@ export const mockTraining: TrainingApi = {
 
   addExercise: (input) =>
     mockWrite(() => {
+      requireMember("library_add");
       const exercise = { ...input, ...stamp(), id: newId(), org_id: DEMO.orgId, image_url: null };
       exercises.push(exercise);
       return exercise;
@@ -80,21 +82,25 @@ export const mockTraining: TrainingApi = {
 
   saveProgram: (full) =>
     mockWrite(() => {
+      requireMember("plans_edit");
+      if (!programs.some((p) => p.id === full.program.id)) requireActiveSubscription();
       replaceProgram({ ...full, program: { ...full.program, updated_at: nowIso() } });
       return buildProgram(full.program.id);
     }),
 
   assign: (programId, clientIds) =>
-    mockWrite(() =>
-      clientIds.map((clientId) => {
+    mockWrite(() => {
+      requireMember("plans_edit");
+      requireActiveSubscription();
+      return clientIds.map((clientId) => {
         // A client has one current program: end the old one by soft-deleting it.
         for (const p of programs) if (p.client_id === clientId && !p.deleted_at) p.deleted_at = nowIso();
         const copy = copyProgram(buildProgram(programId), clientId);
         copy.program.starts_on = nowIso().slice(0, 10);
         replaceProgram(copy);
         return copy.program;
-      }),
-    ),
+      });
+    }),
 
   workoutDay: (clientId, dayId) =>
     mockRead(() => {

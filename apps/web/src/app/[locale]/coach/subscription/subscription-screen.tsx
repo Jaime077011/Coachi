@@ -3,7 +3,7 @@
 import { api } from "@coachi/core";
 import type { SubscriptionStatus } from "@coachi/validation";
 import { useQuery } from "@tanstack/react-query";
-import { CircleCheckIcon, CircleMinusIcon, LockIcon, MessageCircleIcon } from "lucide-react";
+import { CircleCheckIcon, CircleMinusIcon, MessageCircleIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SUPPORT_WHATSAPP } from "@/components/coach/limit-notice";
 import { QueryState } from "@/components/coachi/query-state";
@@ -37,12 +37,6 @@ export function SubscriptionScreen() {
           const has = (key: string) => features.find((f) => f.key === key)?.value === true;
           return (
             <div className="grid gap-6 lg:grid-cols-2">
-              {s.subscription.status === "expired" && (
-                <p className="flex gap-2 rounded-lg border border-destructive/40 bg-destructive/12 p-4 text-sm font-semibold text-destructive lg:col-span-2">
-                  <LockIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-                  {t("expiredBanner")}
-                </p>
-              )}
               <Card>
                 <CardContent className="flex flex-col gap-5">
                   <div className="flex items-start justify-between gap-3">

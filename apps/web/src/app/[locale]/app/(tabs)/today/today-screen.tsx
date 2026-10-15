@@ -65,6 +65,15 @@ export function TodayScreen() {
             />
           ) : (
             <>
+              {data.coach.logo_url && (
+                <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- coach's logo from storage */}
+                  <img src={data.coach.logo_url} alt="" className="size-10 rounded-md object-cover" />
+                  <span className="text-sm text-muted-foreground">
+                    {t.rich("coachedBy", { coach: data.coach.name, b: (chunks) => <bdi className="font-semibold text-foreground">{chunks}</bdi> })}
+                  </span>
+                </div>
+              )}
               {data.week.length > 0 && <WeekStrip days={data.week} />}
               <WorkoutCard data={data} />
               {data.checkin_due && <CheckinCard />}

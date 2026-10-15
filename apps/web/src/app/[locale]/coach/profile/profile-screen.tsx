@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CoachCard } from "@/components/coachi/coach-card";
+import { ImageField } from "@/components/coachi/image-field";
 import { PackageCard } from "@/components/coachi/package-card";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
@@ -18,22 +19,26 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useMe } from "@/hooks/use-session";
+import { initials } from "@/lib/initials";
 import { qk } from "@/lib/query-keys";
 import { LandingSettings } from "./landing-settings";
 import { PackagesEditor, fromDrafts, toDraft, type PackageDraft } from "./packages-editor";
 
 export function ProfileScreen() {
   const t = useTranslations("profile");
-  const { coachId } = useMe();
+  const { coachId, orgId } = useMe();
   const profile = useQuery({ queryKey: qk.coachProfile(coachId), queryFn: () => api.directory.myProfile(coachId), enabled: !!coachId });
   const packages = useQuery({ queryKey: qk.coachPackages(coachId), queryFn: () => api.directory.myPackages(coachId), enabled: !!coachId });
+  const brand = useQuery({ queryKey: qk.brand(orgId), queryFn: () => api.directory.brand(orgId), enabled: !!orgId });
   return (
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} />
       <QueryState query={profile}>
         {(p) => (
           <QueryState query={packages}>
-            {(list) => <ProfileForm initial={p} initialPackages={list} />}
+            {(list) => (
+              <QueryState query={brand}>{(b) => <ProfileForm initial={p} initialPackages={list} brand={b} orgId={orgId} />}</QueryState>
+            )}
           </QueryState>
         )}
       </QueryState>
@@ -41,7 +46,17 @@ export function ProfileScreen() {
   );
 }
 
-function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; initialPackages: CoachPackage[] }) {
+function ProfileForm({
+  initial,
+  initialPackages,
+  brand,
+  orgId,
+}: {
+  initial: CoachProfile;
+  initialPackages: CoachPackage[];
+  brand: { logo_url: string | null; branded_app: boolean };
+  orgId: string;
+}) {
   const t = useTranslations("profile");
   const tParts = useTranslations("parts");
   const tCp = useTranslations("coachPage");
@@ -50,6 +65,7 @@ function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; init
   const [certs, setCerts] = useState(initial.certificates.join(", "));
   const [drafts, setDrafts] = useState<PackageDraft[]>(() => initialPackages.map(toDraft));
   const [savedSlug, setSavedSlug] = useState(initial.slug);
+  const [logo, setLogo] = useState(brand.logo_url);
   const [slugError, setSlugError] = useState<"invalid" | "taken" | null>(null);
   const set = <K extends keyof CoachProfile>(key: K, value: CoachProfile[K]) => setP((x) => ({ ...x, [key]: value }));
   const egp = (piasters: number | null) => (piasters == null ? "" : String(piasters / 100));
@@ -62,6 +78,7 @@ function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; init
         certificates: certs.split(/[,،]/).map((c) => c.trim()).filter(Boolean),
       });
       const packages = await api.directory.savePackages(p.id, fromDrafts(drafts));
+      if (logo !== brand.logo_url) await api.directory.setLogo(orgId, logo);
       return { saved, packages };
     },
     onSuccess: ({ saved, packages }) => {
@@ -71,6 +88,7 @@ function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; init
       queryClient.setQueryData(qk.coachPackages(p.id), packages);
       void queryClient.invalidateQueries({ queryKey: qk.coachProfile(p.id) });
       void queryClient.invalidateQueries({ queryKey: qk.landing(saved.slug) });
+      void queryClient.invalidateQueries({ queryKey: qk.brand(orgId) });
     },
     onError: (error) => {
       if (error instanceof ApiError && error.message === "slug_taken") setSlugError("taken");
@@ -124,6 +142,17 @@ function ProfileForm({ initial, initialPackages }: { initial: CoachProfile; init
           <Switch id="open" checked={p.open_for_clients} onCheckedChange={(v) => set("open_for_clients", v)} />
         </div>
 
+        <ImageField
+          label={t("photo")}
+          shape="square"
+          value={p.photo_url}
+          onChange={(url) => set("photo_url", url)}
+          fallback={<span className="text-3xl font-bold">{initials(p.name)}</span>}
+        />
+        <div className="flex flex-col gap-1.5">
+          <ImageField label={t("logo")} shape="square" value={logo} onChange={setLogo} />
+          <p className="text-xs text-muted-foreground">{brand.branded_app ? t("logoBody") : t("logoNotOnPlan")}</p>
+        </div>
         <F id="name" label={t("name")}>
           <Input id="name" value={p.name} onChange={(e) => set("name", e.target.value)} />
         </F>

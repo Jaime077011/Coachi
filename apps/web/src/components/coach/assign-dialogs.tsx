@@ -10,6 +10,7 @@ import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useMe } from "@/hooks/use-session";
+import { useApiErrorToast } from "@/lib/api-error";
 import { qk } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,9 @@ export type PlanKind = "workout" | "nutrition";
 function useAssign(kind: PlanKind) {
   const { coachId } = useMe();
   const queryClient = useQueryClient();
+  const showError = useApiErrorToast();
   return useMutation({
+    onError: showError,
     mutationFn: async ({ planId, clientIds }: { planId: string; clientIds: string[] }) => {
       if (kind === "workout") await api.training.assign(planId, clientIds);
       else await api.nutrition.assign(planId, clientIds);

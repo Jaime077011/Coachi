@@ -49,6 +49,7 @@ export const coachMore: NavItem[] = [
   { href: "/coach/profile", label: "coach.profile", icon: IdCardIcon, permission: "profile" },
   { href: "/coach/team", label: "coach.team", icon: UsersIcon, permission: "team" },
   { href: "/coach/subscription", label: "coach.subscription", icon: CreditCardIcon, permission: "subscription" },
+  { href: "/coach/settings", label: "coach.settings", icon: SettingsIcon },
 ];
 
 export const adminNav: NavItem[] = [

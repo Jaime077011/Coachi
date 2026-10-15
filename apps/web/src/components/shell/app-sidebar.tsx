@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { localeDirection } from "@coachi/i18n";
 import { Logo } from "@/components/brand/logo";
 import { DemoBadge } from "@/components/brand/demo-badge";
+import { useCan } from "@/hooks/use-can";
 import {
   Sidebar,
   SidebarContent,
@@ -17,8 +18,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useCan } from "@/hooks/use-can";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useSignOut } from "./account-settings";
 import { isActive, navSets, type NavSet } from "./nav-config";
 
 /** Desktop side menu: on the right in Arabic. Active item: surface-2 fill + 3 px primary bar on the inner edge. */
@@ -40,6 +41,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
   const t = useTranslations("nav");
   const tShell = useTranslations("shell");
   const locale = useLocale();
+  const signOut = useSignOut();
 
   return (
     <Sidebar side={localeDirection[locale] === "rtl" ? "right" : "left"}>
@@ -78,11 +80,9 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/login">
-                <LogOutIcon aria-hidden className="rtl:rotate-180" />
-                <span>{tShell("signOut")}</span>
-              </Link>
+            <SidebarMenuButton onClick={signOut}>
+              <LogOutIcon aria-hidden className="rtl:rotate-180" />
+              <span>{tShell("signOut")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

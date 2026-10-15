@@ -25,6 +25,9 @@ export interface DirectoryApi {
   /** Fails with invalid "slug_taken" when another coach has the link. */
   updateProfile(coachId: string, patch: Partial<CoachProfile>): Promise<CoachProfile>;
   myPackages(coachId: string): Promise<CoachPackage[]>;
+  /** The org logo, shown in the client app when the plan has branded_app. */
+  brand(orgId: string): Promise<{ logo_url: string | null; branded_app: boolean }>;
+  setLogo(orgId: string, logoUrl: string | null): Promise<void>;
   /** Replaces the whole list, in order. Max MAX_PACKAGES. */
   savePackages(coachId: string, packages: PackageInput[]): Promise<CoachPackage[]>;
 }

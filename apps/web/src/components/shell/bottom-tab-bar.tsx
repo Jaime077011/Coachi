@@ -1,6 +1,7 @@
 "use client";
 
 import { EllipsisIcon } from "lucide-react";
+import { useCan } from "@/hooks/use-can";
 import { useTranslations } from "next-intl";
 import { Suspense, useState } from "react";
 import {
@@ -10,7 +11,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { useCan } from "@/hooks/use-can";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { isActive, navSets, type NavSet } from "./nav-config";

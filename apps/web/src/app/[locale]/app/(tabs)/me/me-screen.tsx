@@ -1,24 +1,18 @@
 "use client";
 
 import { api } from "@coachi/core";
-import type { Locale } from "@coachi/i18n";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DownloadIcon, LogOutIcon, MessageCircleIcon } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
+import { useQuery } from "@tanstack/react-query";
+import { DownloadIcon, MessageCircleIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/coachi/screen-header";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { DisplaySettings, ProfileCard, SignOutButton } from "@/components/shell/account-settings";
 import { useMe } from "@/hooks/use-session";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { initials } from "@/lib/initials";
 import { qk } from "@/lib/query-keys";
 import { whatsappUrl } from "@/lib/whatsapp";
 
@@ -53,12 +47,7 @@ function usePref(key: string, fallback: boolean) {
 
 export function MeScreen() {
   const t = useTranslations("me");
-  const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
-  const queryClient = useQueryClient();
-  const { theme, setTheme } = useTheme();
-  const { session, clientId } = useMe();
+  const { clientId } = useMe();
   const today = useQuery({ queryKey: qk.today(clientId), queryFn: () => api.journey.today(clientId), enabled: !!clientId });
   const [workoutReminder, setWorkoutReminder] = usePref("workoutReminder", true);
   const [mealReminder, setMealReminder] = usePref("mealReminder", false);
@@ -68,61 +57,9 @@ export function MeScreen() {
     <div className="flex flex-col gap-6">
       <ScreenHeader title={t("title")} />
 
-      {session && (
-        <Card>
-          <CardContent className="flex items-center gap-4">
-            <Avatar className="size-14">
-              <AvatarFallback className="bg-secondary text-lg font-bold">{initials(session.profile.name)}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold">
-                <bdi>{session.profile.name}</bdi>
-              </p>
-              {session.profile.phone && (
-                <p className="text-sm text-muted-foreground" dir="ltr">
-                  {session.profile.phone}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ProfileCard />
 
-      <Card>
-        <CardContent className="flex flex-col gap-5">
-          <Row label={t("language")}>
-            <ToggleGroup
-              type="single"
-              variant="outline"
-              value={locale}
-              onValueChange={(v) => v && router.replace(pathname, { locale: v as Locale })}
-            >
-              <ToggleGroupItem value="ar" lang="ar" className="px-4">
-                عربي
-              </ToggleGroupItem>
-              <ToggleGroupItem value="en" lang="en" className="px-4">
-                English
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </Row>
-          <Separator />
-          <Row label={t("theme")}>
-            <ToggleGroup type="single" variant="outline" value={theme ?? "dark"} onValueChange={(v) => v && setTheme(v)}>
-              <ToggleGroupItem value="dark" className="px-3">
-                {t("themeDark")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="light" className="px-3">
-                {t("themeLight")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="system" className="px-3">
-                {t("themeSystem")}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </Row>
-          <Separator />
-          <p className="text-sm text-muted-foreground">{t("units")}</p>
-        </CardContent>
-      </Card>
+      <DisplaySettings footer={<p className="text-sm text-muted-foreground">{t("units")}</p>} />
 
       <Card>
         <CardContent className="flex flex-col gap-4">
@@ -145,28 +82,8 @@ export function MeScreen() {
           <DownloadIcon data-icon="inline-start" />
           {t("export")}
         </Button>
-        <Button
-          variant="ghost"
-          className="justify-start text-destructive hover:text-destructive"
-          onClick={() => {
-            void api.auth.signOut();
-            queryClient.clear();
-            router.replace("/login");
-          }}
-        >
-          <LogOutIcon data-icon="inline-start" className="rtl:rotate-180" />
-          {t("logout")}
-        </Button>
+        <SignOutButton />
       </div>
-    </div>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <span className="font-semibold">{label}</span>
-      {children}
     </div>
   );
 }

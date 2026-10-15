@@ -1,6 +1,7 @@
 import type { CheckinsApi } from "./api";
 import { DEMO, checkinForms, checkins, coachClients } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { requireMember } from "../mock/session";
 
 const stamp = () => ({ created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
 
@@ -11,6 +12,7 @@ export const mockCheckins: CheckinsApi = {
 
   saveForm: (coachId, input) =>
     mockWrite(() => {
+      requireMember("checkin_form");
       const existing = formOf(coachId);
       if (existing) {
         Object.assign(existing, input, { updated_at: nowIso() });
@@ -45,6 +47,7 @@ export const mockCheckins: CheckinsApi = {
 
   reply: (checkinId, text) =>
     mockWrite(() => {
+      requireMember("checkins_reply");
       const checkin = checkins.find((c) => c.id === checkinId);
       if (!checkin) throw new ApiError("not_found");
       checkin.coach_reply = text;

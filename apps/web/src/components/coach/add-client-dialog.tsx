@@ -56,6 +56,7 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
   };
 
   const limit = invite.error instanceof ApiError && invite.error.code === "limit_reached";
+  const inactive = invite.error instanceof ApiError && invite.error.code === "inactive";
   const result = invite.data;
 
   return (
@@ -92,7 +93,7 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
               </a>
             </Button>
           </div>
-        ) : limit ? undefined : (
+        ) : limit || inactive ? undefined : (
           <Button type="submit" form="add-client" className="w-full sm:w-auto" disabled={invite.isPending}>
             {invite.isPending && <Loader2Icon className="animate-spin" />}
             {t("create")}
@@ -104,8 +105,8 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
         <p className="rounded-md border bg-secondary p-3 text-sm break-all" dir="ltr">
           {result.inviteUrl}
         </p>
-      ) : limit ? (
-        <LimitNotice />
+      ) : limit || inactive ? (
+        <LimitNotice reason={inactive ? "inactive" : "limit"} />
       ) : (
         <form id="add-client" onSubmit={submit} className="flex flex-col gap-4 pb-2" noValidate>
           <div className="flex flex-col gap-1.5">

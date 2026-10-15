@@ -8,6 +8,8 @@ import {
   coachProfiles,
   coachRequests,
   coachResults,
+  organizations,
+  planFeatures,
   profiles,
   subscriptions,
 } from "../mock/data";
@@ -161,6 +163,24 @@ export const mockDirectory: DirectoryApi = {
     }),
 
   myPackages: (coachId) => mockRead(() => packagesOf(coachId), []),
+
+  brand: (orgId) =>
+    mockRead(() => {
+      const sub = subscriptions.find((s) => s.org_id === orgId);
+      return {
+        logo_url: organizations.find((o) => o.id === orgId)?.logo_url ?? null,
+        branded_app: planFeatures.find((f) => f.plan_id === sub?.plan_id && f.key === "branded_app")?.value === true,
+      };
+    }),
+
+  setLogo: (orgId, logoUrl) =>
+    mockWrite(() => {
+      requireMember("profile");
+      const org = organizations.find((o) => o.id === orgId);
+      if (!org) throw new ApiError("not_found");
+      org.logo_url = logoUrl;
+      org.updated_at = nowIso();
+    }),
 
   savePackages: (coachId, input) =>
     mockWrite(() => {

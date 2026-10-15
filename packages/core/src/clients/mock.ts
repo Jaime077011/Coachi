@@ -20,7 +20,7 @@ import {
   workoutLogs,
 } from "../mock/data";
 import { ApiError, dateOnly, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
-import { canSeeClient, mockSession, requireMember, visibleLinks } from "../mock/session";
+import { canSeeClient, mockSession, requireActiveSubscription, requireMember, visibleLinks } from "../mock/session";
 
 /** Coach side: like a row rule, a team member only reads clients he may see. */
 const ensureVisible = (clientId: string) => {
@@ -86,7 +86,8 @@ export const mockClients: ClientsApi = {
         details: clientDetails.find((d) => d.client_id === clientId) ?? null,
         notes: coachNotes
           .filter((n) => n.client_id === clientId && !n.deleted_at)
-          .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.created_at.localeCompare(a.created_at)),
+          .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.created_at.localeCompare(a.created_at))
+          .map((n) => ({ ...n, author_name: profiles.find((p) => p.id === n.author_id)?.name ?? null })),
         started_at: link?.started_at ?? client.created_at,
         assigned_member_id: link?.assigned_member_id ?? null,
       };
@@ -95,6 +96,7 @@ export const mockClients: ClientsApi = {
   invite: (input) =>
     mockWrite(() => {
       requireMember("clients_invite");
+      requireActiveSubscription();
       const sub = subscriptions.find((s) => s.org_id === DEMO.orgId)!;
       const limit = planFeatures.find((f) => f.plan_id === sub.plan_id && f.key === "client_limit")?.value;
       const clientCount = coachClients.filter((l) => l.org_id === DEMO.orgId && !l.ended_at).length;

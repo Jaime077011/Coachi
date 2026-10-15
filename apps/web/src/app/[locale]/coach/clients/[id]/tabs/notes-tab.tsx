@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@coachi/core";
-import { noteTag, type CoachNote, type NoteTag } from "@coachi/validation";
+import { noteTag, type CoachNote, type CoachNoteView, type NoteTag } from "@coachi/validation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EyeOffIcon, NotebookPenIcon, PinIcon, PinOffIcon, Trash2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -10,20 +10,22 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/coachi/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCan } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
+import { useCan } from "@/hooks/use-can";
+import { useMe } from "@/hooks/use-session";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 /** Private to the coach. Pinned notes on top, then newest first. */
-export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNote[] }) {
+export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNoteView[] }) {
   const t = useTranslations("clientFile");
   const tCommon = useTranslations("common");
   const fmt = useFmt();
   const queryClient = useQueryClient();
+  const { session } = useMe();
   const canEdit = useCan()("client_edit");
   const [text, setText] = useState("");
   const [tags, setTags] = useState<NoteTag[]>([]);
@@ -127,7 +129,15 @@ export function NotesTab({ clientId, notes }: { clientId: string; notes: CoachNo
                         {t(`tag_${tag}`)}
                       </Badge>
                     ))}
-                    <span className="ms-auto text-xs text-hint">{fmt.relative(n.created_at)}</span>
+                    <span className="ms-auto text-xs text-hint">
+                      {/* Who wrote it matters once a team shares the client; your own notes skip the name. */}
+                      {n.author_name && n.author_id !== session?.profile.id && (
+                        <>
+                          <bdi>{n.author_name}</bdi> ·{" "}
+                        </>
+                      )}
+                      {fmt.relative(n.created_at)}
+                    </span>
                   </div>
                   <p className="whitespace-pre-line">{n.text}</p>
                   {canEdit && (

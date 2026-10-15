@@ -1,4 +1,5 @@
 import { SupportBar } from "@/components/admin/support-mode";
+import { ReadOnlyBanner } from "@/components/coach/read-only-banner";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { BottomTabBar } from "@/components/shell/bottom-tab-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -10,6 +11,7 @@ export default function CoachLayout({ children }: LayoutProps<"/[locale]/coach">
       <AppSidebar nav="coach" />
       <SidebarInset>
         <SupportBar />
+        <ReadOnlyBanner />
         <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-6 lg:pb-10">
           {children}
         </main>

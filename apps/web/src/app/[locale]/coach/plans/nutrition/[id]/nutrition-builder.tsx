@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/use-session";
 import { useRouter } from "@/i18n/navigation";
 import { useFmt, useLocalName } from "@/lib/format";
+import { useApiErrorToast } from "@/lib/api-error";
 import { qk } from "@/lib/query-keys";
 import { suggestTargets } from "@/lib/targets";
 import { useAutosave } from "@/lib/use-autosave";
@@ -39,13 +40,20 @@ function CreatePlan() {
   const tNb = useTranslations("nutritionBuilder");
   const router = useRouter();
   const { orgId, coachId } = useMe();
+  const showError = useApiErrorToast();
   const created = useRef(false);
   useEffect(() => {
     if (!orgId || !coachId || created.current) return;
     created.current = true;
     const draft = ops.newPlan(orgId, coachId, t("untitledNutrition"), (n) => tNb("newMeal", { n }));
-    void api.nutrition.savePlan(draft).then((saved) => router.replace(`/coach/plans/nutrition/${saved.plan.id}`));
-  }, [orgId, coachId, router, t, tNb]);
+    void api.nutrition.savePlan(draft)
+      .then((saved) => router.replace(`/coach/plans/nutrition/${saved.plan.id}`))
+      .catch((error: unknown) => {
+        // Read-only (ended subscription) or not allowed: say why and go back to the plans list.
+        showError(error);
+        router.replace("/coach/plans");
+      });
+  }, [orgId, coachId, router, t, tNb, showError]);
   return <ListSkeleton />;
 }
 

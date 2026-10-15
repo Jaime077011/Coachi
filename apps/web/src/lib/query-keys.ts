@@ -28,6 +28,7 @@ export const qk = {
   teamMembers: (orgId: string) => ["team-members", orgId] as const,
   coachPackages: (coachId: string) => ["coach-packages", coachId] as const,
   landing: (slug: string) => ["landing", slug] as const,
+  brand: (orgId: string) => ["brand", orgId] as const,
   // Admin
   adminOverview: ["admin-overview"] as const,
   adminCoaches: ["admin-coaches"] as const,

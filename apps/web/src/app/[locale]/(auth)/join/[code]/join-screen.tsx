@@ -46,6 +46,10 @@ export function JoinScreen({ params }: { params: Promise<{ code: string }> }) {
         ) : (
           <div className="flex flex-col gap-8">
             <div className="flex flex-col items-center gap-3 text-center">
+              {data.coach_logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element -- coach's logo from storage
+                <img src={data.coach_logo_url} alt="" className="h-12 w-auto rounded-md object-contain" />
+              )}
               <Avatar className="size-20">
                 {data.coach_photo_url && <AvatarImage src={data.coach_photo_url} alt="" />}
                 <AvatarFallback className="bg-secondary text-2xl font-bold">{initials(data.coach_name)}</AvatarFallback>

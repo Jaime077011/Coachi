@@ -2,6 +2,7 @@ import type { NutritionPlanFull } from "@coachi/validation";
 import type { NutritionApi } from "./api";
 import { DEMO, foods, mealItems, mealLogs, meals, nutritionPlans } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { requireActiveSubscription, requireMember } from "../mock/session";
 import { isTrainingDay } from "../journey/schedule";
 
 const stamp = () => ({ created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
@@ -49,6 +50,7 @@ export const mockNutrition: NutritionApi = {
 
   addFood: (input) =>
     mockWrite(() => {
+      requireMember("library_add");
       const food = { ...input, ...stamp(), id: newId(), org_id: DEMO.orgId };
       foods.push(food);
       return food;
@@ -60,13 +62,17 @@ export const mockNutrition: NutritionApi = {
 
   savePlan: (full) =>
     mockWrite(() => {
+      requireMember("plans_edit");
+      if (!nutritionPlans.some((p) => p.id === full.plan.id)) requireActiveSubscription();
       replacePlan({ ...full, plan: { ...full.plan, updated_at: nowIso() } });
       return buildPlan(full.plan.id);
     }),
 
   assign: (planId, clientIds) =>
-    mockWrite(() =>
-      clientIds.map((clientId) => {
+    mockWrite(() => {
+      requireMember("plans_edit");
+      requireActiveSubscription();
+      return clientIds.map((clientId) => {
         const source = buildPlan(planId);
         const id = newId();
         const copy: NutritionPlanFull = {
@@ -82,8 +88,8 @@ export const mockNutrition: NutritionApi = {
         };
         replacePlan(copy);
         return copy.plan;
-      }),
-    ),
+      });
+    }),
 
   clientDay: (clientId, date) =>
     mockRead(() => {

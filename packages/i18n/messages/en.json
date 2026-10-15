@@ -37,7 +37,8 @@
       "checkInForm": "Check-in form",
       "profile": "Profile",
       "subscription": "Subscription",
-      "team": "Team"
+      "team": "Team",
+      "settings": "Settings"
     },
     "admin": {
       "overview": "Overview",
@@ -210,7 +211,8 @@
     "photo": {
       "add": "Add photo",
       "change": "Change",
-      "remove": "Remove"
+      "remove": "Remove",
+      "failed": "Couldn't read that photo. Try another one."
     },
     "coachCard": {
       "online": "Online",
@@ -298,7 +300,8 @@
     "coachMessage": "From your coach",
     "noCoachTitle": "Find your coach",
     "noCoachBody": "Pick a coach to get a plan made for you.",
-    "browse": "Browse coaches"
+    "browse": "Browse coaches",
+    "coachedBy": "Coached by <b>{coach}</b>"
   },
   "workout": {
     "progress": "Exercise {current} of {total}",
@@ -885,7 +888,11 @@
     "languages": "Languages",
     "saved": "Profile saved",
     "save": "Save profile",
-    "saveFailed": "Couldn't save. Try again."
+    "saveFailed": "Couldn't save. Try again.",
+    "photo": "Your photo",
+    "logo": "Your logo",
+    "logoBody": "Your clients see it in their app.",
+    "logoNotOnPlan": "Your clients see it on the Pro plan."
   },
   "subscription": {
     "title": "Subscription",
@@ -1169,6 +1176,24 @@
     "noPackage": "Not sure yet",
     "sentTitle": "Request sent",
     "sentBody": "{coach} will reply soon.",
-    "openApp": "Open the app"
+    "openApp": "Open the app",
+    "cover": "Cover photo"
+  },
+  "coachSettings": {
+    "title": "Settings",
+    "export": "Export my clients' data",
+    "exportToast": "We're preparing your clients' data file"
+  },
+  "readOnly": {
+    "expired": "Your subscription has ended. You can see everything, but can't add clients, helpers, or new plans until you renew.",
+    "paused": "Your account is paused. You can see everything, but can't add clients, helpers, or new plans.",
+    "askOwner": "Ask the account owner to renew.",
+    "renew": "Renew on WhatsApp",
+    "renewMessage": "Hi, I want to renew my Coachi subscription.",
+    "toast": "Your subscription has ended. Renew to add new plans or clients.",
+    "forbidden": "Your team role can't do this.",
+    "failed": "Something went wrong. Try again.",
+    "noticeTitle": "Your subscription has ended",
+    "noticeBody": "Renew to add clients and helpers again. Everything you have is safe."
   }
 }

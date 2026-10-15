@@ -8,16 +8,17 @@ import { whatsappUrl } from "@/lib/whatsapp";
 /** Support WhatsApp for renewals. Moves to admin Settings data in Step 4. */
 export const SUPPORT_WHATSAPP = "+201000000001";
 
-/** Clear note when the coach hits his plan's client limit, with renew on WhatsApp. */
-export function LimitNotice() {
+/** Clear note when the coach hits his plan's client limit (or his subscription ended), with renew on WhatsApp. */
+export function LimitNotice({ reason = "limit" }: { reason?: "limit" | "inactive" }) {
   const t = useTranslations("clients");
+  const tReadOnly = useTranslations("readOnly");
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-warning/40 bg-warning/12 p-4">
       <p className="flex items-center gap-2 font-semibold text-warning">
         <TriangleAlertIcon className="size-5 shrink-0" aria-hidden />
-        {t("limitTitle")}
+        {reason === "inactive" ? tReadOnly("noticeTitle") : t("limitTitle")}
       </p>
-      <p className="text-sm">{t("limitBody")}</p>
+      <p className="text-sm">{reason === "inactive" ? tReadOnly("noticeBody") : t("limitBody")}</p>
       <Button asChild variant="secondary" className="w-fit">
         <a href={whatsappUrl(SUPPORT_WHATSAPP)} target="_blank" rel="noreferrer">
           <MessageCircleIcon data-icon="inline-start" />

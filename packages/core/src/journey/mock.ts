@@ -19,6 +19,7 @@ import {
 } from "../mock/data";
 import { buildPlan } from "../nutrition/mock";
 import { dateOnly, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
+import { clientBrandLogo, requireMember } from "../mock/session";
 import { programDayFor } from "./schedule";
 
 const water = new Map<string, number>(); // `${clientId}:${date}` → glasses
@@ -97,7 +98,7 @@ export const mockJourney: JourneyApi = {
 
         return {
           date: today,
-          coach: coach ? { id: coach.id, name: coach.name, logo_url: null, whatsapp: coach.whatsapp } : null,
+          coach: coach ? { id: coach.id, name: coach.name, logo_url: clientBrandLogo(coach.org_id), whatsapp: coach.whatsapp } : null,
           week: weekStrip(clientId, today),
           workout: day
             ? {
@@ -192,6 +193,7 @@ export const mockJourney: JourneyApi = {
 
   addCoachMessage: (clientId, text) =>
     mockWrite(() => {
+      requireMember("client_edit");
       const message = {
         id: newId(),
         coach_id: DEMO.coachId,

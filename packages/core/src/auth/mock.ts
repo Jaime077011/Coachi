@@ -1,7 +1,7 @@
 import type { AuthApi } from "./api";
 import { coachProfiles, invites, orgMembers, profiles } from "../mock/data";
 import { ApiError, mockAuthRead, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
-import { mockSession } from "../mock/session";
+import { clientBrandLogo, mockSession } from "../mock/session";
 
 export const mockAuth: AuthApi = {
   getSession: () => mockAuthRead(mockSession),
@@ -26,7 +26,7 @@ export const mockAuth: AuthApi = {
         code,
         coach_name: coach.name,
         coach_photo_url: coach.photo_url,
-        coach_logo_url: null,
+        coach_logo_url: clientBrandLogo(coach.org_id),
         expired: !invite || !!invite.used_by || new Date(invite.expires_at) < new Date(),
         kind: invite?.kind ?? "client",
         member_role: invite?.member_role ?? null,

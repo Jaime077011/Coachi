@@ -2,7 +2,7 @@ import type { TeamView } from "@coachi/validation";
 import type { TeamApi } from "./api";
 import { DEMO, coachClients, invites, orgMembers, planFeatures, profiles, subscriptions } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
-import { activeMembers, requireMember } from "../mock/session";
+import { activeMembers, requireActiveSubscription, requireMember } from "../mock/session";
 
 const DAY = 86_400_000;
 
@@ -68,6 +68,7 @@ export const mockTeam: TeamApi = {
   invite: (input) =>
     mockWrite(() => {
       const session = requireMember("team");
+      requireActiveSubscription();
       const orgId = session.org_id!;
       const limit = seatsLimit(orgId);
       if (limit !== null && seatsUsed(orgId) >= limit) throw new ApiError("limit_reached");

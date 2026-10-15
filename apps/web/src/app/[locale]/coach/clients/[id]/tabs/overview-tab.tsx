@@ -10,9 +10,9 @@ import { toast } from "sonner";
 import { SectionTitle } from "@/components/coachi/screen-header";
 import { StatBlock } from "@/components/coachi/stats";
 import { Button } from "@/components/ui/button";
-import { useCan } from "@/hooks/use-can";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useCan } from "@/hooks/use-can";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 

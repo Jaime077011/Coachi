@@ -78,7 +78,8 @@ export function setMockMemberRole(role: MockMemberRole) {
 
 export class ApiError extends Error {
   constructor(
-    public code: "network" | "not_found" | "forbidden" | "limit_reached" | "invalid",
+    /** inactive = the coach's subscription ended or is paused: read-only until renewed. */
+    public code: "network" | "not_found" | "forbidden" | "limit_reached" | "invalid" | "inactive",
     message: string = code,
   ) {
     super(message);

@@ -17,6 +17,7 @@ import { useMe } from "@/hooks/use-session";
 import { isEgyptMobile, toE164 } from "@/lib/phone";
 import { qk } from "@/lib/query-keys";
 import { whatsappUrl } from "@/lib/whatsapp";
+import { LimitNotice } from "./limit-notice";
 import { SeatsNotice } from "./seats-notice";
 
 /** Name, phone, and role → an invite link to copy or send on WhatsApp. Same flow as Add client. */
@@ -55,6 +56,7 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
   };
 
   const full = invite.error instanceof ApiError && invite.error.code === "limit_reached";
+  const inactive = invite.error instanceof ApiError && invite.error.code === "inactive";
   const result = invite.data;
 
   return (
@@ -65,7 +67,7 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
         if (!o) reset();
       }}
       title={result ? t("linkTitle") : t("inviteTitle")}
-      description={result ? t("linkBody", { name: name.trim() }) : full ? undefined : t("inviteBody")}
+      description={result ? t("linkBody", { name: name.trim() }) : full || inactive ? undefined : t("inviteBody")}
       footer={
         result ? (
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
@@ -94,7 +96,7 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
               </a>
             </Button>
           </div>
-        ) : full ? undefined : (
+        ) : full || inactive ? undefined : (
           <Button type="submit" form="invite-helper" className="w-full sm:w-auto" disabled={invite.isPending}>
             {invite.isPending && <Loader2Icon className="animate-spin" />}
             {t("create")}
@@ -106,6 +108,8 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
         <p className="rounded-md border bg-secondary p-3 text-sm break-all" dir="ltr">
           {result.inviteUrl}
         </p>
+      ) : inactive ? (
+        <LimitNotice reason="inactive" />
       ) : full ? (
         <SeatsNotice full />
       ) : (

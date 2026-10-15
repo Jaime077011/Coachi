@@ -5,13 +5,14 @@ import { CopyIcon, ExternalLinkIcon, GlobeIcon, MessageCircleIcon } from "lucide
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FieldError } from "@/components/coachi/field-error";
+import { ImageField } from "@/components/coachi/image-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { whatsappUrl } from "@/lib/whatsapp";
 
-type Fields = Pick<CoachProfile, "slug" | "headline" | "page_published" | "show_team">;
+type Fields = Pick<CoachProfile, "slug" | "headline" | "cover_url" | "page_published" | "show_team">;
 
 /** The landing page card at the top of the profile editor: link, share, on/off, headline. */
 export function LandingSettings({
@@ -107,6 +108,8 @@ export function LandingSettings({
         <Label htmlFor="headline">{t("headline")}</Label>
         <Input id="headline" maxLength={120} value={value.headline ?? ""} onChange={(e) => onChange({ headline: e.target.value || null })} placeholder={t("headlinePlaceholder")} />
       </div>
+
+      <ImageField label={t("cover")} shape="wide" value={value.cover_url} onChange={(url) => onChange({ cover_url: url })} />
 
       <div className="flex items-center justify-between gap-4">
         <div>

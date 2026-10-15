@@ -3,7 +3,7 @@
  * row rules: the Supabase version gets the same answers from auth.uid() and org_members.
  */
 import { memberCan, type Session, type TeamPermission } from "@coachi/validation";
-import { DEMO, coachClients, coachProfiles, orgMembers, profiles } from "./data";
+import { DEMO, coachClients, coachProfiles, organizations, orgMembers, planFeatures, profiles, subscriptions } from "./data";
 import { ApiError, getMockMemberRole, getMockRole } from "./runtime";
 
 export function mockSession(): Session {
@@ -31,10 +31,26 @@ export function mockSession(): Session {
   };
 }
 
-/** Like a row rule: throws forbidden when the signed-in member's role doesn't allow it. */
+/**
+ * Like a row rule: throws forbidden when the signed-in member's role doesn't allow it.
+ * The super admin passes (support mode and the shared libraries).
+ */
 export function requireMember(permission: TeamPermission) {
   const session = mockSession();
+  if (session.profile.role === "super_admin") return session;
   if (!memberCan(session.member_role, permission)) throw new ApiError("forbidden");
+  return session;
+}
+
+/**
+ * Ended or paused subscription = read-only: the coach and his team see everything but can't
+ * add clients, helpers, or new plans. Editing what exists still works.
+ */
+export function requireActiveSubscription() {
+  const session = mockSession();
+  if (!session.org_id) return session;
+  const status = subscriptions.find((s) => s.org_id === session.org_id)?.status;
+  if (status === "expired" || status === "paused") throw new ApiError("inactive");
   return session;
 }
 
@@ -57,6 +73,13 @@ export function canSeeClient(clientId: string) {
   const link = coachClients.find((l) => l.client_id === clientId && l.org_id === session.org_id && !l.ended_at);
   if (!link) return false;
   return memberCan(session.member_role, "clients_all") || link.assigned_member_id === session.member_id;
+}
+
+/** The coach's logo as his clients see it: only when his plan has branded_app. */
+export function clientBrandLogo(orgId: string) {
+  const sub = subscriptions.find((s) => s.org_id === orgId);
+  const branded = planFeatures.find((f) => f.plan_id === sub?.plan_id && f.key === "branded_app")?.value === true;
+  return branded ? (organizations.find((o) => o.id === orgId)?.logo_url ?? null) : null;
 }
 
 /** Active team members of an org, owner included. */

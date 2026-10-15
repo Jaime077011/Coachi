@@ -93,6 +93,10 @@ export const coachNote = base.extend({
 });
 export type CoachNote = z.infer<typeof coachNote>;
 
+/** A note as the client file shows it: with the writer's name, since team members write notes too. */
+export const coachNoteView = coachNote.extend({ author_name: z.string().nullable() });
+export type CoachNoteView = z.infer<typeof coachNoteView>;
+
 export const newCoachNote = coachNote.pick({ client_id: true, text: true, tags: true, pinned: true });
 export type NewCoachNote = z.infer<typeof newCoachNote>;
 
@@ -143,7 +147,7 @@ export const clientFile = z.object({
     avatar_url: url.nullable(),
   }),
   details: clientDetails.nullable(),
-  notes: z.array(coachNote),
+  notes: z.array(coachNoteView),
   started_at: timestamp,
   assigned_member_id: id.nullable(),
 });
