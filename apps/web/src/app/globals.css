@@ -70,6 +70,65 @@
   background-image: var(--fire);
 }
 
+/* Frosted panel for things that float over content: bars, menus, the sidebar. */
+@utility glass {
+  background-color: var(--glass);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+@utility glass-strong {
+  background-color: var(--glass-strong);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+/* A 1 px gradient edge (fire to blue) drawn with a mask, so the fill stays glass. */
+@utility glow-edge {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--glow-edge);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* Soft fire light in one corner of a card. Kept faint and away from text. */
+@utility glow-corner {
+  background-image: radial-gradient(120% 90% at 100% 0%, var(--glow-fire), transparent 55%);
+  &:where([dir="rtl"], [dir="rtl"] *) {
+    background-image: radial-gradient(120% 90% at 0% 0%, var(--glow-fire), transparent 55%);
+  }
+}
+
+/* Page titles: text color fading to muted, a quiet metallic finish (not the fire gradient). */
+@utility text-sheen {
+  background-image: linear-gradient(180deg, var(--foreground) 35%, color-mix(in oklab, var(--foreground) 55%, var(--muted-foreground)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Fixed bars line up with the content, whether the side menu is open or folded to icons. */
+[data-slot="sidebar-wrapper"] {
+  --shell-inset: var(--sidebar-width);
+}
+[data-slot="sidebar-wrapper"]:has([data-slot="sidebar"][data-state="collapsed"]) {
+  --shell-inset: calc(var(--sidebar-width-icon) + 1rem + 2px);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -81,6 +140,21 @@
   body {
     @apply bg-background text-foreground antialiased;
     line-height: 1.55;
+  }
+  /* Ambient light behind the whole app: fire glow top corner, cool glow opposite. Fixed, so it doesn't scroll. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60rem 36rem at 100% -10%, var(--glow-fire), transparent 60%),
+      radial-gradient(50rem 40rem at -10% 30%, var(--glow-cool), transparent 60%),
+      radial-gradient(40rem 30rem at 60% 115%, color-mix(in oklab, var(--glow-fire) 50%, transparent), transparent 60%);
+  }
+  [dir="rtl"] body::before {
+    transform: scaleX(-1);
   }
   :lang(ar) body {
     line-height: 1.8;
@@ -94,5 +168,17 @@
   textarea,
   select {
     font-size: max(16px, 1em);
+  }
+}
+
+/* People who ask for less transparency get solid surfaces. Unlayered, so it beats the theme. */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  .light,
+  .dark {
+    --card: var(--popover);
+    --sidebar: var(--popover);
+    --glass: var(--popover);
+    --glass-strong: var(--popover);
   }
 }

@@ -108,7 +108,9 @@
     "menu": "Menu",
     "more": "More",
     "signOut": "Log out",
-    "mainNav": "Main navigation"
+    "mainNav": "Main navigation",
+    "collapse": "Collapse menu",
+    "expand": "Expand menu"
   },
   "kit": {
     "title": "Coachi kit",

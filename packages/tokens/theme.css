@@ -9,7 +9,8 @@
 .light {
   --background: #f4efe6;
   --foreground: #040814;
-  --card: #fdfdfd;
+  /* Cards are glass: translucent over the ambient glow. src/index.ts keeps the solid equivalent. */
+  --card: rgba(253, 253, 253, 0.72);
   --card-foreground: #040814;
   --popover: #fdfdfd;
   --popover-foreground: #040814;
@@ -34,7 +35,15 @@
   --warning: #b45309;
   --info: #1d5fd1;
   --fire: linear-gradient(180deg, #ff7a45 0%, #f2412e 45%, #c8141e 100%);
-  --card-shadow: 0 1px 2px rgba(4, 8, 20, 0.06), 0 6px 16px rgba(4, 8, 20, 0.06);
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(4, 8, 20, 0.05), 0 8px 24px -8px rgba(4, 8, 20, 0.1);
+
+  /* Glass and glow (the "elevated" layer) */
+  --glass: rgba(253, 253, 253, 0.6);
+  --glass-strong: rgba(253, 253, 253, 0.82);
+  --glass-border: rgba(4, 8, 20, 0.08);
+  --glow-fire: rgba(255, 122, 69, 0.22);
+  --glow-cool: rgba(29, 95, 209, 0.1);
+  --glow-edge: linear-gradient(135deg, rgba(255, 122, 69, 0.55), rgba(242, 65, 46, 0.15) 40%, rgba(29, 95, 209, 0.25));
 
   --chart-1: #f2412e;
   --chart-2: #1d5fd1;
@@ -44,7 +53,7 @@
 
   --radius: 0.75rem;
 
-  --sidebar: #fdfdfd;
+  --sidebar: rgba(253, 253, 253, 0.62);
   --sidebar-foreground: #040814;
   --sidebar-primary: #c8141e;
   --sidebar-primary-foreground: #fdfdfd;
@@ -61,7 +70,7 @@
 .dark {
   --background: #040814;
   --foreground: #f4efe6;
-  --card: #121c30;
+  --card: rgba(18, 28, 48, 0.58);
   --card-foreground: #f4efe6;
   --popover: #121c30;
   --popover-foreground: #f4efe6;
@@ -75,7 +84,7 @@
   --accent: #1b2740;
   --accent-foreground: #f4efe6;
   --destructive: #ff7aa2;
-  --border: #26324d;
+  --border: rgba(120, 140, 180, 0.18);
   --input: #26324d;
   --ring: #ff7a45;
 
@@ -84,7 +93,15 @@
   --success: #2bc48a;
   --warning: #fdb022;
   --info: #5ea8ff;
-  --card-shadow: none;
+  /* Dark depth: a hairline highlight on top, a soft drop below. */
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+
+  --glass: rgba(14, 22, 40, 0.55);
+  --glass-strong: rgba(10, 16, 30, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glow-fire: rgba(242, 65, 46, 0.2);
+  --glow-cool: rgba(94, 168, 255, 0.12);
+  --glow-edge: linear-gradient(135deg, rgba(255, 122, 69, 0.7), rgba(242, 65, 46, 0.2) 40%, rgba(94, 168, 255, 0.35));
 
   --chart-1: #f2412e;
   --chart-2: #5ea8ff;
@@ -92,13 +109,13 @@
   --chart-4: #fdb022;
   --chart-5: #a9b1c2;
 
-  --sidebar: #121c30;
+  --sidebar: rgba(14, 22, 40, 0.55);
   --sidebar-foreground: #f4efe6;
   --sidebar-primary: #ff5a3a;
   --sidebar-primary-foreground: #040814;
   --sidebar-accent: #1b2740;
   --sidebar-accent-foreground: #f4efe6;
-  --sidebar-border: #26324d;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #ff7a45;
 }
 

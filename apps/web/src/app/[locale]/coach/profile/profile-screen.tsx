@@ -3,12 +3,27 @@
 import { api, ApiError } from "@coachi/core";
 import { coachingMode, MAX_PACKAGES, slug as slugSchema, specialty, type CoachPackage, type CoachProfile } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleCheckIcon, EyeIcon, Loader2Icon, PencilIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  CircleCheckIcon,
+  CompassIcon,
+  DumbbellIcon,
+  EyeIcon,
+  Loader2Icon,
+  PackageIcon,
+  PencilIcon,
+  PlusIcon,
+  SparklesIcon,
+  TriangleAlertIcon,
+  UserRoundIcon,
+  WalletIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CoachCard } from "@/components/coachi/coach-card";
 import { FieldError } from "@/components/coachi/field-error";
+import { IconTile } from "@/components/coachi/icon-tile";
 import { ImageField } from "@/components/coachi/image-field";
 import { PackageCard } from "@/components/coachi/package-card";
 import { QueryState } from "@/components/coachi/query-state";
@@ -213,6 +228,7 @@ function ProfileForm({
           />
 
           <Section
+            icon={CompassIcon}
             title={t("sectionDirectory")}
             body={t("sectionDirectoryBody")}
             action={p.listed ? <StatusChip tone="success">{t("listed")}</StatusChip> : null}
@@ -229,7 +245,7 @@ function ProfileForm({
             </div>
           </Section>
 
-          <Section title={t("sectionAbout")} body={t("sectionAboutBody")}>
+          <Section icon={UserRoundIcon} title={t("sectionAbout")} body={t("sectionAboutBody")}>
             <div className="grid gap-5 sm:grid-cols-2">
               <div id="f-photo">
                 <ImageField
@@ -267,7 +283,7 @@ function ProfileForm({
             </F>
           </Section>
 
-          <Section title={t("sectionCoaching")} body={t("sectionCoachingBody")}>
+          <Section icon={DumbbellIcon} title={t("sectionCoaching")} body={t("sectionCoachingBody")}>
             <div id="f-specialties" className="flex flex-col gap-2">
               <Label>{t("specialties")}</Label>
               <ToggleGroup
@@ -340,7 +356,7 @@ function ProfileForm({
             </F>
           </Section>
 
-          <Section title={t("sectionPrices")} body={t("sectionPricesBody")}>
+          <Section icon={WalletIcon} title={t("sectionPrices")} body={t("sectionPricesBody")}>
             <div className="grid gap-4 sm:grid-cols-2">
               <F id="pmin" label={t("priceMin")}>
                 <Input
@@ -396,7 +412,7 @@ function ProfileForm({
             </div>
           </Section>
 
-          <Section id="f-packages" title={t("sectionPackages")} body={tLanding("packagesBody", { max: MAX_PACKAGES })}>
+          <Section id="f-packages" icon={PackageIcon} title={t("sectionPackages")} body={tLanding("packagesBody", { max: MAX_PACKAGES })}>
             <PackagesEditor drafts={drafts} onChange={(next) => setForm((f) => ({ ...f, drafts: next }))} />
           </Section>
         </form>
@@ -405,7 +421,7 @@ function ProfileForm({
         <aside className={cn(view === "preview" ? "block" : "hidden lg:block", "lg:sticky lg:top-4")}>
           <div
             className={cn(
-              "flex flex-col gap-3 lg:gap-0 lg:overflow-hidden lg:rounded-xl lg:border lg:bg-card lg:shadow-card",
+              "flex flex-col gap-3 lg:glow-edge lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:bg-card lg:shadow-card",
               dirty ? "lg:max-h-[calc(100dvh-7rem)]" : "lg:max-h-[calc(100dvh-2rem)]",
             )}
           >
@@ -416,7 +432,7 @@ function ProfileForm({
                 <p className="text-sm text-muted-foreground">{t("previewBody")}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 lg:overflow-y-auto lg:bg-background/50 lg:p-4">
+            <div className="flex flex-col gap-3 lg:overflow-y-auto lg:bg-background/30 lg:p-4">
               <p className="hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewDirectory")}</p>
               <CoachCard coach={p} />
               <p className="mt-2 hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewPage")}</p>
@@ -444,8 +460,8 @@ function ProfileForm({
 
       {/* Unsaved changes: a sticky Save bar, above the tab bar on phone. */}
       {dirty && (
-        <div className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 backdrop-blur lg:bottom-0 lg:z-40 lg:ps-[var(--sidebar-width)] lg:pb-[env(safe-area-inset-bottom)]">
-          <div className="mx-auto flex max-w-[1200px] items-center gap-2 px-4 py-3 lg:px-6">
+        <div className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t glass-strong lg:bottom-4 lg:z-40 lg:border-0 lg:bg-transparent lg:ps-(--shell-inset) lg:backdrop-blur-none">
+          <div className="mx-auto flex max-w-[1200px] items-center gap-2 px-4 py-3 lg:w-[calc(100%-3rem)] lg:max-w-[1152px] lg:rounded-2xl lg:border lg:glass-strong lg:shadow-[0_16px_48px_-16px_rgba(0,0,0,0.5)] lg:glow-edge lg:px-5">
             <TriangleAlertIcon className="size-5 shrink-0 text-warning" aria-hidden />
             <span className="flex-1 text-sm font-semibold" role="status">
               {t("unsaved")}
@@ -480,24 +496,37 @@ function Completeness({ items, onJump }: { items: Check[]; onJump: (id: string) 
   const missing = items.filter((i) => !i.done);
   if (!missing.length) {
     return (
-      <p className="flex items-center gap-2 rounded-lg border bg-card p-4 text-sm font-semibold">
+      <p className="flex items-center gap-2 rounded-2xl border bg-card p-4 text-sm font-semibold shadow-card">
         <CircleCheckIcon className="size-5 text-success" aria-hidden />
         {t("completeAll")}
       </p>
     );
   }
   return (
-    <section className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:p-5" aria-labelledby="complete-title">
-      <div className="flex flex-col gap-2">
-        <h2 id="complete-title" className="font-semibold">
-          {t("completeTitle", { done, total: items.length })}
-        </h2>
+    <section className="glow-edge glow-corner flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-card sm:p-6" aria-labelledby="complete-title">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <IconTile icon={SparklesIcon} />
+          <h2 id="complete-title" className="flex-1 font-semibold">
+            {t("completeTitle", { done, total: items.length })}
+          </h2>
+          <span className="font-stat text-3xl leading-none tabular-nums" aria-hidden>
+            {Math.round((done / items.length) * 100)}%
+          </span>
+        </div>
         <Progress value={(done / items.length) * 100} aria-labelledby="complete-title" />
       </div>
       <p className="text-sm text-muted-foreground">{t("completeBody")}</p>
       <div className="flex flex-wrap gap-2">
         {missing.map((i) => (
-          <Button key={i.key} type="button" variant="outline" size="sm" className="rounded-full" onClick={() => onJump(i.target)}>
+          <Button
+            key={i.key}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-full bg-transparent backdrop-blur-sm hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+            onClick={() => onJump(i.target)}
+          >
             <PlusIcon data-icon="inline-start" />
             {t(`complete_${i.key}`)}
           </Button>
@@ -510,22 +539,28 @@ function Completeness({ items, onJump }: { items: Check[]; onJump: (id: string) 
 /** A titled card that groups related fields. */
 function Section({
   id,
+  icon,
   title,
   body,
   action,
   children,
 }: {
   id?: string;
+  icon: LucideIcon;
   title: string;
   body?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="flex scroll-mt-4 flex-col gap-5 rounded-lg border bg-card p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-[17px] font-semibold">{title}</h2>
+    <section
+      id={id}
+      className="flex scroll-mt-4 flex-col gap-5 rounded-2xl border bg-card p-4 shadow-card transition-colors duration-300 focus-within:border-primary/30 sm:p-6"
+    >
+      <div className="flex items-start gap-3">
+        <IconTile icon={icon} />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[17px] leading-tight font-semibold">{title}</h2>
           {body && <p className="text-sm text-muted-foreground">{body}</p>}
         </div>
         {action}

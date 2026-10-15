@@ -9,7 +9,7 @@ export default function CoachLayout({ children }: LayoutProps<"/[locale]/coach">
   return (
     <SidebarProvider>
       <AppSidebar nav="coach" />
-      <SidebarInset>
+      <SidebarInset className="bg-transparent">
         <SupportBar />
         <ReadOnlyBanner />
         <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-6 lg:pb-10">

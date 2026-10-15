@@ -33,7 +33,7 @@ export function ScreenHeader({
         </Link>
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h1 className="font-display text-[32px] leading-[1.1] uppercase lg:text-[44px]">{title}</h1>
+        <h1 className="text-sheen font-display text-[32px] leading-[1.1] uppercase lg:text-[44px]">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}

@@ -67,7 +67,7 @@ function SettingsForm({ initial }: { initial: AppSettings }) {
 
       {/* Unsaved changes: a sticky Save bar. */}
       {dirty && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:ps-[var(--sidebar-width)]">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t glass-strong pb-[env(safe-area-inset-bottom)] lg:ps-(--shell-inset)">
           <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-3 lg:px-6">
             <TriangleAlertIcon className="size-5 text-warning" aria-hidden />
             <span className="flex-1 text-sm font-semibold">{t("unsaved")}</span>

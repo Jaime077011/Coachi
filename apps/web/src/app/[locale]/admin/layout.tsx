@@ -7,8 +7,8 @@ export default function AdminLayout({ children }: LayoutProps<"/[locale]/admin">
   return (
     <SidebarProvider>
       <AppSidebar nav="admin" />
-      <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur lg:hidden">
+      <SidebarInset className="bg-transparent">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b glass-strong px-4 lg:hidden">
           <SidebarTrigger className="size-11" />
           <Logo size="mobile" className="h-8 w-auto [&_img]:h-8 [&_img]:w-auto" />
         </header>

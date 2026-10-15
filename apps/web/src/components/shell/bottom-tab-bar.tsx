@@ -50,7 +50,7 @@ function TabBarView({ nav, className, pathname }: Props & { pathname: string | n
     <nav
       aria-label={tShell("mainNav")}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t bg-card pb-[env(safe-area-inset-bottom)]",
+        "fixed inset-x-0 bottom-0 z-40 border-t glass-strong pb-[env(safe-area-inset-bottom)]",
         className,
       )}
     >

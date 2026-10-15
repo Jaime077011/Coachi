@@ -5,6 +5,7 @@ import { CopyIcon, ExternalLinkIcon, GlobeIcon, MessageCircleIcon } from "lucide
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { FieldError } from "@/components/coachi/field-error";
+import { IconTile } from "@/components/coachi/icon-tile";
 import { ImageField } from "@/components/coachi/image-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,10 +34,10 @@ export function LandingSettings({
   const url = `${origin}/${locale}/c/${savedSlug}`;
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+    <section className="glow-corner flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-card sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-3">
-          <GlobeIcon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+          <IconTile icon={GlobeIcon} />
           <div>
             <Label htmlFor="page-on" className="text-[15px] font-semibold">
               {t("cardTitle")}
@@ -49,7 +50,7 @@ export function LandingSettings({
 
       {value.page_published && (
         <>
-          <p className="rounded-md bg-secondary p-3 text-sm font-semibold break-all" dir="ltr">
+          <p className="rounded-xl border border-primary/20 bg-primary/5 p-3 font-mono text-sm font-semibold break-all" dir="ltr">
             {url}
           </p>
           <div className="flex flex-wrap gap-2">
