@@ -68,7 +68,7 @@ export function DevSwitcher() {
         <Button
           size="sm"
           variant="secondary"
-          className="fixed end-3 bottom-[calc(80px+env(safe-area-inset-bottom))] z-50 gap-1.5 rounded-full border shadow-md md:bottom-4"
+          className="fixed end-3 bottom-[calc(80px+env(safe-area-inset-bottom))] z-50 gap-1.5 rounded-full border shadow-md md:bottom-4 lg:bottom-20"
           aria-label={t("switcher")}
         >
           <FlaskConicalIcon />

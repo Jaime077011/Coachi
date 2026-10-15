@@ -923,7 +923,9 @@
     "complete_price": "مدى السعر",
     "complete_whatsapp": "الواتساب",
     "complete_packages": "باقة",
-    "complete_cover": "صورة الغلاف"
+    "complete_cover": "صورة الغلاف",
+    "previewDirectory": "في \"دوّر على كوتش\"",
+    "previewPage": "في صفحتك"
   },
   "subscription": {
     "title": "الاشتراك",

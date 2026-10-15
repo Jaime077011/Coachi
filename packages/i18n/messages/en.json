@@ -923,7 +923,9 @@
     "complete_price": "Price range",
     "complete_whatsapp": "WhatsApp",
     "complete_packages": "A package",
-    "complete_cover": "Cover photo"
+    "complete_cover": "Cover photo",
+    "previewDirectory": "In Find a coach",
+    "previewPage": "On your page"
   },
   "subscription": {
     "title": "Subscription",

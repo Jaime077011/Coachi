@@ -401,31 +401,43 @@ function ProfileForm({
           </Section>
         </form>
 
-        {/* Live preview: its own tab on phone, sticky beside the form on laptop. */}
+        {/* Live preview: its own tab on phone; on laptop a framed panel beside the form that scrolls on its own. */}
         <aside className={cn(view === "preview" ? "block" : "hidden lg:block", "lg:sticky lg:top-4")}>
-          <div className="flex flex-col gap-3 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto lg:pb-4">
-            <div>
-              <SectionTitle className="mb-1">{t("preview")}</SectionTitle>
-              <p className="text-sm text-muted-foreground">{t("previewBody")}</p>
+          <div
+            className={cn(
+              "flex flex-col gap-3 lg:gap-0 lg:overflow-hidden lg:rounded-xl lg:border lg:bg-card lg:shadow-card",
+              dirty ? "lg:max-h-[calc(100dvh-7rem)]" : "lg:max-h-[calc(100dvh-2rem)]",
+            )}
+          >
+            <div className="lg:flex lg:items-start lg:gap-2.5 lg:border-b lg:px-4 lg:py-3">
+              <EyeIcon className="mt-0.5 hidden size-4 shrink-0 text-primary lg:block" aria-hidden />
+              <div>
+                <SectionTitle className="mb-1 lg:mb-0.5">{t("preview")}</SectionTitle>
+                <p className="text-sm text-muted-foreground">{t("previewBody")}</p>
+              </div>
             </div>
-            <CoachCard coach={p} />
-            {p.bio && (
-              <p dir="auto" className="rounded-lg border bg-card p-4 text-sm leading-relaxed whitespace-pre-line">
-                {p.bio}
-              </p>
-            )}
-            {preview.length > 0 ? (
-              preview.map((pkg, i) => <PackageCard key={i} pkg={pkg} className={pkg.highlighted ? "mt-3" : undefined} />)
-            ) : (
-              <button
-                type="button"
-                onClick={() => jumpTo("f-packages")}
-                className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-sm font-semibold text-muted-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                <PlusIcon className="size-4" aria-hidden />
-                {tLanding("addPackage")}
-              </button>
-            )}
+            <div className="flex flex-col gap-3 lg:overflow-y-auto lg:bg-background/50 lg:p-4">
+              <p className="hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewDirectory")}</p>
+              <CoachCard coach={p} />
+              <p className="mt-2 hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewPage")}</p>
+              {p.bio && (
+                <p dir="auto" className="rounded-lg border bg-card p-4 text-sm leading-relaxed whitespace-pre-line">
+                  {p.bio}
+                </p>
+              )}
+              {preview.length > 0 ? (
+                preview.map((pkg, i) => <PackageCard key={i} pkg={pkg} className={pkg.highlighted ? "mt-3" : undefined} />)
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => jumpTo("f-packages")}
+                  className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed p-4 text-sm font-semibold text-muted-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  <PlusIcon className="size-4" aria-hidden />
+                  {tLanding("addPackage")}
+                </button>
+              )}
+            </div>
           </div>
         </aside>
       </div>
