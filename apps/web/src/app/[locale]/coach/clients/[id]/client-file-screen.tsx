@@ -111,7 +111,7 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
       <Tabs value={tab} onValueChange={(v) => router.replace(`${pathname}?tab=${v}`, { scroll: false })}>
         {/* Tabs scroll sideways on phone. */}
         <ScrollArea className="-mx-4 w-auto lg:mx-0">
-          <TabsList className="mx-4 mb-1 lg:mx-0">
+          <TabsList className="mx-4 mb-1 min-w-[calc(100%-2rem)] lg:mx-0 lg:w-full lg:min-w-0">
             {tabs.map((key) => (
               <TabsTrigger key={key} value={key} className="px-3">
                 {t(`tab_${key}`)}

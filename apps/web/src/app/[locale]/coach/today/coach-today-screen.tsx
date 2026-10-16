@@ -90,7 +90,7 @@ export function CoachTodayScreen() {
       <QueryState query={today}>
         {(data) => (
           <Tabs defaultValue="attention">
-            <TabsList className="w-full sm:w-auto">
+            <TabsList className="w-full">
               <TabsTrigger value="attention">
                 {t("attention")}
                 {data.needs_attention.length + (data.new_requests > 0 ? 1 : 0) > 0 && (

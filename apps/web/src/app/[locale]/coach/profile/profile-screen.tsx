@@ -193,7 +193,7 @@ function ProfileForm({
         variant="outline"
         value={view}
         onValueChange={(v) => v && setView(v as typeof view)}
-        className="w-full sm:w-auto"
+        className="w-full"
       >
         <ToggleGroupItem value="edit" className="h-11 flex-1">
           <PencilIcon aria-hidden />
@@ -455,7 +455,7 @@ function ProfileForm({
       {/* Unsaved changes: a sticky Save bar, above the tab bar on phone. */}
       {dirty && (
         <div className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 border-t glass-strong lg:bottom-4 lg:z-40 lg:border-0 lg:bg-transparent lg:ps-(--shell-inset) lg:backdrop-blur-none">
-          <div className="mx-auto flex max-w-[1200px] items-center gap-2 px-4 py-3 lg:w-[calc(100%-3rem)] lg:max-w-[1152px] lg:rounded-2xl lg:border lg:glass-strong lg:shadow-[0_16px_48px_-16px_rgba(0,0,0,0.5)] lg:glow-edge lg:px-5">
+          <div className="mx-auto flex items-center gap-2 px-4 py-3 lg:w-[calc(100%-3rem)] lg:rounded-2xl lg:border lg:glass-strong lg:shadow-[0_16px_48px_-16px_rgba(0,0,0,0.5)] lg:glow-edge lg:px-5">
             <TriangleAlertIcon className="size-5 shrink-0 text-warning" aria-hidden />
             <span className="flex-1 text-sm font-semibold" role="status">
               {t("unsaved")}

@@ -146,7 +146,7 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
           value={draft.plan.name}
           onChange={(e) => edit((p) => ({ ...p, plan: { ...p.plan, name: e.target.value } }))}
           aria-label={tB("name")}
-          className="h-11 max-w-md flex-1 border-transparent bg-transparent text-xl font-bold hover:border-border focus-visible:bg-secondary"
+          className="h-11 min-w-0 flex-1 border-transparent bg-transparent text-xl font-bold hover:border-border focus-visible:bg-secondary"
         />
         <SaveIndicator status={status} />
         <div className="ms-auto flex gap-2">
@@ -189,7 +189,7 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
           else createVersion(type);
         }}
       >
-        <TabsList>
+        <TabsList className="w-full">
           {(["training", "rest", "any"] as const).map((type) => {
             const exists = isTemplate || type === draft.plan.day_type || versions.some((p) => p.day_type === type);
             return (
@@ -256,9 +256,9 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
               ) : (
                 file.data && <p className="text-xs text-hint">{t("noSuggestion")}</p>
               ))}
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               {(["kcal", "protein", "carbs", "fat", "water_ml"] as const).map((key) => (
-                <div key={key} className="flex w-28 flex-col gap-1">
+                <div key={key} className="flex min-w-0 flex-col gap-1">
                   <Label htmlFor={`t-${key}`} className="text-xs">
                     {t(key === "water_ml" ? "water" : key)}
                   </Label>

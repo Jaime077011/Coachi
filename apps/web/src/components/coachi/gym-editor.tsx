@@ -72,7 +72,7 @@ export function GymEditor({ value, onChange }: { value: GymInput; onChange: (nex
               ))}
             </ToggleGroup>
             {group === "free_weights" && value.items.includes("dumbbells") && (
-              <div className="mt-2 flex max-w-60 flex-col gap-1.5">
+              <div className="mt-2 flex flex-col gap-1.5">
                 <Label htmlFor="gym-db-max">{t("dumbbellsMax")}</Label>
                 <Input
                   id="gym-db-max"

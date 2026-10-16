@@ -55,9 +55,9 @@ export function CoachesAdminScreen() {
           </Button>
         }
       />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3">
         <Tabs value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-          <TabsList className="w-full overflow-x-auto lg:w-auto">
+          <TabsList className="w-full overflow-x-auto">
             {statuses.map((s) => (
               <TabsTrigger key={s} value={s}>
                 {s === "all" ? t("all") : tSub(`status_${s}`)}
@@ -65,7 +65,7 @@ export function CoachesAdminScreen() {
             ))}
           </TabsList>
         </Tabs>
-        <div className="relative lg:w-72">
+        <div className="relative w-full">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
           <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
         </div>

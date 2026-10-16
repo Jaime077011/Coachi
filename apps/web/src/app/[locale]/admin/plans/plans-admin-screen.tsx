@@ -72,7 +72,7 @@ function PlanCard({ data }: { data: PlanWithFeatures }) {
               id={`lim-${data.plan.id}`}
               dir="ltr"
               inputMode="numeric"
-              className="h-10 w-24 tabular-nums"
+              className="h-10 min-w-0 flex-1 tabular-nums"
               disabled={limit === null}
               defaultValue={typeof limit === "number" ? limit : ""}
               onBlur={(e) => {
@@ -93,7 +93,7 @@ function PlanCard({ data }: { data: PlanWithFeatures }) {
               id={`seats-${data.plan.id}`}
               dir="ltr"
               inputMode="numeric"
-              className="h-10 w-24 tabular-nums"
+              className="h-10 min-w-0 flex-1 tabular-nums"
               disabled={seats === null}
               defaultValue={typeof seats === "number" ? seats : ""}
               onBlur={(e) => {
@@ -119,7 +119,7 @@ function PlanCard({ data }: { data: PlanWithFeatures }) {
             id={`ai-${data.plan.id}`}
             dir="ltr"
             inputMode="numeric"
-            className="h-10 w-24 tabular-nums"
+            className="h-10 min-w-0 flex-1 tabular-nums"
             defaultValue={typeof value("ai_credits") === "number" ? (value("ai_credits") as number) : 0}
             onBlur={(e) => update.mutate({ key: "ai_credits", value: Math.max(0, Number(e.target.value) || 0) })}
           />

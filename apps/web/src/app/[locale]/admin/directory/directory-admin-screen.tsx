@@ -44,7 +44,7 @@ export function DirectoryAdminScreen() {
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} className="mb-2" />
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="waiting">{t("waiting")}</TabsTrigger>
           <TabsTrigger value="listed">{t("listed")}</TabsTrigger>
           <TabsTrigger value="hidden">{t("hidden")}</TabsTrigger>

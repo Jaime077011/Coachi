@@ -45,13 +45,13 @@ export function AuditScreen() {
   return (
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} className="mb-2" />
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="relative w-full">
           <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
           <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
         </div>
-        <Input type="date" dir="ltr" value={from} onChange={(e) => setFrom(e.target.value)} className="sm:w-44" aria-label={t("col_when")} />
-        <Input type="date" dir="ltr" value={to} onChange={(e) => setTo(e.target.value)} className="sm:w-44" aria-label={t("col_when")} />
+        <Input type="date" dir="ltr" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full" aria-label={t("col_when")} />
+        <Input type="date" dir="ltr" value={to} onChange={(e) => setTo(e.target.value)} className="w-full" aria-label={t("col_when")} />
       </div>
       <QueryState query={log} isEmpty={(l) => l.length === 0} empty={<EmptyState icon={ScrollTextIcon} title={t("empty")} />}>
         {(rows) => {

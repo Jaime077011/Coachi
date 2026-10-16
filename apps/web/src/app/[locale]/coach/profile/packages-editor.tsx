@@ -68,7 +68,7 @@ export function PackagesEditor({ drafts, onChange }: { drafts: PackageDraft[]; o
             <Label htmlFor={`pk-name-${d.key}`}>{t("packageName")}</Label>
             <Input id={`pk-name-${d.key}`} dir="auto" maxLength={60} value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder={t("packageNamePlaceholder")} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`pk-price-${d.key}`}>{t("packagePrice")}</Label>
               <Input id={`pk-price-${d.key}`} dir="ltr" inputMode="numeric" value={d.egp} onChange={(e) => update(i, { egp: e.target.value.replace(/[^\d.]/g, "") })} />

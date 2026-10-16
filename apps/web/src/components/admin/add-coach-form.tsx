@@ -77,7 +77,7 @@ export function AddCoachForm({
         </Button>
       }
     >
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="c-name">{t("name")}</Label>
           <Input id="c-name" value={form.name} onChange={set("name")} />

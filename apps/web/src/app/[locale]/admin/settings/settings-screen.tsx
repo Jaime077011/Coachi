@@ -42,7 +42,7 @@ function SettingsForm({ initial }: { initial: AppSettings }) {
   });
 
   return (
-    <div className="flex max-w-xl flex-col gap-5 pb-24">
+    <div className="flex flex-col gap-5 pb-24">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="s-name">{t("appName")}</Label>
         <Input id="s-name" value={form.app_name} onChange={(e) => setForm({ ...form, app_name: e.target.value })} />
@@ -68,7 +68,7 @@ function SettingsForm({ initial }: { initial: AppSettings }) {
       {/* Unsaved changes: a sticky Save bar. */}
       {dirty && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t glass-strong pb-[env(safe-area-inset-bottom)] lg:ps-(--shell-inset)">
-          <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-3 lg:px-6">
+          <div className="flex items-center gap-3 px-4 py-3 lg:px-6">
             <TriangleAlertIcon className="size-5 text-warning" aria-hidden />
             <span className="flex-1 text-sm font-semibold">{t("unsaved")}</span>
             <Button variant="ghost" onClick={() => setForm(initial)}>

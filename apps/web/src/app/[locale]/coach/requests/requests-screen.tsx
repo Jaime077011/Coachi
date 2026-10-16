@@ -44,7 +44,7 @@ export function RequestsScreen() {
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} className="mb-2" />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="new">{t("new")}</TabsTrigger>
           <TabsTrigger value="answered">{t("answered")}</TabsTrigger>
         </TabsList>
@@ -183,7 +183,7 @@ export function DeclineRequest({ requestId }: { requestId: string }) {
         </Button>
       }
     >
-      <Textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={t("declinePlaceholder")} aria-label={t("declineTitle", { name: "" })} maxLength={300} className="max-w-2xl" />
+      <Textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={t("declinePlaceholder")} aria-label={t("declineTitle", { name: "" })} maxLength={300} />
     </ScreenPanel>
   );
 }

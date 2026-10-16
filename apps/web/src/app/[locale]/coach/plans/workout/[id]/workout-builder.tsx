@@ -189,7 +189,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
           value={draft.program.name}
           onChange={(e) => edit((p) => ({ ...p, program: { ...p.program, name: e.target.value } }))}
           aria-label={t("name")}
-          className="h-11 max-w-md flex-1 border-transparent bg-transparent text-xl font-bold hover:border-border focus-visible:bg-secondary"
+          className="h-11 min-w-0 flex-1 border-transparent bg-transparent text-xl font-bold hover:border-border focus-visible:bg-secondary"
         />
         <SaveIndicator status={status} />
         <div className="ms-auto flex gap-2">
@@ -238,7 +238,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
       <div className="flex flex-col gap-4">
         {/* Weeks and days, full width (min-w-0 so the day strip scrolls instead of widening the page) */}
         <section className="flex min-w-0 flex-col gap-3">
-          <div className="flex max-w-sm items-end gap-2">
+          <div className="flex items-end gap-2">
             <div className="flex flex-1 flex-col gap-1.5">
               <Label className="text-xs">{t("weeks")}</Label>
               <Select value={String(week)} onValueChange={(v) => selectWeek(Number(v))}>

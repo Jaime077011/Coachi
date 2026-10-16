@@ -62,7 +62,7 @@ function TeamBody({ data, onInvite }: { data: TeamView; onInvite: () => void }) 
 
   return (
     <Tabs defaultValue="members">
-      <TabsList className="w-full sm:w-auto">
+      <TabsList className="w-full">
         <TabsTrigger value="members">{t("members")}</TabsTrigger>
         <TabsTrigger value="roles">{t("rolesTab")}</TabsTrigger>
       </TabsList>

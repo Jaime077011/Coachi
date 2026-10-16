@@ -113,20 +113,20 @@ export function ClientsScreen() {
           )
         }
       />
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-          <TabsList className="w-full overflow-x-auto lg:w-auto">
+          <TabsList className="w-full overflow-x-auto">
             {(["active", "attention", "paused", "all"] as const).map((f) => (
-              <TabsTrigger key={f} value={f} className="flex-1 lg:flex-none">
+              <TabsTrigger key={f} value={f}>
                 {t(`tab_${f}`)}
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
-        <div className="flex flex-col gap-3 sm:flex-row lg:items-center">
+        <div className="flex flex-col gap-3">
           {hasTeam && can("clients_assign") && (
             <Select value={member} onValueChange={setMember}>
-              <SelectTrigger className="h-11 sm:w-48" aria-label={tTeam("filterLabel")}>
+              <SelectTrigger className="h-11 w-full" aria-label={tTeam("filterLabel")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -140,7 +140,7 @@ export function ClientsScreen() {
               </SelectContent>
             </Select>
           )}
-          <div className="relative flex-1 lg:w-72 lg:flex-none">
+          <div className="relative w-full">
             <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
             <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
           </div>

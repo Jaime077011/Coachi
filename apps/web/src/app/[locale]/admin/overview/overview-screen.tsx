@@ -95,7 +95,7 @@ export function OverviewScreen() {
               </CardContent>
             </Card>
             <Tabs defaultValue="ending">
-              <TabsList className="w-full overflow-x-auto sm:w-auto">
+              <TabsList className="w-full overflow-x-auto">
                 <TabsTrigger value="ending">{t("endingSoon")}</TabsTrigger>
                 <TabsTrigger value="newest">{t("newest")}</TabsTrigger>
                 <TabsTrigger value="requests">{tLeads("title")}</TabsTrigger>

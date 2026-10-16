@@ -112,7 +112,7 @@ function FormEditor({ coachId, initial }: { coachId: string; initial: CheckinFor
       </section>
 
       <section className="flex flex-col gap-4">
-        <div className="flex max-w-sm flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="ci-day">{t("day")}</Label>
           <Select value={String(day)} onValueChange={(v) => setDay(Number(v))}>
             <SelectTrigger id="ci-day" className="h-12 w-full">

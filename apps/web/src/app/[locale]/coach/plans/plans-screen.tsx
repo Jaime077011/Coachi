@@ -103,8 +103,8 @@ export function PlansScreen() {
     <div className="flex flex-col gap-4">
       <ScreenHeader title={t("title")} className="mb-2" />
       <Tabs defaultValue="workout">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <TabsList>
+        <div className="mb-4 flex flex-col gap-3">
+          <TabsList className="w-full">
             <TabsTrigger value="workout">{t("workout")}</TabsTrigger>
             <TabsTrigger value="nutrition">{t("nutrition")}</TabsTrigger>
           </TabsList>

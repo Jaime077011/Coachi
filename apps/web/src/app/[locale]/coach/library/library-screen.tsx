@@ -59,12 +59,12 @@ export function LibraryScreen({ admin = false }: { admin?: boolean }) {
         }
       />
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
+        <div className="mb-4 flex flex-col gap-3">
+          <TabsList className="w-full">
             <TabsTrigger value="exercises">{t("exercises")}</TabsTrigger>
             <TabsTrigger value="foods">{t("foods")}</TabsTrigger>
           </TabsList>
-          <div className="relative sm:w-72">
+          <div className="relative w-full">
             <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-hint" aria-hidden />
             <Input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="ps-10" />
           </div>
@@ -253,7 +253,7 @@ export function AddExerciseForm({ back }: { back: string }) {
         </Button>
       }
     >
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <Field id="ex-ar" label={t("nameAr")}>
           <Input id="ex-ar" lang="ar" dir="rtl" value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
         </Field>
@@ -359,7 +359,7 @@ export function AddFoodForm({ back }: { back: string }) {
         </Button>
       }
     >
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <Field id="fd-ar" label={t("nameAr")}>
           <Input id="fd-ar" lang="ar" dir="rtl" value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
         </Field>

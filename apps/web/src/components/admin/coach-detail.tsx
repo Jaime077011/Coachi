@@ -125,7 +125,7 @@ export function CoachDetail({ coachId }: { coachId: string }) {
             </div>
 
             <Tabs defaultValue="details">
-              <TabsList className="w-full sm:w-auto">
+              <TabsList className="w-full">
                 <TabsTrigger value="details">{t("details")}</TabsTrigger>
                 <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
                 <TabsTrigger value="notes">{t("notes")}</TabsTrigger>
@@ -213,7 +213,7 @@ export function DeleteCoach({ coachId }: { coachId: string }) {
               </Button>
             }
           >
-            <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={t("deleteConfirm")} aria-label={t("deleteConfirm")} className="max-w-md" />
+            <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={t("deleteConfirm")} aria-label={t("deleteConfirm")} />
           </ScreenPanel>
         )
       }
