@@ -38,8 +38,8 @@ export function OverviewTab({ clientId, data }: { clientId: string; data: Client
   const latest = progress.data?.checkins.at(-1);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Card className="lg:col-span-2">
+    <div className="flex flex-col gap-6">
+      <Card>
         <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <StatBlock value={start != null ? fmt.num(start) : "—"} label={t("startWeight")} />
           <StatBlock
@@ -85,7 +85,7 @@ export function OverviewTab({ clientId, data }: { clientId: string; data: Client
       </section>
 
       {canEdit && (
-        <section className="lg:col-span-2">
+        <section>
           <SectionTitle>{t("coachWord")}</SectionTitle>
           <form
             className="flex gap-2"

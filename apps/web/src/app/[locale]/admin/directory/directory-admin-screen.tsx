@@ -56,7 +56,7 @@ export function DirectoryAdminScreen() {
         empty={<EmptyState icon={HourglassIcon} title={t("queueEmpty")} />}
       >
         {(items) => (
-          <ul className="grid gap-4 lg:grid-cols-2">
+          <ul className="flex flex-col gap-4">
             {items
               .filter((i) => bucket(i) === tab)
               .map((i) => (

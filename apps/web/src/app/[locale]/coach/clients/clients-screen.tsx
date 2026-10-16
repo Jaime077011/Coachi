@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchIcon, SearchXIcon, UserPlusIcon, UsersRoundIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AddClientDialog } from "@/components/coach/add-client-dialog";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader } from "@/components/coachi/screen-header";
 import { SortableTable, type Column } from "@/components/coachi/sortable-table";
@@ -42,7 +41,6 @@ export function ClientsScreen() {
   const [search, setSearch] = useState("");
   /** "all", "none" (unassigned), or a team member id. */
   const [member, setMember] = useState("all");
-  const [adding, setAdding] = useState(false);
   const list = useQuery({ queryKey: qk.clients(coachId), queryFn: () => api.clients.list(coachId), enabled: !!coachId });
 
   const visible = (rows: ClientSummary[]) =>
@@ -108,7 +106,7 @@ export function ClientsScreen() {
         className="mb-2"
         action={
           can("clients_invite") && (
-            <Button onClick={() => setAdding(true)} className="max-sm:size-12 max-sm:px-0" aria-label={tAdd("title")}>
+            <Button onClick={() => router.push("/coach/clients/new")} className="max-sm:size-12 max-sm:px-0" aria-label={tAdd("title")}>
               <UserPlusIcon data-icon="inline-start" />
               <span className="max-sm:sr-only">{tAdd("title")}</span>
             </Button>
@@ -159,7 +157,7 @@ export function ClientsScreen() {
             body={can("clients_invite") ? undefined : tTeam("noAssignedBody")}
             action={
               can("clients_invite") && (
-                <Button onClick={() => setAdding(true)}>
+                <Button onClick={() => router.push("/coach/clients/new")}>
                   <UserPlusIcon data-icon="inline-start" />
                   {tAdd("title")}
                 </Button>
@@ -221,7 +219,6 @@ export function ClientsScreen() {
         }}
       </QueryState>
 
-      <AddClientDialog open={adding} onOpenChange={setAdding} />
     </div>
   );
 }

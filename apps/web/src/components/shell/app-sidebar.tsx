@@ -173,11 +173,11 @@ function CollapseTab({ collapsed, onToggle, label }: { collapsed: boolean; onTog
       aria-expanded={!collapsed}
       title={label}
       // end-2 = the panel's edge (the container's end padding); 1px back over the panel's border line.
-      className="group/tab absolute end-2 top-1/2 z-30 grid h-14 w-[22px] -translate-y-1/2 place-items-center rounded-e-xl text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
+      className="absolute end-2 top-1/2 z-30 grid h-14 w-[22px] -translate-y-1/2 place-items-center rounded-e-xl text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute start-0 -top-2.5 h-[76px] w-[23px] bg-sidebar backdrop-blur-2xl backdrop-saturate-150 transition-colors group-hover/tab:bg-sidebar-accent rtl:-scale-x-100"
+        className="pointer-events-none absolute start-0 -top-2.5 h-[76px] w-[23px] bg-sidebar backdrop-blur-2xl backdrop-saturate-150 rtl:-scale-x-100"
         style={{ clipPath: `path("${TAB_OUTLINE}Z")` }}
       />
       <svg aria-hidden width="23" height="76" viewBox="0 0 23 76" className="pointer-events-none absolute start-0 -top-2.5 overflow-visible rtl:-scale-x-100">
@@ -187,7 +187,7 @@ function CollapseTab({ collapsed, onToggle, label }: { collapsed: boolean; onTog
       <ChevronLeftIcon
         aria-hidden
         strokeWidth={2.5}
-        className={cn("relative size-[18px] transition-transform duration-200 rtl:-scale-x-100 group-hover/tab:-translate-x-px rtl:group-hover/tab:translate-x-px", collapsed && "rotate-180")}
+        className={cn("relative size-[18px] transition-transform duration-200 rtl:-scale-x-100", collapsed && "rotate-180")}
       />
     </button>
   );

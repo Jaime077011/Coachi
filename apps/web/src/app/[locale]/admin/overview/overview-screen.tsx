@@ -5,17 +5,16 @@ import type { AdminCoachRow } from "@coachi/validation";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarClockIcon, MessageCircleIcon, ReceiptIcon, UserPlusIcon, UsersRoundIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { AddCoachDialog } from "@/components/admin/add-coach-dialog";
 import { CoachLeads } from "@/components/admin/coach-leads";
-import { RecordPaymentDialog } from "@/components/admin/record-payment-dialog";
 import { QueryState } from "@/components/coachi/query-state";
-import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
+import { ScreenHeader } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
 import { StatBlock } from "@/components/coachi/stats";
 import { StatusChip } from "@/components/coachi/status-chip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { subscriptionTone } from "@/lib/subscription-tone";
@@ -26,9 +25,8 @@ export function OverviewScreen() {
   const tSub = useTranslations("subscription");
   const tPay = useTranslations("admin.payment");
   const tCoaches = useTranslations("admin.coaches");
+  const tLeads = useTranslations("admin.leads");
   const fmt = useFmt();
-  const [adding, setAdding] = useState(false);
-  const [paying, setPaying] = useState(false);
   const overview = useQuery({ queryKey: qk.adminOverview, queryFn: () => api.admin.overview() });
 
   const row = (c: AdminCoachRow, action?: React.ReactNode) => (
@@ -53,13 +51,17 @@ export function OverviewScreen() {
         className="mb-0"
         action={
           <div className="hidden gap-2 sm:flex">
-            <Button variant="secondary" onClick={() => setPaying(true)}>
-              <ReceiptIcon data-icon="inline-start" />
-              {tPay("title")}
+            <Button asChild variant="secondary">
+              <Link href="/admin/payments/new">
+                <ReceiptIcon data-icon="inline-start" />
+                {tPay("title")}
+              </Link>
             </Button>
-            <Button onClick={() => setAdding(true)}>
-              <UserPlusIcon data-icon="inline-start" />
-              {tCoaches("add")}
+            <Button asChild>
+              <Link href={{ pathname: "/admin/coaches/new", query: { back: "/admin/overview" } }}>
+                <UserPlusIcon data-icon="inline-start" />
+                {tCoaches("add")}
+              </Link>
             </Button>
           </div>
         }
@@ -72,9 +74,11 @@ export function OverviewScreen() {
             icon={UsersRoundIcon}
             title={t("emptyTitle")}
             action={
-              <Button onClick={() => setAdding(true)}>
-                <UserPlusIcon data-icon="inline-start" />
-                {t("emptyTitle")}
+              <Button asChild>
+                <Link href={{ pathname: "/admin/coaches/new", query: { back: "/admin/overview" } }}>
+                  <UserPlusIcon data-icon="inline-start" />
+                  {t("emptyTitle")}
+                </Link>
               </Button>
             }
           />
@@ -90,9 +94,13 @@ export function OverviewScreen() {
                 <StatBlock value={fmt.num(o.ending_in_7_days)} label={t("ending7")} />
               </CardContent>
             </Card>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <section>
-                <SectionTitle>{t("endingSoon")}</SectionTitle>
+            <Tabs defaultValue="ending">
+              <TabsList className="w-full overflow-x-auto sm:w-auto">
+                <TabsTrigger value="ending">{t("endingSoon")}</TabsTrigger>
+                <TabsTrigger value="newest">{t("newest")}</TabsTrigger>
+                <TabsTrigger value="requests">{tLeads("title")}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="ending" className="mt-4">
                 {o.ending_soon.length === 0 ? (
                   <EmptyState icon={CalendarClockIcon} title={t("noneEnding")} />
                 ) : (
@@ -116,18 +124,17 @@ export function OverviewScreen() {
                     )}
                   </ul>
                 )}
-              </section>
-              <section>
-                <SectionTitle>{t("newest")}</SectionTitle>
+              </TabsContent>
+              <TabsContent value="newest" className="mt-4">
                 <ul className="divide-y rounded-lg border bg-card">{o.newest.map((c) => row(c))}</ul>
-              </section>
-            </div>
+              </TabsContent>
+              <TabsContent value="requests" className="mt-4">
+                <CoachLeads />
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </QueryState>
-      <CoachLeads />
-      <AddCoachDialog open={adding} onOpenChange={setAdding} />
-      <RecordPaymentDialog open={paying} onOpenChange={setPaying} />
     </div>
   );
 }

@@ -75,7 +75,7 @@ function FormEditor({ coachId, initial }: { coachId: string; initial: CheckinFor
   const dayName = (dow: number) => fmt.weekday(`2026-10-${String(11 + dow).padStart(2, "0")}`);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-3">
         <SectionTitle>{t("questions")}</SectionTitle>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -111,8 +111,8 @@ function FormEditor({ coachId, initial }: { coachId: string; initial: CheckinFor
         </form>
       </section>
 
-      <aside className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
+      <section className="flex flex-col gap-4">
+        <div className="flex max-w-sm flex-col gap-1.5">
           <Label htmlFor="ci-day">{t("day")}</Label>
           <Select value={String(day)} onValueChange={(v) => setDay(Number(v))}>
             <SelectTrigger id="ci-day" className="h-12 w-full">
@@ -143,11 +143,11 @@ function FormEditor({ coachId, initial }: { coachId: string; initial: CheckinFor
             ))}
           </div>
         )}
-        <Button size="lg" disabled={save.isPending || questions.length === 0} onClick={() => save.mutate()}>
+        <Button size="lg" className="w-fit" disabled={save.isPending || questions.length === 0} onClick={() => save.mutate()}>
           {save.isPending && <Loader2Icon className="animate-spin" />}
           {t("save")}
         </Button>
-      </aside>
+      </section>
     </div>
   );
 }

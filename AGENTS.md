@@ -16,3 +16,9 @@ Daily progress lives in `progress/`, one file per day named `YYYY-MM-DD.md` (see
 - At the start of a session, read the newest file in `progress/` to see where things stand and what is next.
 - When asked to log the day, create or update today's file. Never edit past days' files; add a new day instead.
 - Steps refer to the 6-step plan in `Coachi Starter Kit.md`.
+
+## Coach and admin screens (decided 2026-10-16)
+
+- No split screens: every section is full width, one under another. When a page has a lot, use tabs to switch between sections (e.g. Today: Needs attention / Activity).
+- No pop-ups (dialogs, drawers, sheets): every form, picker, and confirmation is its own screen, built with `ScreenPanel` (`components/coachi/screen-panel.tsx`) and a `?back=` link (`useBack`). Plan builders open their pickers as a full-screen view on the same route (`?pick=`) so the unsaved draft stays in memory.
+- Dropdown menus and select lists are fine. The client app is not covered by this rule.

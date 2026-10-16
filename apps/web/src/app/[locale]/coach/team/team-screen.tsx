@@ -5,12 +5,11 @@ import { helperRole, type HelperRole, type Invite, type OrgRole, type TeamMember
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CopyIcon, Loader2Icon, Trash2Icon, UserPlusIcon, UsersIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+
 import { toast } from "sonner";
-import { InviteHelperDialog } from "@/components/coach/invite-helper-dialog";
 import { SeatsNotice } from "@/components/coach/seats-notice";
 import { QueryState } from "@/components/coachi/query-state";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
@@ -18,8 +17,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMe } from "@/hooks/use-session";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { initials } from "@/lib/initials";
 import { qk } from "@/lib/query-keys";
@@ -30,7 +31,7 @@ export const roleTone: Record<OrgRole, Tone> = { owner: "success", head_coach: "
 export function TeamScreen() {
   const t = useTranslations("team");
   const { orgId } = useMe();
-  const [inviting, setInviting] = useState(false);
+  const router = useRouter();
   const team = useQuery({ queryKey: qk.team(orgId), queryFn: () => api.team.get(orgId), enabled: !!orgId });
   const noSeats = team.data?.seats_limit === 0;
 
@@ -41,15 +42,16 @@ export function TeamScreen() {
         className="mb-0"
         action={
           !noSeats && (
-            <Button onClick={() => setInviting(true)} className="max-sm:size-12 max-sm:px-0" aria-label={t("invite")}>
-              <UserPlusIcon data-icon="inline-start" />
-              <span className="max-sm:sr-only">{t("invite")}</span>
+            <Button asChild className="max-sm:size-12 max-sm:px-0">
+              <Link href="/coach/team/invite" aria-label={t("invite")}>
+                <UserPlusIcon data-icon="inline-start" />
+                <span className="max-sm:sr-only">{t("invite")}</span>
+              </Link>
             </Button>
           )
         }
       />
-      <QueryState query={team}>{(data) => <TeamBody data={data} onInvite={() => setInviting(true)} />}</QueryState>
-      <InviteHelperDialog open={inviting} onOpenChange={setInviting} />
+      <QueryState query={team}>{(data) => <TeamBody data={data} onInvite={() => router.push("/coach/team/invite")} />}</QueryState>
     </div>
   );
 }
@@ -59,8 +61,12 @@ function TeamBody({ data, onInvite }: { data: TeamView; onInvite: () => void }) 
   const helpers = data.members.filter((m) => m.member.role !== "owner");
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="flex flex-col gap-6">
+    <Tabs defaultValue="members">
+      <TabsList className="w-full sm:w-auto">
+        <TabsTrigger value="members">{t("members")}</TabsTrigger>
+        <TabsTrigger value="roles">{t("rolesTab")}</TabsTrigger>
+      </TabsList>
+      <TabsContent value="members" className="mt-4 flex flex-col gap-6">
         <Seats data={data} />
 
         <section>
@@ -98,12 +104,11 @@ function TeamBody({ data, onInvite }: { data: TeamView; onInvite: () => void }) 
             </ul>
           </section>
         )}
-      </div>
-
-      <aside>
+      </TabsContent>
+      <TabsContent value="roles" className="mt-4">
         <RolesCard />
-      </aside>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -129,7 +134,7 @@ function MemberRow({ m }: { m: TeamMemberView }) {
   const t = useTranslations("team");
   const { orgId, session } = useMe();
   const queryClient = useQueryClient();
-  const [removing, setRemoving] = useState(false);
+  const router = useRouter();
   const isOwner = m.member.role === "owner";
   const isMe = m.member.profile_id === session?.profile.id;
 
@@ -142,15 +147,6 @@ function MemberRow({ m }: { m: TeamMemberView }) {
     onSuccess: () => {
       toast.success(t("roleChanged"));
       refresh();
-    },
-  });
-  const remove = useMutation({
-    mutationFn: () => api.team.remove(m.member.id),
-    onSuccess: () => {
-      setRemoving(false);
-      toast.success(t("removed", { name: m.name }));
-      refresh();
-      void queryClient.invalidateQueries({ queryKey: ["clients"] });
     },
   });
 
@@ -183,28 +179,11 @@ function MemberRow({ m }: { m: TeamMemberView }) {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label={t("remove", { name: m.name })} onClick={() => setRemoving(true)}>
+          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label={t("remove", { name: m.name })} onClick={() => router.push(`/coach/team/${m.member.id}/remove`)}>
             <Trash2Icon />
           </Button>
         </div>
       )}
-      <ResponsiveDialog
-        open={removing}
-        onOpenChange={setRemoving}
-        title={t("removeTitle", { name: m.name })}
-        description={t("removeBody")}
-        footer={
-          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="secondary" onClick={() => setRemoving(false)}>
-              {t("keep")}
-            </Button>
-            <Button variant="destructive" disabled={remove.isPending} onClick={() => remove.mutate()}>
-              {remove.isPending && <Loader2Icon className="animate-spin" />}
-              {t("removeConfirm")}
-            </Button>
-          </div>
-        }
-      />
     </li>
   );
 }
@@ -268,5 +247,43 @@ function RolesCard() {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** /coach/team/<memberId>/remove: removing never deletes anything, but it asks first. */
+export function RemoveMember({ memberId }: { memberId: string }) {
+  const t = useTranslations("team");
+  const { orgId } = useMe();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const team = useQuery({ queryKey: qk.team(orgId), queryFn: () => api.team.get(orgId), enabled: !!orgId });
+  const m = team.data?.members.find((x) => x.member.id === memberId);
+  const remove = useMutation({
+    mutationFn: () => api.team.remove(memberId),
+    onSuccess: () => {
+      toast.success(t("removed", { name: m?.name ?? "" }));
+      void queryClient.invalidateQueries({ queryKey: qk.team(orgId) });
+      void queryClient.invalidateQueries({ queryKey: qk.teamMembers(orgId) });
+      void queryClient.invalidateQueries({ queryKey: ["clients"] });
+      router.push("/coach/team");
+    },
+  });
+  return (
+    <ScreenPanel
+      back="/coach/team"
+      title={t("removeTitle", { name: m?.name ?? "" })}
+      description={t("removeBody")}
+      footer={
+        <>
+          <Button asChild variant="secondary">
+            <Link href="/coach/team">{t("keep")}</Link>
+          </Button>
+          <Button variant="destructive" disabled={remove.isPending || !m} onClick={() => remove.mutate()}>
+            {remove.isPending && <Loader2Icon className="animate-spin" />}
+            {t("removeConfirm")}
+          </Button>
+        </>
+      }
+    />
   );
 }

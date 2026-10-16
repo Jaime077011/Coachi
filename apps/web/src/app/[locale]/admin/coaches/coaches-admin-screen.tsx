@@ -6,8 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchIcon, SearchXIcon, UserPlusIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AddCoachDialog } from "@/components/admin/add-coach-dialog";
-import { CoachPanel } from "@/components/admin/coach-panel";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader } from "@/components/coachi/screen-header";
 import { SortableTable, type Column } from "@/components/coachi/sortable-table";
@@ -16,6 +14,7 @@ import { StatusChip } from "@/components/coachi/status-chip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { subscriptionTone } from "@/lib/subscription-tone";
@@ -28,10 +27,8 @@ export function CoachesAdminScreen() {
   const fmt = useFmt();
   const [status, setStatus] = useState<SubscriptionStatus | "all">("all");
   const [search, setSearch] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const router = useRouter();
   const coaches = useQuery({ queryKey: qk.adminCoaches, queryFn: () => api.admin.coaches() });
-  const open = coaches.data?.find((c) => c.coach_id === openId) ?? null;
 
   const chip = (c: AdminCoachRow) => <StatusChip tone={subscriptionTone[c.status]}>{tSub(`status_${c.status}`)}</StatusChip>;
   const columns: Column<AdminCoachRow>[] = [
@@ -50,9 +47,11 @@ export function CoachesAdminScreen() {
         title={t("title")}
         className="mb-2"
         action={
-          <Button onClick={() => setAdding(true)}>
-            <UserPlusIcon data-icon="inline-start" />
-            {t("add")}
+          <Button asChild>
+            <Link href="/admin/coaches/new">
+              <UserPlusIcon data-icon="inline-start" />
+              {t("add")}
+            </Link>
           </Button>
         }
       />
@@ -95,7 +94,7 @@ export function CoachesAdminScreen() {
                   <li key={c.coach_id}>
                     <button
                       type="button"
-                      onClick={() => setOpenId(c.coach_id)}
+                      onClick={() => router.push(`/admin/coaches/${c.coach_id}`)}
                       className="flex w-full items-center gap-3 rounded-lg border bg-card p-3 text-start hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     >
                       <div className="min-w-0 flex-1">
@@ -110,14 +109,12 @@ export function CoachesAdminScreen() {
                 ))}
               </ul>
               <div className="hidden lg:block">
-                <SortableTable label={t("title")} columns={columns} rows={shown} rowKey={(c) => c.coach_id} onRowClick={(c) => setOpenId(c.coach_id)} defaultSort={{ key: "end", dir: "asc" }} />
+                <SortableTable label={t("title")} columns={columns} rows={shown} rowKey={(c) => c.coach_id} onRowClick={(c) => router.push(`/admin/coaches/${c.coach_id}`)} defaultSort={{ key: "end", dir: "asc" }} />
               </div>
             </>
           );
         }}
       </QueryState>
-      <CoachPanel coach={open} onOpenChange={(o) => !o && setOpenId(null)} />
-      <AddCoachDialog open={adding} onOpenChange={setAdding} />
     </div>
   );
 }

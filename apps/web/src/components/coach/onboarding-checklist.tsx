@@ -38,7 +38,7 @@ function useDismissed(orgId: string) {
  * Full Spec > Onboarding: 3 steps on first login (logo, first client, starter template).
  * Each step ticks itself from real data; the card goes away when all 3 are done or he closes it.
  */
-export function OnboardingChecklist({ onAddClient }: { onAddClient: () => void }) {
+export function OnboardingChecklist() {
   const t = useTranslations("onboarding");
   const { session, orgId, coachId } = useMe();
   const isOwner = session?.member_role === "owner";
@@ -53,7 +53,7 @@ export function OnboardingChecklist({ onAddClient }: { onAddClient: () => void }
 
   const steps = [
     { key: "logo", done: !!brand.data.logo_url, action: <Link href="/coach/profile">{t("logoAction")}</Link> },
-    { key: "client", done: clients.data.length > 0, action: t("clientAction"), onClick: onAddClient },
+    { key: "client", done: clients.data.length > 0, action: <Link href={{ pathname: "/coach/clients/new", query: { back: "/coach/today" } }}>{t("clientAction")}</Link> },
     { key: "template", done: programs.data.some((p) => p.client_id !== null), action: <Link href="/coach/plans">{t("templateAction")}</Link> },
   ] as const;
   const doneCount = steps.filter((s) => s.done).length;
@@ -93,16 +93,11 @@ export function OnboardingChecklist({ onAddClient }: { onAddClient: () => void }
                 <span className="sr-only">{s.done ? t("doneLabel") : t("todoLabel")} </span>
                 {i + 1}. {t(`${s.key}Title`)}
               </span>
-              {!s.done &&
-                ("onClick" in s ? (
-                  <Button size="sm" onClick={s.onClick}>
-                    {s.action}
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="secondary" asChild>
-                    {s.action}
-                  </Button>
-                ))}
+              {!s.done && (
+                <Button size="sm" variant={s.key === "client" ? "default" : "secondary"} asChild>
+                  {s.action}
+                </Button>
+              )}
             </li>
           ))}
         </ol>

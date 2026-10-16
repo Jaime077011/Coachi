@@ -6,9 +6,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardPlusIcon, MailWarningIcon, MessageCircleIcon, UserRoundCogIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { use, useState } from "react";
+import { use } from "react";
 import { toast } from "sonner";
-import { AssignTemplateDialog } from "@/components/coach/assign-dialogs";
 import { QueryState } from "@/components/coachi/query-state";
 import { BackLink } from "@/components/coachi/screen-header";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
@@ -51,7 +50,7 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
   const search = useSearchParams();
   const requested = search.get("tab") as Tab | null;
   const tab: Tab = requested && tabs.includes(requested) ? requested : "overview";
-  const [assigning, setAssigning] = useState(false);
+  const assignHref = `/coach/clients/${clientId}/assign`;
   const can = useCan();
   const resend = useMutation({
     mutationFn: async () => {
@@ -89,7 +88,7 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
             </Button>
           )}
           {can("plans_edit") && (
-            <Button className="flex-1 sm:flex-none" onClick={() => setAssigning(true)}>
+            <Button className="flex-1 sm:flex-none" onClick={() => router.push(assignHref)}>
               <ClipboardPlusIcon data-icon="inline-start" />
               {t("assignPlan")}
             </Button>
@@ -131,7 +130,7 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
           <NotesTab clientId={clientId} notes={data.notes} />
         </TabsContent>
         <TabsContent value="plans" className="mt-4">
-          <PlansTab clientId={clientId} onAssign={() => setAssigning(true)} />
+          <PlansTab clientId={clientId} onAssign={() => router.push(assignHref)} />
         </TabsContent>
         <TabsContent value="progress" className="mt-4">
           <ProgressTab clientId={clientId} />
@@ -141,7 +140,6 @@ function ClientFileView({ clientId, data }: { clientId: string; data: ClientFile
         </TabsContent>
       </Tabs>
 
-      <AssignTemplateDialog clientId={clientId} open={assigning} onOpenChange={setAssigning} />
     </div>
   );
 }

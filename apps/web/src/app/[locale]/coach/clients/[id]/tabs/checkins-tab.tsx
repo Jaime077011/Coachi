@@ -74,7 +74,7 @@ function CheckinCard({ clientId, checkin, form }: { clientId: string; checkin: C
             {!checkin.read_at && <Badge className="bg-info text-white">{t("unread")}</Badge>}
             {checkin.weight_kg != null && <span className="ms-auto font-stat text-2xl tabular-nums">{fmt.kg(checkin.weight_kg)}</span>}
           </div>
-          <dl className="grid gap-3 sm:grid-cols-2">
+          <dl className="flex flex-col gap-3">
             {checkin.answers.map((a) => (
               <div key={a.question_id} className="flex flex-col gap-0.5">
                 <dt className="text-xs text-hint">{question(a.question_id)}</dt>

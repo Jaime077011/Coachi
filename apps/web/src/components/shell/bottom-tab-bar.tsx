@@ -3,14 +3,7 @@
 import { EllipsisIcon } from "lucide-react";
 import { useCan } from "@/hooks/use-can";
 import { useTranslations } from "next-intl";
-import { Suspense, useState } from "react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { Suspense } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { isActive, navSets, type NavSet } from "./nav-config";
@@ -42,8 +35,7 @@ function TabBarView({ nav, className, pathname }: Props & { pathname: string | n
   const more = navSets[nav].more?.filter(allowed);
   const t = useTranslations("nav");
   const tShell = useTranslations("shell");
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreActive = more?.some((item) => isActive(pathname, item.href)) ?? false;
+  const moreActive = isActive(pathname, "/coach/more") || (more?.some((item) => isActive(pathname, item.href)) ?? false);
   const columns = items.length + (more ? 1 : 0);
 
   return (
@@ -72,34 +64,15 @@ function TabBarView({ nav, className, pathname }: Props & { pathname: string | n
         })}
         {more && (
           <li className="contents">
-            <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
-              <DrawerTrigger className={cn(tabClass, moreActive ? "text-primary" : "text-hint hover:text-foreground")}>
-                <EllipsisIcon className="size-6" aria-hidden />
-                {tShell("more")}
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>{tShell("more")}</DrawerTitle>
-                </DrawerHeader>
-                <ul className="flex flex-col gap-1 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-                  {more.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setMoreOpen(false)}
-                        className={cn(
-                          "flex min-h-12 items-center gap-3 rounded-md px-3 font-semibold hover:bg-accent",
-                          isActive(pathname, item.href) && "bg-accent text-primary",
-                        )}
-                      >
-                        <item.icon className="size-5" aria-hidden />
-                        {t(item.label)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </DrawerContent>
-            </Drawer>
+            {/* No pop-ups: "More" is its own screen with the rest of the menu. */}
+            <Link
+              href="/coach/more"
+              aria-current={moreActive ? "page" : undefined}
+              className={cn(tabClass, moreActive ? "text-primary" : "text-hint hover:text-foreground")}
+            >
+              <EllipsisIcon className="size-6" aria-hidden />
+              {tShell("more")}
+            </Link>
           </li>
         )}
       </ul>

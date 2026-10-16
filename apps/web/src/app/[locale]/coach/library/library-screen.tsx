@@ -5,11 +5,12 @@ import { equipment, gymItem, muscleGroup, type Exercise, type Food, type GymItem
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PlayCircleIcon, PlusIcon, SearchIcon, SearchXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useGymItemLabel } from "@/components/coachi/gym-editor";
 import { QueryState } from "@/components/coachi/query-state";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { ScreenHeader } from "@/components/coachi/screen-header";
 import { SortableTable, type Column } from "@/components/coachi/sortable-table";
 import { EmptyState } from "@/components/coachi/states";
@@ -21,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 
@@ -34,8 +36,15 @@ export function LibraryScreen({ admin = false }: { admin?: boolean }) {
   const t = useTranslations("library");
   const tAdmin = useTranslations("admin.libraries");
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"exercises" | "foods">("exercises");
-  const [adding, setAdding] = useState(false);
+  const router = useRouter();
+  // ?tab=foods: coming back from adding a food lands on the foods list.
+  const [tab, setTab] = useState<"exercises" | "foods">(useSearchParams().get("tab") === "foods" ? "foods" : "exercises");
+  const base = admin ? "/admin/libraries" : "/coach/library";
+  const addHref = {
+    pathname: `${base}/new`,
+    query: { type: tab === "exercises" ? "exercise" : "food", back: tab === "foods" ? `${base}?tab=foods` : base },
+  };
+  const add = () => router.push(addHref);
 
   return (
     <div className="flex flex-col gap-4">
@@ -43,7 +52,7 @@ export function LibraryScreen({ admin = false }: { admin?: boolean }) {
         title={admin ? tAdmin("title") : t("title")}
         className="mb-2"
         action={
-          <Button onClick={() => setAdding(true)}>
+          <Button onClick={add}>
             <PlusIcon data-icon="inline-start" />
             {tab === "exercises" ? t("addExercise") : t("addFood")}
           </Button>
@@ -61,13 +70,12 @@ export function LibraryScreen({ admin = false }: { admin?: boolean }) {
           </div>
         </div>
         <TabsContent value="exercises">
-          <Exercises search={search} onAdd={() => setAdding(true)} />
+          <Exercises search={search} onAdd={add} />
         </TabsContent>
         <TabsContent value="foods">
-          <Foods search={search} onAdd={() => setAdding(true)} />
+          <Foods search={search} onAdd={add} />
         </TabsContent>
       </Tabs>
-      {tab === "exercises" ? <AddExerciseDialog open={adding} onOpenChange={setAdding} /> : <AddFoodDialog open={adding} onOpenChange={setAdding} />}
     </div>
   );
 }
@@ -209,8 +217,10 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Its own screen: /coach/library/new?type=exercise (and the admin's). */
+export function AddExerciseForm({ back }: { back: string }) {
   const t = useTranslations("library");
+  const router = useRouter();
   const queryClient = useQueryClient();
   const gymLabel = useGymItemLabel();
   const [form, setForm] = useState({ name_ar: "", name_en: "", muscle: "chest", equipment: "dumbbell", video_url: "" });
@@ -228,25 +238,22 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     onSuccess: () => {
       toast.success(t("added"));
       void queryClient.invalidateQueries({ queryKey: qk.exercises });
-      onOpenChange(false);
-      setForm((f) => ({ ...f, name_ar: "", name_en: "", video_url: "" }));
-      setGymItems([]);
+      router.push(back);
     },
   });
   const valid = form.name_ar.trim() && form.name_en.trim();
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
+    <ScreenPanel
+      back={back}
       title={t("addExercise")}
       footer={
-        <Button className="w-full sm:w-auto" disabled={!valid || add.isPending} onClick={() => add.mutate()}>
+        <Button disabled={!valid || add.isPending} onClick={() => add.mutate()}>
           {add.isPending && <Loader2Icon className="animate-spin" />}
           {t("addExercise")}
         </Button>
       }
     >
-      <div className="grid gap-4 pb-2 sm:grid-cols-2">
+      <div className="flex max-w-2xl flex-col gap-4">
         <Field id="ex-ar" label={t("nameAr")}>
           <Input id="ex-ar" lang="ar" dir="rtl" value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
         </Field>
@@ -281,7 +288,7 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             </SelectContent>
           </Select>
         </Field>
-        <div className="flex flex-col gap-2 sm:col-span-2">
+        <div className="flex flex-col gap-2">
           {/* What the gym must have for this exercise, so client plans only show it when it fits. */}
           <Label>{t("gymItems")}</Label>
           <ToggleGroup
@@ -299,18 +306,20 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             ))}
           </ToggleGroup>
         </div>
-        <div className="sm:col-span-2">
+        <div>
           <Field id="ex-video" label={t("video")}>
             <Input id="ex-video" type="url" dir="ltr" placeholder="https://youtube.com/…" value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} />
           </Field>
         </div>
       </div>
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }
 
-function AddFoodDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Its own screen: /coach/library/new?type=food (and the admin's). */
+export function AddFoodForm({ back }: { back: string }) {
   const t = useTranslations("library");
+  const router = useRouter();
   const queryClient = useQueryClient();
   const empty = { name_ar: "", name_en: "", serving: "100 g", serving_g: "100", kcal: "", protein: "", carbs: "", fat: "" };
   const [form, setForm] = useState(empty);
@@ -330,8 +339,7 @@ function AddFoodDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     onSuccess: () => {
       toast.success(t("added"));
       void queryClient.invalidateQueries({ queryKey: qk.foods });
-      onOpenChange(false);
-      setForm(empty);
+      router.push(back);
     },
   });
   const valid = form.name_ar.trim() && form.name_en.trim() && form.kcal;
@@ -341,18 +349,17 @@ function AddFoodDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     </Field>
   );
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
+    <ScreenPanel
+      back={back}
       title={t("addFood")}
       footer={
-        <Button className="w-full sm:w-auto" disabled={!valid || add.isPending} onClick={() => add.mutate()}>
+        <Button disabled={!valid || add.isPending} onClick={() => add.mutate()}>
           {add.isPending && <Loader2Icon className="animate-spin" />}
           {t("addFood")}
         </Button>
       }
     >
-      <div className="grid grid-cols-2 gap-4 pb-2">
+      <div className="flex max-w-2xl flex-col gap-4">
         <Field id="fd-ar" label={t("nameAr")}>
           <Input id="fd-ar" lang="ar" dir="rtl" value={form.name_ar} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} />
         </Field>
@@ -368,6 +375,6 @@ function AddFoodDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
         {numField("carbs", t("carbs"))}
         {numField("fat", t("fat"))}
       </div>
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

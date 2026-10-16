@@ -6,11 +6,12 @@ import { Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "@/i18n/navigation";
 import { qk } from "@/lib/query-keys";
 import { useNow } from "@/lib/use-now";
 
@@ -20,22 +21,22 @@ const toE164 = (v: string) => {
   return d.startsWith("+") ? d : d.startsWith("0") ? `+20${d.slice(1)}` : `+20${d}`;
 };
 
-/** Name, phone, email, plan, start and end. The app sends a login invite. */
-export function AddCoachDialog({
-  open,
-  onOpenChange,
+/** Name, phone, email, plan, start and end. The app sends a login invite. Its own screen: /admin/coaches/new. */
+export function AddCoachForm({
+  back,
   initial,
   onAdded,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** Prefill from a home-page coach request. Remount (key) to change it. */
+  back: string;
+  /** Prefill from a home-page coach request. */
   initial?: { name: string; phone: string };
+  /** After saving (e.g. mark the coach request as added), then it goes back. */
   onAdded?: () => void;
 }) {
+  const router = useRouter();
   const t = useTranslations("admin.addCoach");
   const queryClient = useQueryClient();
-  const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans(), enabled: open });
+  const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans() });
   const now = useNow();
   // Dates default to today and +14 days once the browser knows the time (never during prerender).
   const [form, setForm] = useState({ name: initial?.name ?? "", phone: initial?.phone ?? "", email: "", planId: "", starts: "", ends: "" });
@@ -56,9 +57,8 @@ export function AddCoachDialog({
     onSuccess: () => {
       toast.success(t("added"));
       for (const key of [qk.adminCoaches, qk.adminOverview, qk.directoryQueue, qk.audit]) void queryClient.invalidateQueries({ queryKey: key });
-      onOpenChange(false);
       onAdded?.();
-      setForm((f) => ({ ...f, name: "", phone: "", email: "" }));
+      router.push(back);
     },
   });
 
@@ -66,20 +66,19 @@ export function AddCoachDialog({
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
 
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
+    <ScreenPanel
+      back={back}
       title={t("title")}
       description={t("body")}
       footer={
-        <Button className="w-full sm:w-auto" disabled={!valid || add.isPending} onClick={() => add.mutate()}>
+        <Button disabled={!valid || add.isPending} onClick={() => add.mutate()}>
           {add.isPending && <Loader2Icon className="animate-spin" />}
           {t("add")}
         </Button>
       }
     >
-      <div className="grid gap-4 pb-2 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+      <div className="flex max-w-2xl flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="c-name">{t("name")}</Label>
           <Input id="c-name" value={form.name} onChange={set("name")} />
         </div>
@@ -91,7 +90,7 @@ export function AddCoachDialog({
           <Label htmlFor="c-email">{t("email")}</Label>
           <Input id="c-email" type="email" dir="ltr" value={form.email} onChange={set("email")} />
         </div>
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="c-plan">{t("plan")}</Label>
           <Select value={planId} onValueChange={(v) => setForm({ ...form, planId: v })}>
             <SelectTrigger id="c-plan" className="h-12 w-full">
@@ -115,6 +114,6 @@ export function AddCoachDialog({
           <Input id="c-end" type="date" dir="ltr" value={ends} onChange={set("ends")} />
         </div>
       </div>
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

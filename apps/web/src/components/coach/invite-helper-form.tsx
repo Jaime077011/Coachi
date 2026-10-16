@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FieldError } from "@/components/coachi/field-error";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +20,8 @@ import { whatsappUrl } from "@/lib/whatsapp";
 import { LimitNotice } from "./limit-notice";
 import { SeatsNotice } from "./seats-notice";
 
-/** Name, phone, and role → an invite link to copy or send on WhatsApp. Same flow as Add client. */
-export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Name, phone, and role → an invite link to copy or send on WhatsApp. Same flow as Add client. Its own screen: /coach/team/invite. */
+export function InviteHelperForm({ back }: { back: string }) {
   const t = useTranslations("team");
   const tAuth = useTranslations("auth");
   const { orgId } = useMe();
@@ -37,15 +37,6 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: qk.team(orgId) }),
   });
 
-  const reset = () => {
-    setName("");
-    setPhone("");
-    setRole("coach");
-    setErrors({});
-    setCopied(false);
-    invite.reset();
-  };
-
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = newTeamMember.safeParse({ name: name.trim(), phone: toE164(phone), role });
@@ -60,12 +51,8 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
   const result = invite.data;
 
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={(o) => {
-        onOpenChange(o);
-        if (!o) reset();
-      }}
+    <ScreenPanel
+      back={back}
       title={result ? t("linkTitle") : t("inviteTitle")}
       description={result ? t("linkBody", { name: name.trim() }) : full || inactive ? undefined : t("inviteBody")}
       footer={
@@ -97,7 +84,7 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
             </Button>
           </div>
         ) : full || inactive ? undefined : (
-          <Button type="submit" form="invite-helper" className="w-full sm:w-auto" disabled={invite.isPending}>
+          <Button type="submit" form="invite-helper" disabled={invite.isPending}>
             {invite.isPending && <Loader2Icon className="animate-spin" />}
             {t("create")}
           </Button>
@@ -153,6 +140,6 @@ export function InviteHelperDialog({ open, onOpenChange }: { open: boolean; onOp
           </fieldset>
         </form>
       )}
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

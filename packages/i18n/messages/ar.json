@@ -735,7 +735,8 @@
     "assignClient": "حطها لعملاء",
     "days": "الأيام",
     "library": "مكتبة التمارين",
-    "dragHint": "اسحب أو دوس + عشان تضيف"
+    "dragHint": "اسحب أو دوس + عشان تضيف",
+    "added": "اتضاف"
   },
   "nutritionBuilder": {
     "targets": "أهداف اليوم",
@@ -1015,7 +1016,9 @@
       "deleteConfirm": "اكتب الاسم",
       "deleted": "الكوتش اتمسح",
       "noPayments": "لسه مفيش مدفوعات",
-      "notesPlaceholder": "ملاحظات خاصة عن الكوتش ده"
+      "notesPlaceholder": "ملاحظات خاصة عن الكوتش ده",
+      "notFound": "الكوتش ده مش موجود",
+      "backToCoaches": "ارجع للكوتشز"
     },
     "addCoach": {
       "title": "ضيف كوتش",
@@ -1175,7 +1178,8 @@
     "filterAll": "كل الفريق",
     "filterLabel": "فلتر حسب عضو الفريق",
     "noAssignedTitle": "مفيش عملاء متوزعين عليك لسه",
-    "noAssignedBody": "صاحب الحساب هو اللي بيوزع العملاء عليك."
+    "noAssignedBody": "صاحب الحساب هو اللي بيوزع العملاء عليك.",
+    "rolesTab": "كل دور يقدر يعمل إيه"
   },
   "landing": {
     "cardTitle": "صفحتك الخاصة",

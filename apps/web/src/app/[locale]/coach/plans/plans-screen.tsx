@@ -4,8 +4,8 @@ import { api } from "@coachi/core";
 import { useQuery } from "@tanstack/react-query";
 import { BookmarkIcon, DumbbellIcon, PencilIcon, PlusIcon, UsersRoundIcon, UtensilsIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { AssignToClientsDialog, type PlanKind } from "@/components/coach/assign-dialogs";
+
+import type { PlanKind } from "@/components/coach/assign-forms";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/coachi/states";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,6 @@ export function PlansScreen() {
   const tFile = useTranslations("clientFile");
   const fmt = useFmt();
   const { coachId } = useMe();
-  const [assign, setAssign] = useState<{ kind: PlanKind; id: string; name: string } | null>(null);
   const programs = useQuery({ queryKey: qk.programs(coachId), queryFn: () => api.training.programs(coachId), enabled: !!coachId });
   const nutrition = useQuery({ queryKey: qk.nutritionPlans(coachId), queryFn: () => api.nutrition.plans(coachId), enabled: !!coachId });
   const clients = useQuery({ queryKey: qk.clients(coachId), queryFn: () => api.clients.list(coachId), enabled: !!coachId });
@@ -69,9 +68,11 @@ export function PlansScreen() {
               </Link>
             </Button>
             {!r.clientId && (
-              <Button size="sm" variant="ghost" onClick={() => setAssign({ kind, id: r.id, name: r.name })}>
-                <UsersRoundIcon data-icon="inline-start" />
-                {t("assign")}
+              <Button asChild size="sm" variant="ghost">
+                <Link href={`/coach/plans/${kind}/${r.id}/assign`}>
+                  <UsersRoundIcon data-icon="inline-start" />
+                  {t("assign")}
+                </Link>
               </Button>
             )}
           </div>
@@ -85,13 +86,13 @@ export function PlansScreen() {
           {templates.length === 0 ? (
             <EmptyState icon={BookmarkIcon} title={t("noTemplates")} />
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{templates.map(card)}</div>
+            <div className="flex flex-col gap-3">{templates.map(card)}</div>
           )}
         </section>
         {forClients.length > 0 && (
           <section>
             <SectionTitle>{t("clientPlans")}</SectionTitle>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{forClients.map(card)}</div>
+            <div className="flex flex-col gap-3">{forClients.map(card)}</div>
           </section>
         )}
       </div>
@@ -125,7 +126,6 @@ export function PlansScreen() {
         <TabsContent value="workout">{list("workout", workoutRows, programs)}</TabsContent>
         <TabsContent value="nutrition">{list("nutrition", nutritionRows, nutrition)}</TabsContent>
       </Tabs>
-      <AssignToClientsDialog kind={assign?.kind ?? "workout"} plan={assign} onOpenChange={(open) => !open && setAssign(null)} />
     </div>
   );
 }

@@ -8,8 +8,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { QueryState } from "@/components/coachi/query-state";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { ScreenHeader } from "@/components/coachi/screen-header";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip } from "@/components/coachi/status-chip";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/use-session";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { whatsappUrl } from "@/lib/whatsapp";
@@ -28,8 +28,7 @@ export function RequestsScreen() {
   const { coachId } = useMe();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"new" | "answered">("new");
-  const [declining, setDeclining] = useState<CoachRequest | null>(null);
-  const [reply, setReply] = useState("");
+  const router = useRouter();
   const inbox = useQuery({ queryKey: qk.inbox(coachId), queryFn: () => api.directory.inbox(coachId), enabled: !!coachId });
 
   const answer = useMutation({
@@ -69,7 +68,7 @@ export function RequestsScreen() {
         }
       >
         {(rows) => (
-          <ul className="grid gap-3 lg:grid-cols-2">
+          <ul className="flex flex-col gap-3">
             {rows
               .filter((r) => (tab === "new" ? r.status === "sent" : r.status !== "sent"))
               .map((r) => (
@@ -78,36 +77,13 @@ export function RequestsScreen() {
                   request={r}
                   busy={answer.isPending && answer.variables?.request.id === r.id}
                   onAccept={() => answer.mutate({ request: r, accept: true })}
-                  onDecline={() => {
-                    setReply("");
-                    setDeclining(r);
-                  }}
+                  onDecline={() => router.push(`/coach/requests/${r.id}/decline`)}
                 />
               ))}
           </ul>
         )}
       </QueryState>
 
-      <ResponsiveDialog
-        open={!!declining}
-        onOpenChange={(open) => !open && setDeclining(null)}
-        title={t("declineTitle", { name: declining?.client_name ?? "" })}
-        description={t("declineBody")}
-        footer={
-          <Button
-            variant="destructive"
-            className="w-full sm:w-auto"
-            onClick={() => {
-              answer.mutate({ request: declining!, accept: false, reply: reply.trim() || undefined });
-              setDeclining(null);
-            }}
-          >
-            {t("decline")}
-          </Button>
-        }
-      >
-        <Textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={t("declinePlaceholder")} aria-label={t("declineTitle", { name: "" })} maxLength={300} />
-      </ResponsiveDialog>
     </div>
   );
 }
@@ -140,7 +116,7 @@ function RequestCard({ request: r, busy, onAccept, onDecline }: { request: Coach
               <StatusChip tone={r.status === "accepted" ? "success" : "neutral"}>{t(`status_${r.status}`)}</StatusChip>
             )}
           </div>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dl className="flex flex-col gap-2 text-sm">
             <div>
               <dt className="text-xs text-hint">{t("goal")}</dt>
               <dd className="font-semibold">{tParts(`goalName.${r.goal}`)}</dd>
@@ -175,5 +151,39 @@ function RequestCard({ request: r, busy, onAccept, onDecline }: { request: Coach
         </CardContent>
       </Card>
     </li>
+  );
+}
+
+/** /coach/requests/<id>/decline: an optional short reply, then decline. */
+export function DeclineRequest({ requestId }: { requestId: string }) {
+  const t = useTranslations("requests");
+  const { coachId } = useMe();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [reply, setReply] = useState("");
+  const inbox = useQuery({ queryKey: qk.inbox(coachId), queryFn: () => api.directory.inbox(coachId), enabled: !!coachId });
+  const decline = useMutation({
+    mutationFn: () => api.directory.answer(requestId, false, reply.trim() || undefined),
+    onSuccess: () => {
+      toast.success(t("declined"));
+      for (const key of [qk.inbox(coachId), qk.clients(coachId), qk.coachToday(coachId)]) void queryClient.invalidateQueries({ queryKey: key });
+      router.push("/coach/requests");
+    },
+  });
+  const request = inbox.data?.find((r) => r.id === requestId);
+  return (
+    <ScreenPanel
+      back="/coach/requests"
+      title={t("declineTitle", { name: request?.client_name ?? "" })}
+      description={t("declineBody")}
+      footer={
+        <Button variant="destructive" disabled={decline.isPending || !request} onClick={() => decline.mutate()}>
+          {decline.isPending && <Loader2Icon className="animate-spin" />}
+          {t("decline")}
+        </Button>
+      }
+    >
+      <Textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder={t("declinePlaceholder")} aria-label={t("declineTitle", { name: "" })} maxLength={300} className="max-w-2xl" />
+    </ScreenPanel>
   );
 }

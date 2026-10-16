@@ -7,13 +7,11 @@ import { BookmarkPlusIcon, PlusIcon, SparklesIcon, SplitIcon, Trash2Icon, UsersR
 import { useTranslations } from "next-intl";
 import { use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AssignToClientsDialog } from "@/components/coach/assign-dialogs";
 import { SaveIndicator } from "@/components/coach/save-indicator";
 import { QueryState } from "@/components/coachi/query-state";
-import { BackLink } from "@/components/coachi/screen-header";
+import { BackLink, ScreenHeader } from "@/components/coachi/screen-header";
 import { ListSkeleton } from "@/components/coachi/states";
 import { MacroBar } from "@/components/coachi/stats";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -22,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/use-session";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useFmt, useLocalName } from "@/lib/format";
 import { useApiErrorToast } from "@/lib/api-error";
 import { qk } from "@/lib/query-keys";
@@ -72,8 +71,21 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
   const { coachId } = useMe();
   const [draft, setDraft] = useState(initial);
   const [version, setVersion] = useState(0);
-  const [picker, setPicker] = useState<{ mealId: string; swapWith?: string } | null>(null);
-  const [assigning, setAssigning] = useState(false);
+  // "Add food" is its own screen: ?pick=<mealId>[:<itemId to add an "or" choice to>]. Same route,
+  // so the draft stays in memory; Back returns to the plan.
+  const pathname = usePathname();
+  const pickParam = useSearchParams().get("pick");
+  const picker = pickParam ? { mealId: pickParam.split(":")[0]!, swapWith: pickParam.split(":")[1] } : null;
+  const pushedPick = useRef(false);
+  const setPicker = (next: { mealId: string; swapWith?: string } | null) => {
+    if (next) {
+      pushedPick.current = true;
+      router.push(`${pathname}?pick=${next.mealId}${next.swapWith ? `:${next.swapWith}` : ""}`, { scroll: false });
+    } else if (pushedPick.current) {
+      pushedPick.current = false;
+      router.back();
+    } else router.replace(pathname, { scroll: false });
+  };
 
   const status = useAutosave(draft, version, async (p) => {
     await api.nutrition.savePlan(p);
@@ -110,6 +122,22 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
         router.push(`/coach/plans/nutrition/${saved.plan.id}`);
       });
 
+  if (picker) {
+    const meal = draft.meals.find((m) => m.meal.id === picker.mealId);
+    return (
+      <FoodPicker
+        title={picker.swapWith ? t("orChoice") : t("addFood")}
+        subtitle={meal?.meal.name}
+        onCancel={() => setPicker(null)}
+        onPick={(food) => {
+          edit((p) => ops.addFood(p, picker.mealId, food, picker.swapWith));
+          setPicker(null);
+          toast.success(tB("added"));
+        }}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -123,7 +151,13 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
         <SaveIndicator status={status} />
         <div className="ms-auto flex gap-2">
           {isTemplate ? (
-            <Button variant="secondary" onClick={() => setAssigning(true)}>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await api.nutrition.savePlan(draft);
+                router.push(`/coach/plans/nutrition/${draft.plan.id}/assign?back=${encodeURIComponent(`/coach/plans/nutrition/${draft.plan.id}`)}`);
+              }}
+            >
               <UsersRoundIcon data-icon="inline-start" />
               {tB("assignClient")}
             </Button>
@@ -168,8 +202,8 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
         </TabsList>
       </Tabs>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="order-2 flex min-w-0 flex-col gap-4 lg:order-1">
+      <div className="flex flex-col gap-4">
+        <div className="order-2 flex min-w-0 flex-col gap-4">
           {/* Totals stick to the top and update live. Over target turns warning; it never blocks saving. */}
           <div className="sticky top-0 z-10 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur lg:mx-0 lg:rounded-lg lg:border">
             <p className="mb-2 text-xs font-bold tracking-[0.12em] text-hint uppercase">{t("totals")}</p>
@@ -207,8 +241,8 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
           </div>
         </div>
 
-        <aside className="order-1 lg:order-2">
-          <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 lg:sticky lg:top-4">
+        <section className="order-1">
+          <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
             <p className="font-semibold">{t("targets")}</p>
             {clientId &&
               (suggestion ? (
@@ -222,9 +256,9 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
               ) : (
                 file.data && <p className="text-xs text-hint">{t("noSuggestion")}</p>
               ))}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-wrap gap-3">
               {(["kcal", "protein", "carbs", "fat", "water_ml"] as const).map((key) => (
-                <div key={key} className={key === "kcal" ? "col-span-2 flex flex-col gap-1" : "flex flex-col gap-1"}>
+                <div key={key} className="flex w-28 flex-col gap-1">
                   <Label htmlFor={`t-${key}`} className="text-xs">
                     {t(key === "water_ml" ? "water" : key)}
                   </Label>
@@ -240,19 +274,8 @@ function Builder({ initial }: { initial: NutritionPlanFull }) {
               ))}
             </div>
           </div>
-        </aside>
+        </section>
       </div>
-
-      <FoodPicker
-        open={!!picker}
-        onOpenChange={(open) => !open && setPicker(null)}
-        onPick={(food) => {
-          if (picker) edit((p) => ops.addFood(p, picker.mealId, food, picker.swapWith));
-          setPicker(null);
-        }}
-      />
-
-      <AssignToClientsDialog kind="nutrition" plan={assigning ? { id: draft.plan.id, name: draft.plan.name } : null} onOpenChange={setAssigning} />
     </div>
   );
 }
@@ -352,16 +375,27 @@ function MealEditor({
   );
 }
 
-function FoodPicker({ open, onOpenChange, onPick }: { open: boolean; onOpenChange: (open: boolean) => void; onPick: (food: Food) => void }) {
+function FoodPicker({ title, subtitle, onCancel, onPick }: { title: string; subtitle?: string; onCancel: () => void; onPick: (food: Food) => void }) {
   const t = useTranslations("nutritionBuilder");
+  const tCommon = useTranslations("common");
   const fmt = useFmt();
   const name = useLocalName();
-  const foods = useQuery({ queryKey: qk.foods, queryFn: () => api.nutrition.foods(), enabled: open });
+  const foods = useQuery({ queryKey: qk.foods, queryFn: () => api.nutrition.foods() });
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={t("addFood")}>
-      <Command className="rounded-lg border" filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
+    <div className="flex flex-col gap-4">
+      <ScreenHeader
+        title={title}
+        subtitle={subtitle}
+        className="mb-0"
+        action={
+          <Button variant="secondary" onClick={onCancel}>
+            {tCommon("cancel")}
+          </Button>
+        }
+      />
+      <Command className="rounded-lg border bg-card" filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
         <CommandInput placeholder={t("searchFoods")} autoFocus />
-        <CommandList className="max-h-80">
+        <CommandList className="max-h-none">
           <CommandEmpty>{t("noFood")}</CommandEmpty>
           {(foods.data ?? []).map((f) => (
             <CommandItem key={f.id} value={`${f.name_en} ${f.name_ar}`} onSelect={() => onPick(f)} className="min-h-11 gap-2">
@@ -373,6 +407,6 @@ function FoodPicker({ open, onOpenChange, onPick }: { open: boolean; onOpenChang
           ))}
         </CommandList>
       </Command>
-    </ResponsiveDialog>
+    </div>
   );
 }

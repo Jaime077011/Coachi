@@ -87,7 +87,7 @@ export function ProgressTab({ clientId }: { clientId: string }) {
             <TrendChart title={t("weightChart")} points={weights} unit={fmt.kg} />
             <section>
               <SectionTitle>{t("liftChart")}</SectionTitle>
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
                 {data.lifts.map((lift) => (
                   <TrendChart
                     key={lift.exercise.id}

@@ -8,36 +8,37 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PhotoSlot } from "@/components/coachi/photo-slot";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFmt } from "@/lib/format";
+import { useRouter } from "@/i18n/navigation";
 import { qk } from "@/lib/query-keys";
 import { useNow } from "@/lib/use-now";
 
 const DAY = 86_400_000;
 
-/** Coach, amount in EGP, method, date, receipt. Shows the new end date before you save. */
-export function RecordPaymentDialog({
-  open,
-  onOpenChange,
-  coach,
+/** Coach, amount in EGP, method, date, receipt. Shows the new end date before you save. Its own screen: /admin/payments/new. */
+export function RecordPaymentForm({
+  back,
+  orgId: presetOrg,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** Preselected from the coach panel; otherwise pick one. */
-  coach?: AdminCoachRow | null;
+  back: string;
+  /** Preselected from the coach page; otherwise pick one. */
+  orgId?: string | null;
 }) {
+  const router = useRouter();
   const t = useTranslations("admin.payment");
   const tParts = useTranslations("parts");
   const fmt = useFmt();
   const now = useNow();
   const queryClient = useQueryClient();
-  const coaches = useQuery({ queryKey: qk.adminCoaches, queryFn: () => api.admin.coaches(), enabled: open });
-  const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans(), enabled: open });
-  const [orgId, setOrgId] = useState(coach?.org_id ?? "");
+  const coaches = useQuery({ queryKey: qk.adminCoaches, queryFn: () => api.admin.coaches() });
+  const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans() });
+  const [orgId, setOrgId] = useState(presetOrg ?? "");
+  const coach: AdminCoachRow | undefined = presetOrg ? coaches.data?.find((c) => c.org_id === presetOrg) : undefined;
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("instapay");
   const [pickedDate, setDate] = useState("");
@@ -45,7 +46,7 @@ export function RecordPaymentDialog({
   const [note, setNote] = useState("");
   const [receipt, setReceipt] = useState<File | null>(null);
 
-  const selected = coaches.data?.find((c) => c.org_id === (coach?.org_id ?? orgId));
+  const selected = coaches.data?.find((c) => c.org_id === orgId);
   const planDays = plans.data?.find((p) => p.plan.name === selected?.plan_name)?.plan.days ?? 30;
   const newEnd = selected && now ? new Date(Math.max(now, Date.parse(selected.ends_at)) + planDays * DAY).toISOString() : null;
 
@@ -62,30 +63,27 @@ export function RecordPaymentDialog({
     onSuccess: ({ subscription }) => {
       toast.success(t("saved", { date: fmt.date(subscription.ends_at, "short") }));
       for (const key of [qk.adminCoaches, qk.adminOverview, qk.payments(subscription.org_id), qk.audit]) void queryClient.invalidateQueries({ queryKey: key });
-      onOpenChange(false);
-      setAmount("");
-      setNote("");
-      setReceipt(null);
+      router.push(back);
     },
   });
 
   const valid = !!selected && Number(amount.replace(",", ".")) > 0 && !!date;
 
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
+    <ScreenPanel
+      back={back}
       title={t("title")}
+      description={coach?.name}
       footer={
-        <Button className="w-full sm:w-auto" disabled={!valid || save.isPending} onClick={() => save.mutate()}>
+        <Button disabled={!valid || save.isPending} onClick={() => save.mutate()}>
           {save.isPending && <Loader2Icon className="animate-spin" />}
           {t("save")}
         </Button>
       }
     >
-      <div className="grid gap-4 pb-2 sm:grid-cols-2">
-        {!coach && (
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
+      <div className="flex max-w-2xl flex-col gap-4">
+        {!presetOrg && (
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="pay-coach">{t("coach")}</Label>
             <Select value={orgId} onValueChange={setOrgId}>
               <SelectTrigger id="pay-coach" className="h-12 w-full">
@@ -128,17 +126,17 @@ export function RecordPaymentDialog({
           <Label htmlFor="pay-note">{t("note")}</Label>
           <Input id="pay-note" value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-1.5">
           <span className="text-sm font-semibold">{t("receipt")}</span>
           <PhotoSlot label={t("receipt")} file={receipt} onChange={setReceipt} className="aspect-[3/2] max-w-48" />
         </div>
         {newEnd && (
-          <p className="flex items-center gap-2 rounded-md bg-success/12 p-3 text-sm font-semibold text-success sm:col-span-2">
+          <p className="flex items-center gap-2 rounded-md bg-success/12 p-3 text-sm font-semibold text-success">
             <CalendarCheckIcon className="size-4" aria-hidden />
             {t("newEnd", { date: fmt.date(newEnd, "long") })}
           </p>
         )}
       </div>
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

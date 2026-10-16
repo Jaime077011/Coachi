@@ -193,7 +193,7 @@ function ProfileForm({
         variant="outline"
         value={view}
         onValueChange={(v) => v && setView(v as typeof view)}
-        className="w-full lg:hidden"
+        className="w-full sm:w-auto"
       >
         <ToggleGroupItem value="edit" className="h-11 flex-1">
           <PencilIcon aria-hidden />
@@ -205,10 +205,10 @@ function ProfileForm({
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="flex flex-col gap-8">
         <form
           id="profile-form"
-          className={cn("flex-col gap-5", view === "edit" ? "flex" : "hidden lg:flex")}
+          className={cn("flex-col gap-5", view === "edit" ? "flex" : "hidden")}
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
@@ -246,7 +246,7 @@ function ProfileForm({
           </Section>
 
           <Section icon={UserRoundIcon} title={t("sectionAbout")} body={t("sectionAboutBody")}>
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-5">
               <div id="f-photo">
                 <ImageField
                   label={t("photo")}
@@ -314,7 +314,7 @@ function ProfileForm({
                 ))}
               </ToggleGroup>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <F id="city" label={t("city")}>
                 <Input id="city" autoComplete="address-level2" value={p.city} onChange={(e) => set("city", e.target.value)} />
               </F>
@@ -357,7 +357,7 @@ function ProfileForm({
           </Section>
 
           <Section icon={WalletIcon} title={t("sectionPrices")} body={t("sectionPricesBody")}>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <F id="pmin" label={t("priceMin")}>
                 <Input
                   id="pmin"
@@ -386,7 +386,7 @@ function ProfileForm({
               </F>
             </div>
             {priceError && <FieldError id="pmax-error">{t("priceOrder")}</FieldError>}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
               <F id="wa" label={t("whatsapp")}>
                 <Input
                   id="wa"
@@ -417,25 +417,19 @@ function ProfileForm({
           </Section>
         </form>
 
-        {/* Live preview: its own tab on phone; on laptop a framed panel beside the form that scrolls on its own. */}
-        <aside className={cn(view === "preview" ? "block" : "hidden lg:block", "lg:sticky lg:top-4")}>
-          <div
-            className={cn(
-              "flex flex-col gap-3 lg:glow-edge lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:bg-card lg:shadow-card",
-              dirty ? "lg:max-h-[calc(100dvh-7rem)]" : "lg:max-h-[calc(100dvh-2rem)]",
-            )}
-          >
-            <div className="lg:flex lg:items-start lg:gap-2.5 lg:border-b lg:px-4 lg:py-3">
-              <EyeIcon className="mt-0.5 hidden size-4 shrink-0 text-primary lg:block" aria-hidden />
+        {/* Live preview: its own view (Edit / Preview), full width like everything else. */}
+        <section className={cn(view === "preview" ? "block" : "hidden")}>
+          <div className="flex flex-col gap-3">
+            <div>
               <div>
-                <SectionTitle className="mb-1 lg:mb-0.5">{t("preview")}</SectionTitle>
+                <SectionTitle className="mb-1">{t("preview")}</SectionTitle>
                 <p className="text-sm text-muted-foreground">{t("previewBody")}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 lg:overflow-y-auto lg:bg-background/30 lg:p-4">
-              <p className="hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewDirectory")}</p>
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-semibold text-muted-foreground">{t("previewDirectory")}</p>
               <CoachCard coach={p} />
-              <p className="mt-2 hidden text-xs font-semibold text-muted-foreground lg:block">{t("previewPage")}</p>
+              <p className="mt-2 text-xs font-semibold text-muted-foreground">{t("previewPage")}</p>
               {p.bio && (
                 <p dir="auto" className="rounded-lg border bg-card p-4 text-sm leading-relaxed whitespace-pre-line">
                   {p.bio}
@@ -455,7 +449,7 @@ function ProfileForm({
               )}
             </div>
           </div>
-        </aside>
+        </section>
       </div>
 
       {/* Unsaved changes: a sticky Save bar, above the tab bar on phone. */}

@@ -28,14 +28,12 @@ import {
 import { useTranslations } from "next-intl";
 import { use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AssignToClientsDialog } from "@/components/coach/assign-dialogs";
 import { SaveIndicator } from "@/components/coach/save-indicator";
 import { EXERCISE_DRAG_TYPE, ExercisePicker } from "@/components/coach/exercise-picker";
 import { ExerciseRow } from "@/components/coach/exercise-row";
 import { GymSummary } from "@/components/coachi/gym-editor";
 import { QueryState } from "@/components/coachi/query-state";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
-import { BackLink } from "@/components/coachi/screen-header";
+import { BackLink, ScreenHeader } from "@/components/coachi/screen-header";
 import { EmptyState, ListSkeleton } from "@/components/coachi/states";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,13 +43,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useMe } from "@/hooks/use-session";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAutosave } from "@/lib/use-autosave";
 import { useApiErrorToast } from "@/lib/api-error";
 import { qk } from "@/lib/query-keys";
@@ -92,7 +90,6 @@ function LoadProgram({ id }: { id: string }) {
 
 function Builder({ initial }: { initial: ProgramFull }) {
   const t = useTranslations("builder");
-  const tPlans = useTranslations("plans");
   const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const { coachId } = useMe();
@@ -101,10 +98,23 @@ function Builder({ initial }: { initial: ProgramFull }) {
   const [week, setWeek] = useState(1);
   const [dayId, setDayId] = useState(initial.days.find((d) => d.day.week === 1)?.day.id ?? initial.days[0]?.day.id ?? "");
   const [clipboard, setClipboard] = useState<ops.DayFull | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [assigning, setAssigning] = useState(false);
   const [showGym, setShowGym] = useState(false);
   const tGym = useTranslations("gym");
+  const router = useRouter();
+  const pathname = usePathname();
+  // "Add exercise" is its own screen: ?pick=1 shows the library full width; Back returns here
+  // with the draft still in memory (same route, so nothing is lost).
+  const picking = useSearchParams().get("pick") === "1";
+  const pushedPick = useRef(false);
+  const openPicker = () => {
+    pushedPick.current = true;
+    router.push(`${pathname}?pick=1`, { scroll: false });
+  };
+  const closePicker = () => {
+    if (pushedPick.current) router.back();
+    else router.replace(pathname, { scroll: false });
+    pushedPick.current = false;
+  };
   // A client's plan: build with what his gym has.
   const clientId = initial.program.client_id;
   const gymQuery = useQuery({ queryKey: qk.clientGym(clientId ?? ""), queryFn: () => api.clients.gym(clientId!), enabled: !!clientId });
@@ -139,7 +149,8 @@ function Builder({ initial }: { initial: ProgramFull }) {
   const add = (exercise: Exercise) => {
     if (!day) return;
     edit((p) => ops.addExercise(p, day.day.id, exercise));
-    setPickerOpen(false);
+    closePicker();
+    toast.success(t("added"));
   };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -151,6 +162,24 @@ function Builder({ initial }: { initial: ProgramFull }) {
   };
 
   const isTemplate = draft.program.client_id === null;
+
+  if (picking) {
+    return (
+      <div className="flex flex-col gap-4">
+        <ScreenHeader
+          title={t("addExercise")}
+          subtitle={day ? `${t("week", { n: week })} · ${day.day.title || t("day", { n: day.day.day })}` : undefined}
+          className="mb-0"
+          action={
+            <Button variant="secondary" onClick={closePicker}>
+              {tCommon("cancel")}
+            </Button>
+          }
+        />
+        <ExercisePicker onPick={add} client={pickerClient} className="rounded-lg border bg-card" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -165,13 +194,19 @@ function Builder({ initial }: { initial: ProgramFull }) {
         <SaveIndicator status={status} />
         <div className="ms-auto flex gap-2">
           {pickerClient?.gym && (
-            <Button variant="secondary" onClick={() => setShowGym(true)}>
+            <Button variant="secondary" aria-expanded={showGym} onClick={() => setShowGym((v) => !v)}>
               <DumbbellIcon data-icon="inline-start" />
               {tGym("hisGym")}
             </Button>
           )}
           {isTemplate ? (
-            <Button variant="secondary" onClick={() => setAssigning(true)}>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                await api.training.saveProgram(draft);
+                router.push(`/coach/plans/workout/${draft.program.id}/assign?back=${encodeURIComponent(`/coach/plans/workout/${draft.program.id}`)}`);
+              }}
+            >
               <UsersRoundIcon data-icon="inline-start" />
               {t("assignClient")}
             </Button>
@@ -194,10 +229,16 @@ function Builder({ initial }: { initial: ProgramFull }) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)_320px]">
-        {/* Pane 1: weeks and days (min-w-0 so the phone day strip scrolls instead of widening the page) */}
-        <aside className="flex min-w-0 flex-col gap-3">
-          <div className="flex items-end gap-2">
+      {showGym && pickerClient?.gym && (
+        <section aria-label={tGym("hisGym")} className="rounded-lg border bg-card p-4">
+          <GymSummary gym={pickerClient.gym} />
+        </section>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {/* Weeks and days, full width (min-w-0 so the day strip scrolls instead of widening the page) */}
+        <section className="flex min-w-0 flex-col gap-3">
+          <div className="flex max-w-sm items-end gap-2">
             <div className="flex flex-1 flex-col gap-1.5">
               <Label className="text-xs">{t("weeks")}</Label>
               <Select value={String(week)} onValueChange={(v) => selectWeek(Number(v))}>
@@ -228,7 +269,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
             </Button>
           </div>
           {/* Phone: day chips in a row. Laptop: a vertical list. */}
-          <ol className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+          <ol className="flex gap-2 overflow-x-auto pb-1">
             {weekDays.map((d) => (
               <li key={d.day.id} className="shrink-0">
                 <button
@@ -266,9 +307,9 @@ function Builder({ initial }: { initial: ProgramFull }) {
               </Button>
             </li>
           </ol>
-        </aside>
+        </section>
 
-        {/* Pane 2: the day editor (also a drop target for exercises dragged from the library) */}
+        {/* The day editor (also a drop target for exercises dragged from the library) */}
         <section
           className="flex min-w-0 flex-col gap-3"
           onDragOver={(e) => {
@@ -338,9 +379,8 @@ function Builder({ initial }: { initial: ProgramFull }) {
                 <EmptyState
                   icon={PlusIcon}
                   title={t("emptyDay")}
-                  body={t("dragHint")}
                   action={
-                    <Button className="lg:hidden" onClick={() => setPickerOpen(true)}>
+                    <Button onClick={openPicker}>
                       <PlusIcon data-icon="inline-start" />
                       {t("addExercise")}
                     </Button>
@@ -373,7 +413,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
               )}
 
               {!day.day.rest_day && day.items.length > 0 && (
-                <Button variant="secondary" className="lg:hidden" onClick={() => setPickerOpen(true)}>
+                <Button variant="secondary" className="w-fit" onClick={openPicker}>
                   <PlusIcon data-icon="inline-start" />
                   {t("addExercise")}
                 </Button>
@@ -381,38 +421,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
             </>
           )}
         </section>
-
-        {/* Pane 3: exercise library (laptop). On phone it opens in a bottom sheet. */}
-        <aside className="hidden lg:block">
-          <div className="sticky top-4 flex h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-lg border bg-card">
-            <p className="border-b px-3 py-2 text-xs font-bold tracking-[0.12em] text-hint uppercase">{t("library")}</p>
-            <ExercisePicker onPick={add} client={pickerClient} className="flex-1 bg-transparent" />
-          </div>
-        </aside>
       </div>
-
-      <Drawer open={pickerOpen} onOpenChange={setPickerOpen}>
-        <DrawerContent className="h-[85dvh]">
-          <DrawerHeader className="text-start">
-            <DrawerTitle>{t("addExercise")}</DrawerTitle>
-          </DrawerHeader>
-          <ExercisePicker onPick={add} client={pickerClient} className="flex-1 bg-transparent px-2" />
-        </DrawerContent>
-      </Drawer>
-
-      <ResponsiveDialog open={showGym} onOpenChange={setShowGym} title={tGym("hisGym")}>
-        {pickerClient?.gym && (
-          <div className="pb-4 lg:max-h-[65dvh] lg:overflow-y-auto">
-            <GymSummary gym={pickerClient.gym} />
-          </div>
-        )}
-      </ResponsiveDialog>
-
-      <AssignToClientsDialog
-        kind="workout"
-        plan={assigning ? { id: draft.program.id, name: draft.program.name || tPlans("untitledWorkout") } : null}
-        onOpenChange={setAssigning}
-      />
     </div>
   );
 }

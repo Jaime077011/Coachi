@@ -6,7 +6,7 @@ import { CheckIcon, ClipboardListIcon, DumbbellIcon, Loader2Icon, UtensilsIcon }
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useMe } from "@/hooks/use-session";
@@ -38,43 +38,39 @@ function useAssign(kind: PlanKind) {
   });
 }
 
-/** Templates page: one template → many clients (each gets an editable copy). */
-export function AssignToClientsDialog({
+/** One template → many clients (each gets an editable copy). Its own screen: /coach/plans/<kind>/<id>/assign. */
+export function AssignToClientsForm({
   kind,
   plan,
-  onOpenChange,
+  back,
+  onDone,
 }: {
   kind: PlanKind;
-  plan: { id: string; name: string } | null;
-  onOpenChange: (open: boolean) => void;
+  plan: { id: string; name: string };
+  back: string;
+  onDone: () => void;
 }) {
   const t = useTranslations("plans");
   const { coachId } = useMe();
   const [picked, setPicked] = useState<string[]>([]);
-  const clients = useQuery({ queryKey: qk.clients(coachId), queryFn: () => api.clients.list(coachId), enabled: !!coachId && !!plan });
+  const clients = useQuery({ queryKey: qk.clients(coachId), queryFn: () => api.clients.list(coachId), enabled: !!coachId });
   const assign = useAssign(kind);
 
   return (
-    <ResponsiveDialog
-      open={!!plan}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) setPicked([]);
-      }}
-      title={t("assignTitle", { name: plan?.name ?? "" })}
+    <ScreenPanel
+      back={back}
+      title={t("assignTitle", { name: plan.name })}
       description={t("assignBody")}
       footer={
         <Button
-          className="w-full sm:w-auto"
           disabled={picked.length === 0 || assign.isPending}
           onClick={() =>
             assign.mutate(
-              { planId: plan!.id, clientIds: picked },
+              { planId: plan.id, clientIds: picked },
               {
                 onSuccess: () => {
                   toast.success(t("assigned", { count: picked.length }));
-                  onOpenChange(false);
-                  setPicked([]);
+                  onDone();
                 },
               },
             )
@@ -87,7 +83,7 @@ export function AssignToClientsDialog({
     >
       <Command className="rounded-lg border">
         <CommandInput placeholder={t("searchClients")} />
-        <CommandList className="max-h-72">
+        <CommandList className="max-h-none">
           <CommandEmpty>—</CommandEmpty>
           {(clients.data ?? []).map((c) => {
             const on = picked.includes(c.id);
@@ -109,25 +105,17 @@ export function AssignToClientsDialog({
           })}
         </CommandList>
       </Command>
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }
 
-/** Client file: pick a template for this one client. */
-export function AssignTemplateDialog({
-  clientId,
-  open,
-  onOpenChange,
-}: {
-  clientId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+/** Client file: pick a template for this one client. Its own screen: /coach/clients/<id>/assign. */
+export function AssignTemplateForm({ clientId, back, onDone }: { clientId: string; back: string; onDone: () => void }) {
   const t = useTranslations("plans");
   const tFile = useTranslations("clientFile");
   const { coachId } = useMe();
-  const programs = useQuery({ queryKey: qk.programs(coachId), queryFn: () => api.training.programs(coachId), enabled: !!coachId && open });
-  const nutrition = useQuery({ queryKey: qk.nutritionPlans(coachId), queryFn: () => api.nutrition.plans(coachId), enabled: !!coachId && open });
+  const programs = useQuery({ queryKey: qk.programs(coachId), queryFn: () => api.training.programs(coachId), enabled: !!coachId });
+  const nutrition = useQuery({ queryKey: qk.nutritionPlans(coachId), queryFn: () => api.nutrition.plans(coachId), enabled: !!coachId });
   const assignWorkout = useAssign("workout");
   const assignNutrition = useAssign("nutrition");
 
@@ -137,7 +125,7 @@ export function AssignTemplateDialog({
   ];
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={tFile("assignPlan")} description={t("assignBody")}>
+    <ScreenPanel back={back} title={tFile("assignPlan")} description={t("assignBody")}>
       {templates.length === 0 ? (
         <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
           <ClipboardListIcon className="size-5" aria-hidden />
@@ -159,7 +147,7 @@ export function AssignTemplateDialog({
                       {
                         onSuccess: () => {
                           toast.success(t("assigned", { count: 1 }));
-                          onOpenChange(false);
+                          onDone();
                         },
                       },
                     )
@@ -175,6 +163,6 @@ export function AssignTemplateDialog({
           })}
         </ul>
       )}
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

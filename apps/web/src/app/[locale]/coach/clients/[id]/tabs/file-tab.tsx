@@ -2,13 +2,13 @@
 
 import { api } from "@coachi/core";
 import type { ClientDetails, ClientFile, GymInput } from "@coachi/validation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PencilIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { GymEditor, GymSummary, toGymInput } from "@/components/coachi/gym-editor";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCan } from "@/hooks/use-can";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 
@@ -133,7 +134,7 @@ function Section({ clientId, details, fields }: { clientId: string; details: Cli
 
   return (
     <div className="flex flex-col gap-4">
-      <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+      <dl className="flex flex-col gap-4">
         {fields.map((f) =>
           editing ? (
             <EditField key={f.key} field={f} value={details[f.key]} draft={draft[f.key]} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
@@ -171,53 +172,59 @@ function Section({ clientId, details, fields }: { clientId: string; details: Cli
   );
 }
 
-/** What his gym has, as he listed it. The coach can fix it (same editor as the client's My gym). */
+/** What his gym has, as he listed it. The coach can fix it on its own screen (same editor as the client's My gym). */
 function GymSection({ clientId, gym }: { clientId: string; gym: ClientFile["gym"] }) {
   const t = useTranslations("gym");
-  const tCommon = useTranslations("common");
-  const queryClient = useQueryClient();
   const canEdit = useCan()("client_edit");
-  const [editing, setEditing] = useState<GymInput | null>(null);
-
-  const save = useMutation({
-    mutationFn: (input: GymInput) => api.clients.saveGym(clientId, input),
-    onSuccess: () => {
-      setEditing(null);
-      toast.success(tCommon("saved"));
-      void queryClient.invalidateQueries({ queryKey: qk.clientFile(clientId) });
-      void queryClient.invalidateQueries({ queryKey: qk.clientGym(clientId) });
-    },
-  });
-
   return (
     <div className="flex flex-col gap-4">
       {gym && gym.items.length + gym.custom_items.length > 0 ? <GymSummary gym={gym} /> : <p className="text-sm text-hint">{t("notListed")}</p>}
       {canEdit && (
         <div>
-          <Button size="sm" variant="secondary" onClick={() => setEditing(toGymInput(gym))}>
-            <PencilIcon data-icon="inline-start" />
-            {t("edit")}
+          <Button asChild size="sm" variant="secondary">
+            <Link href={`/coach/clients/${clientId}/gym`}>
+              <PencilIcon data-icon="inline-start" />
+              {t("edit")}
+            </Link>
           </Button>
         </div>
       )}
-      <ResponsiveDialog
-        open={editing !== null}
-        onOpenChange={(open) => !open && setEditing(null)}
-        title={t("editTitle")}
-        footer={
-          <Button className="w-full sm:w-auto" disabled={save.isPending} onClick={() => editing && save.mutate(editing)}>
-            {save.isPending && <Loader2Icon className="animate-spin" />}
-            {tCommon("save")}
-          </Button>
-        }
-      >
-        {editing && (
-          <div className="pb-2 lg:-me-2 lg:max-h-[65dvh] lg:overflow-y-auto lg:pe-2">
-            <GymEditor value={editing} onChange={setEditing} />
-          </div>
-        )}
-      </ResponsiveDialog>
     </div>
+  );
+}
+
+/** /coach/clients/<id>/gym */
+export function EditClientGym({ clientId }: { clientId: string }) {
+  const t = useTranslations("gym");
+  const tCommon = useTranslations("common");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const back = `/coach/clients/${clientId}?tab=file`;
+  const gym = useQuery({ queryKey: qk.clientGym(clientId), queryFn: () => api.clients.gym(clientId) });
+  const [draft, setDraft] = useState<GymInput | null>(null);
+  const value = draft ?? (gym.isSuccess ? toGymInput(gym.data) : null);
+  const save = useMutation({
+    mutationFn: (input: GymInput) => api.clients.saveGym(clientId, input),
+    onSuccess: () => {
+      toast.success(tCommon("saved"));
+      void queryClient.invalidateQueries({ queryKey: qk.clientFile(clientId) });
+      void queryClient.invalidateQueries({ queryKey: qk.clientGym(clientId) });
+      router.push(back);
+    },
+  });
+  return (
+    <ScreenPanel
+      back={back}
+      title={t("editTitle")}
+      footer={
+        <Button disabled={!value || save.isPending} onClick={() => value && save.mutate(value)}>
+          {save.isPending && <Loader2Icon className="animate-spin" />}
+          {tCommon("save")}
+        </Button>
+      }
+    >
+      {value && <GymEditor value={value} onChange={setDraft} />}
+    </ScreenPanel>
   );
 }
 
@@ -259,7 +266,7 @@ function EditField({
     value === null || value === undefined ? "" : Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? (value ? "yes" : "no") : String(value);
   const current = draft ?? initial;
   return (
-    <div className="flex flex-col gap-1.5 sm:col-span-1">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor={id} className="text-xs">
         {field.label}
       </Label>

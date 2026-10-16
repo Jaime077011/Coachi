@@ -735,7 +735,8 @@
     "assignClient": "Assign to clients",
     "days": "Days",
     "library": "Exercise library",
-    "dragHint": "Drag or tap + to add"
+    "dragHint": "Drag or tap + to add",
+    "added": "Added"
   },
   "nutritionBuilder": {
     "targets": "Daily targets",
@@ -1015,7 +1016,9 @@
       "deleteConfirm": "Type the name",
       "deleted": "Coach deleted",
       "noPayments": "No payments yet",
-      "notesPlaceholder": "Private notes about this coach"
+      "notesPlaceholder": "Private notes about this coach",
+      "notFound": "This coach isn't here anymore",
+      "backToCoaches": "Back to coaches"
     },
     "addCoach": {
       "title": "Add coach",
@@ -1175,7 +1178,8 @@
     "filterAll": "Whole team",
     "filterLabel": "Filter by team member",
     "noAssignedTitle": "No clients assigned to you yet",
-    "noAssignedBody": "The account owner assigns clients to you."
+    "noAssignedBody": "The account owner assigns clients to you.",
+    "rolesTab": "What each role can do"
   },
   "landing": {
     "cardTitle": "Your landing page",

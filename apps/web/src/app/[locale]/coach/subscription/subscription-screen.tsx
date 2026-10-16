@@ -36,7 +36,7 @@ export function SubscriptionScreen() {
           const features = plans.data?.find((p) => p.plan.id === s.plan.id)?.features ?? [];
           const has = (key: string) => features.find((f) => f.key === key)?.value === true;
           return (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="flex flex-col gap-6">
               <Card>
                 <CardContent className="flex flex-col gap-5">
                   <div className="flex items-start justify-between gap-3">

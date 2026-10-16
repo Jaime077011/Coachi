@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FieldError } from "@/components/coachi/field-error";
-import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
+import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,8 @@ const toE164 = (v: string) => {
   return d.startsWith("+") ? d : d.startsWith("0") ? `+20${d.slice(1)}` : `+20${d}`;
 };
 
-/** Name and phone only → an invite link to copy or send on WhatsApp. */
-export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Name and phone only → an invite link to copy or send on WhatsApp. Its own screen: /coach/clients/new. */
+export function AddClientForm({ back }: { back: string }) {
   const t = useTranslations("addClient");
   const tAuth = useTranslations("auth");
   const { coachId } = useMe();
@@ -37,14 +37,6 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
     mutationFn: () => api.clients.invite({ name: name.trim(), phone: toE164(phone) }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: qk.clients(coachId) }),
   });
-
-  const reset = () => {
-    setName("");
-    setPhone("");
-    setErrors({});
-    setCopied(false);
-    invite.reset();
-  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +52,8 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
   const result = invite.data;
 
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={(o) => {
-        onOpenChange(o);
-        if (!o) reset();
-      }}
+    <ScreenPanel
+      back={back}
       title={result ? t("linkTitle") : t("title")}
       description={result ? t("linkBody", { name: name.trim() }) : t("body")}
       footer={
@@ -94,7 +82,7 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
             </Button>
           </div>
         ) : limit || inactive ? undefined : (
-          <Button type="submit" form="add-client" className="w-full sm:w-auto" disabled={invite.isPending}>
+          <Button type="submit" form="add-client" disabled={invite.isPending}>
             {invite.isPending && <Loader2Icon className="animate-spin" />}
             {t("create")}
           </Button>
@@ -130,6 +118,6 @@ export function AddClientDialog({ open, onOpenChange }: { open: boolean; onOpenC
           </div>
         </form>
       )}
-    </ResponsiveDialog>
+    </ScreenPanel>
   );
 }

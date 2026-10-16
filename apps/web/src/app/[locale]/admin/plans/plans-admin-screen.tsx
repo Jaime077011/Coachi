@@ -24,7 +24,7 @@ export function PlansAdminScreen() {
       <ScreenHeader title={t("title")} />
       <QueryState query={plans}>
         {(list) => (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="flex flex-col gap-4">
             {list.map((p) => (
               <PlanCard key={p.plan.id} data={p} />
             ))}

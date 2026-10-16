@@ -13,19 +13,19 @@ import {
   UserPlusIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
-import { AddClientDialog } from "@/components/coach/add-client-dialog";
 import { OnboardingChecklist } from "@/components/coach/onboarding-checklist";
 import { InstallGuide } from "@/components/coachi/install-guide";
 import { NotificationBell } from "@/components/coachi/notifications";
 import { QueryState } from "@/components/coachi/query-state";
-import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
+import { ScreenHeader } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCan } from "@/hooks/use-can";
 import { useMe } from "@/hooks/use-session";
 import { Link } from "@/i18n/navigation";
@@ -43,7 +43,6 @@ const reasonTone: Record<CoachToday["needs_attention"][number]["reason"], Tone> 
 export function CoachTodayScreen() {
   const t = useTranslations("coachToday");
   const { coachId } = useMe();
-  const [adding, setAdding] = useState(false);
   const can = useCan();
   const newPlan = can("plans_edit") && (
     <Button variant="secondary" asChild>
@@ -54,9 +53,11 @@ export function CoachTodayScreen() {
     </Button>
   );
   const addClient = can("clients_invite") && (
-    <Button onClick={() => setAdding(true)}>
-      <UserPlusIcon data-icon="inline-start" />
-      {t("addClient")}
+    <Button asChild>
+      <Link href={{ pathname: "/coach/clients/new", query: { back: "/coach/today" } }}>
+        <UserPlusIcon data-icon="inline-start" />
+        {t("addClient")}
+      </Link>
     </Button>
   );
   const today = useQuery({ queryKey: qk.coachToday(coachId), queryFn: () => api.clients.coachToday(coachId), enabled: !!coachId });
@@ -83,14 +84,22 @@ export function CoachTodayScreen() {
         </div>
       )}
 
-      <OnboardingChecklist onAddClient={() => setAdding(true)} />
+      <OnboardingChecklist />
       <InstallGuide />
 
       <QueryState query={today}>
         {(data) => (
-          <div className="grid gap-8 lg:grid-cols-2">
-            <section>
-              <SectionTitle>{t("attention")}</SectionTitle>
+          <Tabs defaultValue="attention">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="attention">
+                {t("attention")}
+                {data.needs_attention.length + (data.new_requests > 0 ? 1 : 0) > 0 && (
+                  <span className="rounded-full bg-primary/15 px-1.5 text-xs font-bold text-primary tabular-nums">{data.needs_attention.length + (data.new_requests > 0 ? 1 : 0)}</span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="attention" className="mt-4">
               {data.new_requests > 0 && (
                 <Link href="/coach/requests" className="mb-3 block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                   <Card className="border-primary/40">
@@ -132,10 +141,9 @@ export function CoachTodayScreen() {
                   ))}
                 </ul>
               )}
-            </section>
+            </TabsContent>
 
-            <section>
-              <SectionTitle>{t("activity")}</SectionTitle>
+            <TabsContent value="activity" className="mt-4">
               {data.activity.length === 0 ? (
                 <EmptyState icon={DumbbellIcon} title={t("noActivity")} />
               ) : (
@@ -145,12 +153,11 @@ export function CoachTodayScreen() {
                   ))}
                 </ul>
               )}
-            </section>
-          </div>
+            </TabsContent>
+          </Tabs>
         )}
       </QueryState>
 
-      <AddClientDialog open={adding} onOpenChange={setAdding} />
     </div>
   );
 }

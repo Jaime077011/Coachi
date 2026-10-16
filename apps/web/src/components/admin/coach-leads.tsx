@@ -1,17 +1,15 @@
 "use client";
 
 import { api } from "@coachi/core";
-import type { CoachLead, CoachLeadStatus } from "@coachi/validation";
+import type { CoachLeadStatus } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { InboxIcon, MessageCircleIcon, UserPlusIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { AddCoachDialog } from "@/components/admin/add-coach-dialog";
 import { QueryState } from "@/components/coachi/query-state";
-import { SectionTitle } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip, type Tone } from "@/components/coachi/status-chip";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { whatsappUrl } from "@/lib/whatsapp";
@@ -24,7 +22,6 @@ export function CoachLeads() {
   const fmt = useFmt();
   const queryClient = useQueryClient();
   const leads = useQuery({ queryKey: qk.coachLeads, queryFn: () => api.admin.coachLeads() });
-  const [adding, setAdding] = useState<CoachLead | null>(null);
 
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: CoachLeadStatus }) => api.admin.setLeadStatus(id, status),
@@ -32,8 +29,7 @@ export function CoachLeads() {
   });
 
   return (
-    <section>
-      <SectionTitle>{t("title")}</SectionTitle>
+    <section aria-label={t("title")}>
       <QueryState
         query={leads}
         isEmpty={(list) => list.every((l) => l.status === "added" || l.status === "dismissed")}
@@ -68,9 +64,11 @@ export function CoachLeads() {
                         {t("whatsapp")}
                       </a>
                     </Button>
-                    <Button size="sm" onClick={() => setAdding(l)}>
-                      <UserPlusIcon data-icon="inline-start" />
-                      {t("add")}
+                    <Button asChild size="sm">
+                      <Link href={{ pathname: "/admin/coaches/new", query: { name: l.name, phone: l.phone, lead: l.id, back: "/admin/overview" } }}>
+                        <UserPlusIcon data-icon="inline-start" />
+                        {t("add")}
+                      </Link>
                     </Button>
                     <Button size="sm" variant="ghost" aria-label={t("dismiss")} title={t("dismiss")} onClick={() => setStatus.mutate({ id: l.id, status: "dismissed" })}>
                       <XIcon />
@@ -81,13 +79,6 @@ export function CoachLeads() {
           </ul>
         )}
       </QueryState>
-      <AddCoachDialog
-        key={adding?.id ?? "none"}
-        open={adding !== null}
-        onOpenChange={(open) => !open && setAdding(null)}
-        initial={adding ? { name: adding.name, phone: adding.phone } : undefined}
-        onAdded={() => adding && setStatus.mutate({ id: adding.id, status: "added" })}
-      />
     </section>
   );
 }
