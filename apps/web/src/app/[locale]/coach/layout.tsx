@@ -12,7 +12,7 @@ export default function CoachLayout({ children }: LayoutProps<"/[locale]/coach">
       <SidebarInset className="bg-transparent">
         <SupportBar />
         <ReadOnlyBanner />
-        <main className="mx-auto w-full max-w-[1200px] px-4 pt-6 pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-6 lg:pb-10">
+        <main className="w-full px-4 pt-6 pb-[calc(88px+env(safe-area-inset-bottom))] lg:px-6 lg:pb-10">
           {children}
         </main>
       </SidebarInset>

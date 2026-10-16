@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: LayoutProps<"/[locale]/admin">
           <SidebarTrigger className="size-11" />
           <Logo size="mobile" className="h-8 w-auto [&_img]:h-8 [&_img]:w-auto" />
         </header>
-        <main className="mx-auto w-full max-w-[1200px] px-4 py-6 lg:px-6 lg:py-10">{children}</main>
+        <main className="w-full px-4 py-6 lg:px-6 lg:py-10">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

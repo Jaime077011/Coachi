@@ -67,7 +67,8 @@ export const adminNav: NavItem[] = [
 /** Navigation sets by key, so server layouts can pick one without passing icon functions to the client. */
 export const navSets = {
   client: { tabs: clientTabs, more: undefined, sidebar: [] },
-  coach: { tabs: coachTabs, more: coachMore, sidebar: [coachTabs, coachMore] },
+  // Laptop: Notifications sits in the menu's footer next to Log out, not in the list.
+  coach: { tabs: coachTabs, more: coachMore, sidebar: [coachTabs, coachMore.filter((i) => i.href !== "/coach/notifications")] },
   admin: { tabs: [], more: undefined, sidebar: [adminNav] },
 } satisfies Record<string, { tabs: NavItem[]; more: NavItem[] | undefined; sidebar: NavItem[][] }>;
 export type NavSet = keyof typeof navSets;

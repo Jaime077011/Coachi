@@ -111,7 +111,9 @@
     "signOut": "Log out",
     "mainNav": "Main navigation",
     "collapse": "Collapse menu",
-    "expand": "Expand menu"
+    "expand": "Expand menu",
+    "notifications": "Notifications",
+    "notificationsUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}"
   },
   "kit": {
     "title": "Coachi kit",

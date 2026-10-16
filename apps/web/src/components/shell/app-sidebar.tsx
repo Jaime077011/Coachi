@@ -1,11 +1,12 @@
 "use client";
 
-import { LogOutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
+import { BellIcon, ChevronLeftIcon, LogOutIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { localeDirection } from "@coachi/i18n";
 import { Logo, Mark } from "@/components/brand/logo";
 import { DemoBadge } from "@/components/brand/demo-badge";
+import { useUnreadCount } from "@/components/coachi/notifications";
 import { useCan } from "@/hooks/use-can";
 import {
   Sidebar,
@@ -21,13 +22,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, usePathname } from "@/i18n/navigation";
+import { cn } from "@/lib/utils";
 import { useSignOut } from "./account-settings";
 import { isActive, navSets, type NavSet } from "./nav-config";
 
 /**
  * Desktop side menu: a floating glass panel, on the right in Arabic. Folds to icons
- * (button, rail, or Ctrl/Cmd + B) and remembers that in a cookie.
- * Active item: soft primary wash + a glowing fire bar on the inner edge.
+ * (the arrow on its edge, the rail, or Ctrl/Cmd + B) and remembers that in a cookie.
+ * Active item: soft primary wash. Footer: Notifications next to Log out.
  */
 export function AppSidebar({ nav }: { nav: NavSet }) {
   return (
@@ -52,6 +54,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
   const tipSide = side === "left" ? "right" : "left";
   const signOut = useSignOut();
   const { state, toggleSidebar } = useSidebar();
+  const unread = useUnreadCount();
   const collapsed = state === "collapsed";
 
   return (
@@ -87,7 +90,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
                         isActive={active}
                         size="lg"
                         tooltip={{ children: t(item.label), side: tipSide }}
-                        className="relative h-11 rounded-xl transition-all duration-200 hover:bg-foreground/5 data-active:bg-linear-to-r data-active:from-primary/18 data-active:to-primary/4 data-active:font-semibold data-active:text-foreground rtl:data-active:bg-linear-to-l data-active:[&_svg]:text-primary data-active:before:absolute data-active:before:inset-y-2.5 data-active:before:end-0 data-active:before:w-[3px] data-active:before:rounded-full data-active:before:bg-fire data-active:before:shadow-[0_0_12px_var(--glow-fire)] group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:before:hidden group-data-[collapsible=icon]:[&>span]:hidden"
+                        className="relative h-11 rounded-xl transition-all duration-200 hover:bg-foreground/5 data-active:bg-linear-to-r data-active:from-primary/18 data-active:to-primary/4 data-active:font-semibold data-active:text-foreground rtl:data-active:bg-linear-to-l data-active:[&_svg]:text-primary group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
                       >
                         <Link href={item.href} aria-current={active ? "page" : undefined}>
                           <item.icon aria-hidden className="size-5!" />
@@ -102,28 +105,41 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="gap-1 p-4 group-data-[collapsible=icon]:px-2">
-        <SidebarMenu className="gap-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={toggleSidebar}
-              tooltip={{ children: tShell("expand"), side: tipSide }}
-              aria-expanded={!collapsed}
-              className="h-10 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
-            >
-              {collapsed ? (
-                <PanelLeftOpenIcon aria-hidden className="size-5! rtl:rotate-180" />
-              ) : (
-                <PanelLeftCloseIcon aria-hidden className="size-5! rtl:rotate-180" />
-              )}
-              <span>{collapsed ? tShell("expand") : tShell("collapse")}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
+      <SidebarFooter className="border-t border-sidebar-border p-3 group-data-[collapsible=icon]:px-2">
+        <SidebarMenu className="flex-row gap-1 group-data-[collapsible=icon]:flex-col">
+          {nav === "coach" && (
+            <SidebarMenuItem className="min-w-0 flex-1">
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(pathname, "/coach/notifications")}
+                tooltip={{ children: tShell("notifications"), side: tipSide }}
+                className="relative h-10 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground data-active:bg-primary/12 data-active:text-foreground group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
+              >
+                <Link href="/coach/notifications" aria-label={unread ? tShell("notificationsUnread", { count: unread }) : tShell("notifications")}>
+                  <BellIcon aria-hidden className="size-5!" />
+                  <span className="flex-1 truncate">{tShell("notifications")}</span>
+                  {unread > 0 && (
+                    <span
+                      aria-hidden
+                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] leading-5 font-bold text-primary-foreground tabular-nums group-data-[collapsible=icon]:absolute! group-data-[collapsible=icon]:end-0.5 group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:flex!"
+                    >
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          <SidebarMenuItem className={cn(nav !== "coach" && "flex-1")}>
             <SidebarMenuButton
               onClick={signOut}
+              aria-label={tShell("signOut")}
               tooltip={{ children: tShell("signOut"), side: tipSide }}
-              className="h-10 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
+              className={cn(
+                "h-10 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden",
+                // Next to Notifications it's just the icon; alone (admin) it keeps its label.
+                nav === "coach" && "w-10 justify-center [&>span]:hidden",
+              )}
             >
               <LogOutIcon aria-hidden className="size-5! rtl:rotate-180" />
               <span>{tShell("signOut")}</span>
@@ -131,6 +147,18 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      {/* Fold / unfold: a round arrow on the menu's inner edge, halfway down. */}
+      <button
+        type="button"
+        onClick={toggleSidebar}
+        aria-label={collapsed ? tShell("expand") : tShell("collapse")}
+        aria-expanded={!collapsed}
+        title={collapsed ? tShell("expand") : tShell("collapse")}
+        className="absolute end-2 top-1/2 z-30 grid size-7 -translate-y-1/2 place-items-center rounded-full border border-sidebar-border bg-sidebar text-muted-foreground shadow-card backdrop-blur-2xl transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-1/2 rtl:-translate-x-1/2"
+      >
+        {/* Points the way the menu will move: in when open, out when folded (mirrored in Arabic). */}
+        <ChevronLeftIcon aria-hidden className={cn("size-4 transition-transform duration-200 rtl:-scale-x-100", collapsed && "rotate-180")} />
+      </button>
       <SidebarRail />
     </Sidebar>
   );

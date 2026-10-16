@@ -34,6 +34,10 @@ function useNotifications() {
   });
 }
 
+export function useUnreadCount() {
+  return useNotifications().data?.filter((n) => !n.read_at).length ?? 0;
+}
+
 /** Bell with the unread count, for the Today headers. */
 export function NotificationBell() {
   const t = useTranslations("notifications");
