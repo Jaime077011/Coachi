@@ -65,6 +65,15 @@
   --shadow-card: var(--card-shadow);
 }
 
+/* Scrolls without showing a bar (the sidebar nav, command lists). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Fire gradient: progress, streaks, milestones, the mark. Never behind text. */
 @utility bg-fire {
   background-image: var(--fire);
