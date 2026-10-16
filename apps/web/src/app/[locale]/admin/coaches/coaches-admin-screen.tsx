@@ -34,7 +34,7 @@ export function CoachesAdminScreen() {
   const columns: Column<AdminCoachRow>[] = [
     { key: "name", header: t("col_name"), sortValue: (c) => c.name, cell: (c) => <bdi className="font-semibold">{c.name}</bdi> },
     { key: "phone", header: t("col_phone"), cell: (c) => <span dir="ltr" className="tabular-nums">{c.phone}</span> },
-    { key: "plan", header: t("col_plan"), sortValue: (c) => c.plan_name, cell: (c) => c.plan_name },
+    { key: "seats", header: t("col_seats"), sortValue: (c) => c.client_seats, cell: (c) => <span className="tabular-nums">{t("seatsCell", { clients: c.client_seats, team: c.team_seats })}</span> },
     { key: "clients", header: t("col_clients"), sortValue: (c) => c.client_count, cell: (c) => <span className="tabular-nums">{fmt.num(c.client_count)}</span> },
     { key: "status", header: t("col_status"), sortValue: (c) => c.status, cell: chip },
     { key: "end", header: t("col_end"), sortValue: (c) => c.ends_at, cell: (c) => <span className="tabular-nums">{fmt.date(c.ends_at, "short")}</span> },
@@ -100,7 +100,7 @@ export function CoachesAdminScreen() {
                       <div className="min-w-0 flex-1">
                         <bdi className="block truncate font-semibold">{c.name}</bdi>
                         <p className="text-xs text-hint">
-                          {c.plan_name} · {fmt.num(c.client_count)} · {fmt.date(c.ends_at, "short")}
+                          {t("seatsCell", { clients: c.client_seats, team: c.team_seats })} · {fmt.num(c.client_count)} · {fmt.date(c.ends_at, "short")}
                         </p>
                       </div>
                       {chip(c)}

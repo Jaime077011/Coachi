@@ -2,7 +2,7 @@
 
 import { api } from "@coachi/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlusIcon, EyeIcon, Layers2Icon, PauseIcon, PlayIcon, ReceiptIcon, Trash2Icon, UserRoundXIcon } from "lucide-react";
+import { CalendarPlusIcon, EyeIcon, Loader2Icon, PauseIcon, PlayIcon, ReceiptIcon, Trash2Icon, UserRoundXIcon, UsersIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,8 +12,8 @@ import { ScreenPanel } from "@/components/coachi/screen-panel";
 import { EmptyState } from "@/components/coachi/states";
 import { StatusChip } from "@/components/coachi/status-chip";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -34,17 +34,17 @@ function useCoachActions() {
   const t = useTranslations("admin.panel");
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ orgId, coachId, action }: { orgId: string; coachId: string; action: "extend" | "pause" | "resume" | "delete" | { plan: string } }) => {
+    mutationFn: async ({ orgId, coachId, action }: { orgId: string; coachId: string; action: "extend" | "pause" | "resume" | "delete" | { client_seats: number; team_seats: number } }) => {
       if (action === "extend") await api.admin.extend(orgId, 7);
       else if (action === "pause") await api.admin.setStatus(orgId, "paused");
       else if (action === "resume") await api.admin.setStatus(orgId, "active");
       else if (action === "delete") await api.admin.deleteCoach(coachId);
-      else await api.admin.changePlan(orgId, action.plan);
+      else await api.admin.setSeats(orgId, action);
     },
     onSuccess: (_d, { action }) => {
       for (const key of [qk.adminCoaches, qk.adminOverview, qk.audit]) void queryClient.invalidateQueries({ queryKey: key });
       toast.success(
-        action === "extend" ? t("extended") : action === "pause" ? t("paused") : action === "resume" ? t("resumed") : action === "delete" ? t("deleted") : t("planChanged"),
+        action === "extend" ? t("extended") : action === "pause" ? t("paused") : action === "resume" ? t("resumed") : action === "delete" ? t("deleted") : t("seatsChanged"),
       );
     },
   });
@@ -59,7 +59,6 @@ export function CoachDetail({ coachId }: { coachId: string }) {
   const { start } = useSupportMode();
   const coach = useCoach(coachId);
   const act = useCoachActions();
-  const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans() });
   const self = `/admin/coaches/${coachId}`;
 
   return (
@@ -74,7 +73,7 @@ export function CoachDetail({ coachId }: { coachId: string }) {
               subtitle={
                 <span className="flex items-center gap-2">
                   <StatusChip tone={subscriptionTone[c.status]}>{tSub(`status_${c.status}`)}</StatusChip>
-                  <span>{c.plan_name}</span>
+                  <span>{t("seatsSummary", { clients: c.client_seats, team: c.team_seats })}</span>
                 </span>
               }
               back="/admin/coaches"
@@ -103,21 +102,12 @@ export function CoachDetail({ coachId }: { coachId: string }) {
                   {t("pause")}
                 </Button>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary">
-                    <Layers2Icon data-icon="inline-start" />
-                    {t("changePlan")}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {(plans.data ?? []).map((p) => (
-                    <DropdownMenuItem key={p.plan.id} disabled={p.plan.name === c.plan_name} onSelect={() => act.mutate({ orgId: c.org_id, coachId: c.coach_id, action: { plan: p.plan.id } })}>
-                      {p.plan.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button asChild variant="secondary">
+                <Link href={`/admin/coaches/${c.coach_id}/seats`}>
+                  <UsersIcon data-icon="inline-start" />
+                  {t("changeSeats")}
+                </Link>
+              </Button>
               <Button variant="secondary" onClick={() => void start(c.coach_id, c.name)}>
                 <EyeIcon data-icon="inline-start" />
                 {t("support")}
@@ -135,16 +125,18 @@ export function CoachDetail({ coachId }: { coachId: string }) {
                   <Fact label={t("phone")}>
                     <span dir="ltr">{c.phone ?? "—"}</span>
                   </Fact>
-                  <Fact label={t("plan")}>{c.plan_name}</Fact>
-                  <Fact label={t("ends")}>{fmt.date(c.ends_at)}</Fact>
-                  <Fact label={t("clients")}>
-                    <span className="tabular-nums">{fmt.num(c.client_count)}</span>
+                  <Fact label={t("clientSeats")}>
+                    <span className="tabular-nums">{t("seatsUsed", { used: c.client_count, seats: c.client_seats })}</span>
                   </Fact>
+                  <Fact label={t("teamSeats")}>
+                    <span className="tabular-nums">{fmt.num(c.team_seats)}</span>
+                  </Fact>
+                  <Fact label={t("ends")}>{fmt.date(c.ends_at)}</Fact>
                   <Fact label={t("listed")}>{c.listed ? t("yes") : t("no")}</Fact>
                 </dl>
               </TabsContent>
               <TabsContent value="payments" className="mt-4">
-                <Payments orgId={c.org_id} empty={t("noPayments")} methodLabel={(m) => tParts(`paymentMethod.${m}`)} />
+                <Payments orgId={c.org_id} empty={t("noPayments")} methodLabel={(m) => tParts(`paymentMethod.${m}`)} seatsLabel={(clients, team) => t("seatsSummary", { clients, team })} />
               </TabsContent>
               <TabsContent value="notes" className="mt-4">
                 <CoachNotes coachId={c.coach_id} placeholder={t("notesPlaceholder")} label={t("notes")} />
@@ -166,15 +158,26 @@ export function CoachDetail({ coachId }: { coachId: string }) {
   );
 }
 
-function Payments({ orgId, empty, methodLabel }: { orgId: string; empty: string; methodLabel: (m: "instapay" | "cash" | "bank" | "vodafone_cash") => string }) {
+function Payments({
+  orgId,
+  empty,
+  methodLabel,
+  seatsLabel,
+}: {
+  orgId: string;
+  empty: string;
+  methodLabel: (m: "instapay" | "cash" | "bank" | "vodafone_cash") => string;
+  seatsLabel: (clients: number, team: number) => string;
+}) {
   const fmt = useFmt();
   const payments = useQuery({ queryKey: qk.payments(orgId), queryFn: () => api.billing.payments(orgId) });
   if (!payments.data?.length) return <p className="text-sm text-muted-foreground">{empty}</p>;
   return (
     <ul className="divide-y rounded-lg border bg-card text-sm">
       {payments.data.map((p) => (
-        <li key={p.id} className="flex items-center justify-between gap-3 p-3">
+        <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-3">
           <span>{fmt.date(p.paid_at)}</span>
+          {p.client_seats !== null && <span className="text-hint">{seatsLabel(p.client_seats, p.team_seats ?? 0)}</span>}
           <span className="text-hint">{methodLabel(p.method)}</span>
           <span className="font-semibold tabular-nums">{fmt.egp(p.amount_piasters)}</span>
         </li>
@@ -214,6 +217,56 @@ export function DeleteCoach({ coachId }: { coachId: string }) {
             }
           >
             <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={t("deleteConfirm")} aria-label={t("deleteConfirm")} />
+          </ScreenPanel>
+        )
+      }
+    </QueryState>
+  );
+}
+
+/** /admin/coaches/<id>/seats: change seats without a payment (e.g. a few extra clients until he renews). */
+export function ChangeSeats({ coachId }: { coachId: string }) {
+  const t = useTranslations("admin.panel");
+  const router = useRouter();
+  const coach = useCoach(coachId);
+  const act = useCoachActions();
+  const [clients, setClients] = useState<string | null>(null);
+  const [team, setTeam] = useState<string | null>(null);
+  const toInt = (v: string) => Math.max(0, Math.round(Number(v)) || 0);
+  return (
+    <QueryState query={coach}>
+      {(c) =>
+        !c ? (
+          <EmptyState icon={UserRoundXIcon} title={t("notFound")} />
+        ) : (
+          <ScreenPanel
+            back={`/admin/coaches/${coachId}`}
+            title={t("changeSeats")}
+            description={t("changeSeatsBody", { name: c.name })}
+            footer={
+              <Button
+                disabled={act.isPending}
+                onClick={() =>
+                  act.mutate(
+                    { orgId: c.org_id, coachId: c.coach_id, action: { client_seats: toInt(clients ?? String(c.client_seats)), team_seats: toInt(team ?? String(c.team_seats)) } },
+                    { onSuccess: () => router.push(`/admin/coaches/${coachId}`) },
+                  )
+                }
+              >
+                {act.isPending && <Loader2Icon className="animate-spin" />}
+                {t("saveSeats")}
+              </Button>
+            }
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="seats-clients">{t("clientSeats")}</Label>
+              <Input id="seats-clients" dir="ltr" inputMode="numeric" className="tabular-nums" value={clients ?? String(c.client_seats)} onChange={(e) => setClients(e.target.value)} />
+              <p className="text-xs text-hint">{t("seatsUsed", { used: c.client_count, seats: c.client_seats })}</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="seats-team">{t("teamSeats")}</Label>
+              <Input id="seats-team" dir="ltr" inputMode="numeric" className="tabular-nums" value={team ?? String(c.team_seats)} onChange={(e) => setTeam(e.target.value)} />
+            </div>
           </ScreenPanel>
         )
       }

@@ -9,7 +9,6 @@ import {
   coachRequests,
   orgMembers,
   organizations,
-  plans,
   profiles,
   settings,
   subscriptions,
@@ -28,7 +27,8 @@ function row(coach: (typeof coachProfiles)[number]): AdminCoachRow {
     org_id: coach.org_id,
     name: coach.name,
     phone: profile?.phone ?? null,
-    plan_name: plans.find((p) => p.id === sub.plan_id)?.name ?? "—",
+    client_seats: sub.client_seats,
+    team_seats: sub.team_seats,
     client_count: coachClients.filter((l) => l.coach_id === coach.id && !l.ended_at).length,
     status: sub.status,
     ends_at: sub.ends_at,
@@ -88,7 +88,7 @@ export const mockAdmin: AdminApi = {
       profiles.push({ ...stamp, id: profileId, role: "coach", name: input.name, phone: input.phone, email: input.email ?? null, avatar_url: null, language: "ar", time_zone: "Africa/Cairo" });
       organizations.push({ ...stamp, id: orgId, name: input.name, type: "solo", logo_url: null, city: null });
       orgMembers.push({ ...stamp, id: newId(), org_id: orgId, profile_id: profileId, role: "owner", status: "active" });
-      subscriptions.push({ ...stamp, id: newId(), org_id: orgId, plan_id: input.plan_id, status: "trial", starts_at: input.starts_at, ends_at: input.ends_at, source: "manual" });
+      subscriptions.push({ ...stamp, id: newId(), org_id: orgId, client_seats: input.client_seats, team_seats: input.team_seats, status: "trial", starts_at: input.starts_at, ends_at: input.ends_at, source: "manual" });
       const coach = {
         ...stamp,
         id: newId(),
@@ -131,12 +131,12 @@ export const mockAdmin: AdminApi = {
       log(status === "paused" ? "coach.pause" : "coach.resume", `org:${orgId}`);
     }),
 
-  changePlan: (orgId, planId) =>
+  setSeats: (orgId, seats) =>
     mockWrite(() => {
       const sub = subscriptions.find((s) => s.org_id === orgId);
       if (!sub) throw new ApiError("not_found");
-      sub.plan_id = planId;
-      log("coach.change_plan", `org:${orgId}`);
+      Object.assign(sub, seats, { updated_at: nowIso() });
+      log("coach.set_seats", `org:${orgId}`);
     }),
 
   extend: (orgId, days) =>

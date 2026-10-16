@@ -15,7 +15,6 @@ import {
   mealLogs,
   milestones,
   orgMembers,
-  planFeatures,
   profiles,
   programs,
   setLogs,
@@ -173,9 +172,11 @@ export const mockClients: ClientsApi = {
       requireMember("clients_invite");
       requireActiveSubscription();
       const sub = subscriptions.find((s) => s.org_id === DEMO.orgId)!;
-      const limit = planFeatures.find((f) => f.plan_id === sub.plan_id && f.key === "client_limit")?.value;
-      const clientCount = coachClients.filter((l) => l.org_id === DEMO.orgId && !l.ended_at).length;
-      if (typeof limit === "number" && clientCount >= limit) {
+      // One client seat per client (pending invites hold one too).
+      const clientCount =
+        coachClients.filter((l) => l.org_id === DEMO.orgId && !l.ended_at).length +
+        invites.filter((i) => i.org_id === DEMO.orgId && i.kind === "client" && !i.used_by && !i.deleted_at && Date.parse(i.expires_at) > Date.now()).length;
+      if (clientCount >= sub.client_seats) {
         throw new ApiError("limit_reached");
       }
       const code = `${input.name.split(" ")[0]}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase();

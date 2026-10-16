@@ -34,9 +34,8 @@ import type {
   Organization,
   OrgMember,
   Payment,
-  Plan,
-  PlanFeature,
   Profile,
+  SeatPricing,
   Program,
   ProgramDay,
   ProgramExercise,
@@ -185,56 +184,28 @@ export const orgMembers: OrgMember[] = [
   })),
 ];
 
-export const plans: Plan[] = [
-  { id: uid(KIND.plan, 1), name: "Trial", price_piasters: 0, currency: "EGP", days: 14, ...created(150) },
-  { id: uid(KIND.plan, 2), name: "Basic", price_piasters: 50000, currency: "EGP", days: 30, ...created(150) },
-  { id: uid(KIND.plan, 3), name: "Pro", price_piasters: 90000, currency: "EGP", days: 30, ...created(150) },
+/** Super admin prices (one row): 100 EGP a client seat, 300 EGP a team seat, per 30 days. */
+export const seatPricing: SeatPricing[] = [
+  { client_seat_piasters: 10000, team_seat_piasters: 30000, currency: "EGP", period_days: 30, trial_days: 14, trial_client_seats: 5 },
 ];
-
-const featureRows: [number, PlanFeature["key"], PlanFeature["value"]][] = [
-  [1, "client_limit", 5],
-  [1, "team_seats", 0],
-  [1, "nutrition", true],
-  [1, "directory_listing", false],
-  [1, "ai_credits", 0],
-  [1, "branded_app", false],
-  [2, "client_limit", 20],
-  [2, "team_seats", 1],
-  [2, "nutrition", true],
-  [2, "directory_listing", true],
-  [2, "ai_credits", 0],
-  [2, "branded_app", false],
-  [3, "client_limit", null],
-  [3, "team_seats", 5],
-  [3, "nutrition", true],
-  [3, "directory_listing", true],
-  [3, "ai_credits", 0],
-  [3, "branded_app", true],
-];
-
-export const planFeatures: PlanFeature[] = featureRows.map(([plan, key, value], i) => ({
-  id: uid(KIND.feature, i + 1),
-  plan_id: uid(KIND.plan, plan),
-  key,
-  value,
-  ...created(150),
-}));
 
 const inDays = (days: number) => daysAgo(-days, 23);
 
-const subRows: [number, Subscription["status"], string, string][] = [
-  [3, "active", daysAgo(20), inDays(10)], // Ahmed: Pro
-  [2, "ending_soon", daysAgo(25), inDays(5)], // Mariam
-  [2, "active", daysAgo(3), inDays(27)], // Mahmoud
-  [1, "trial", daysAgo(4), inDays(10)], // Nour
-  [2, "expired", daysAgo(40), daysAgo(10)], // Yasmin
-  [3, "active", daysAgo(12), inDays(18)], // Karim
+/** [client seats, team seats, status, starts, ends] */
+const subRows: [number, number, Subscription["status"], string, string][] = [
+  [20, 4, "active", daysAgo(20), inDays(10)], // Ahmed: 3 helpers + 1 free team seat (demo can invite)
+  [15, 0, "ending_soon", daysAgo(25), inDays(5)], // Mariam
+  [10, 1, "active", daysAgo(3), inDays(27)], // Mahmoud
+  [5, 0, "trial", daysAgo(4), inDays(10)], // Nour
+  [10, 0, "expired", daysAgo(40), daysAgo(10)], // Yasmin
+  [25, 2, "active", daysAgo(12), inDays(18)], // Karim
 ];
 
-export const subscriptions: Subscription[] = subRows.map(([plan, status, starts, ends], i) => ({
+export const subscriptions: Subscription[] = subRows.map(([clientSeats, teamSeats, status, starts, ends], i) => ({
   id: uid(KIND.sub, i + 1),
   org_id: uid(KIND.org, i + 1),
-  plan_id: uid(KIND.plan, plan),
+  client_seats: clientSeats,
+  team_seats: teamSeats,
   status,
   starts_at: starts,
   ends_at: ends,
@@ -242,21 +213,25 @@ export const subscriptions: Subscription[] = subRows.map(([plan, status, starts,
   ...created(40),
 }));
 
+/** [org, client seats, team seats, method, days ago]; amount = seats × prices for one period. */
 export const payments: Payment[] = [
-  [1, 90000, "instapay", 20],
-  [1, 90000, "instapay", 50],
-  [2, 50000, "cash", 25],
-  [3, 50000, "vodafone_cash", 3],
-  [6, 90000, "bank", 12],
-].map(([org, amount, method, ago], i) => ({
+  [1, 20, 3, "instapay", 20],
+  [1, 20, 2, "instapay", 50],
+  [2, 15, 0, "cash", 25],
+  [3, 10, 1, "vodafone_cash", 3],
+  [6, 25, 2, "bank", 12],
+].map(([org, clientSeats, teamSeats, method, ago], i) => ({
   id: uid(KIND.payment, i + 1),
   org_id: uid(KIND.org, org as number),
-  amount_piasters: amount as number,
+  amount_piasters: (clientSeats as number) * 10000 + (teamSeats as number) * 30000,
   currency: "EGP" as const,
   method: method as Payment["method"],
   paid_at: daysAgo(ago as number),
   note: null,
   receipt_path: null,
+  client_seats: clientSeats as number,
+  team_seats: teamSeats as number,
+  periods: 1,
   ...created(ago as number),
 }));
 

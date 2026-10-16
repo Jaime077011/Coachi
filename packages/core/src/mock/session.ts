@@ -3,7 +3,7 @@
  * row rules: the Supabase version gets the same answers from auth.uid() and org_members.
  */
 import { memberCan, type Session, type TeamPermission } from "@coachi/validation";
-import { DEMO, clients, coachClients, coachProfiles, organizations, orgMembers, planFeatures, profiles, subscriptions } from "./data";
+import { DEMO, clients, coachClients, coachProfiles, organizations, orgMembers, profiles, subscriptions } from "./data";
 import { ApiError, getMockClientProfile, getMockMemberRole, getMockRole } from "./runtime";
 
 export function mockSession(): Session {
@@ -78,11 +78,9 @@ export function canSeeClient(clientId: string) {
   return memberCan(session.member_role, "clients_all") || link.assigned_member_id === session.member_id;
 }
 
-/** The coach's logo as his clients see it: only when his plan has branded_app. */
+/** The coach's logo as his clients see it. Every coach gets it (no feature tiers). */
 export function clientBrandLogo(orgId: string) {
-  const sub = subscriptions.find((s) => s.org_id === orgId);
-  const branded = planFeatures.find((f) => f.plan_id === sub?.plan_id && f.key === "branded_app")?.value === true;
-  return branded ? (organizations.find((o) => o.id === orgId)?.logo_url ?? null) : null;
+  return organizations.find((o) => o.id === orgId)?.logo_url ?? null;
 }
 
 /** Active team members of an org, owner included. */

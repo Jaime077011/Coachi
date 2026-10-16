@@ -28,7 +28,7 @@ export function SettingsScreen() {
 
 function SettingsForm({ initial }: { initial: AppSettings }) {
   const t = useTranslations("admin.settings");
-  const tPlans = useTranslations("admin.plans");
+  const tPricing = useTranslations("admin.pricing");
   const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const [form, setForm] = useState(initial);
@@ -61,7 +61,7 @@ function SettingsForm({ initial }: { initial: AppSettings }) {
       <section>
         <SectionTitle>{t("limits")}</SectionTitle>
         <Button asChild variant="secondary">
-          <Link href="/admin/plans">{tPlans("title")}</Link>
+          <Link href="/admin/pricing">{tPricing("title")}</Link>
         </Button>
       </section>
 

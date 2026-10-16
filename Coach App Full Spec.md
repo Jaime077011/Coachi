@@ -100,7 +100,7 @@ A coach can run a small team: helpers who work inside his account on his clients
 
 **Rules**
 
-- Team size comes from the plan: a `team_seats` feature (for example Trial 0, Basic 1, Pro 5). Pending invites count as seats. When the coach hits the limit he sees a clear note with Renew on WhatsApp.
+- Team size comes from the team seats the coach bought (one per helper; the owner is free). Pending invites count as seats. When he hits the limit he sees a clear note with Buy seats on WhatsApp.
 - The owner adds a helper with name, phone, and role. The app makes an invite link to send on WhatsApp, the same way as client invites.
 - Each client has at most one assigned team member (or none, meaning only the owner and head coaches work on him). The client sees his coach's name and brand, not the helper's.
 - Removing a helper never deletes anything: his clients go back to unassigned, and his notes and plans stay.
@@ -111,7 +111,7 @@ A coach can run a small team: helpers who work inside his account on his clients
 
 The public page at `coachi.app` for people who don't know Coachi yet. No login, found by search engines, Arabic and English.
 
-- Sections: hero ("Every client. One app."), what a coach gets, how it works (3 steps), prices from the super admin's plans, the "I'm a coach" form, questions, footer with About, Privacy, Terms
+- Sections: hero ("Every client. One app."), what a coach gets, how it works (3 steps), seat prices from the super admin's Pricing with a cost calculator, the "I'm a coach" form, questions, footer with About, Privacy, Terms
 - **I'm a coach form:** name, WhatsApp number, city, how many clients, message. Coaches still can't sign up alone: the form lands in the super admin's Overview under "Coach requests", with WhatsApp, Add coach (prefilled), and Dismiss
 - "Find a coach" opens the directory. Log in (or Open the app when signed in) in the header
 - The installed app skips this page: it opens at `/start`, which sends each role to its own area
@@ -130,10 +130,10 @@ You run the business from here. Coaches pay you by hand, and you switch their ac
 
 **Coaches**
 
-- Table: name, phone, plan, client count, status (Trial, Active, Ending soon, Expired, Paused), end date, last active
-- Add coach: name, phone, email, plan, start and end date. The app sends a login invite
+- Table: name, phone, seats (client · team), client count, status (Trial, Active, Ending soon, Expired, Paused), end date, last active
+- Add coach: name, phone, email, client seats, team seats, start and end date (defaults: the free trial). The app sends a login invite
 - Coach page: details, clients count, payment history, notes
-- Actions: extend, pause, change plan, support mode, delete (with confirm)
+- Actions: record payment, extend, pause, change seats (without a payment), support mode, delete (with confirm)
 
 **Coach directory**
 
@@ -141,11 +141,13 @@ You run the business from here. Coaches pay you by hand, and you switch their ac
 - Hide a coach (bad reviews, fake info, expired), or feature a few at the top
 - See requests per coach and how many get accepted, to spot coaches who never reply
 
-**Subscriptions (manual)**
+**Subscriptions (manual, seats — changed Oct 16)**
 
-- Plans you define, for example: Trial (14 days, 5 clients), Basic (20 clients), Pro (unlimited)
-- Each plan has: name, price in EGP, client limit, team seats, length in days
-- Record a payment: coach, amount, method (InstaPay, cash, bank, Vodafone Cash), date, note, optional receipt photo. Saving it extends the end date
+- No plans. Coaches buy seats ahead: a client seat per client and a team seat per helper (the owner is free), for one period (30 days). They can't go past their seats until they buy more; pending invites hold a seat
+- Every coach gets every feature (meal plans, directory listing after approval, logo in the client app, landing page, team roles). Only seat counts differ
+- Pricing (super admin): price per client seat (default 100 EGP), price per team seat (default 300 EGP), period length, and the free trial (default 14 days with 5 client seats, no team seats)
+- Record a payment: coach, client seats, team seats, how many periods, amount (worked out from the seats, editable for discounts), method (InstaPay, cash, bank, Vodafone Cash), date, note, optional receipt photo. Saving sets his seats and extends the end date
+- The coach sees seats used vs bought and the cost per period on Subscription, and asks for more seats on WhatsApp
 - Auto status: Ending soon at 7 days left, Expired after the end date
 
 **Shared libraries**
@@ -156,7 +158,7 @@ You run the business from here. Coaches pay you by hand, and you switch their ac
 **Settings**
 
 - App name, logo, support WhatsApp number
-- Client limits per plan
+- Link to Pricing (seat prices and the trial)
 - Activity log of admin actions
 
 ## Coach dashboard
@@ -174,7 +176,7 @@ In phase one the coach can run his whole business here: a full file on every cli
 - List with photo, name, goal, plan, last workout, this week's adherence (for example 3 of 4 done)
 - Search and filter: active, paused, needs attention
 - Add client: name and phone only. The app makes an invite link to send on WhatsApp
-- Client limit from the coach's plan; a clear message when he hits it
+- One client seat per client (pending invites hold one); a clear message with Buy seats when they're all taken
 
 **Requests**
 
@@ -251,7 +253,7 @@ Every coach gets his own public page at `coachi.app/c/<his-link>`, to put in his
 **Team (added Oct 15)**
 
 - Members list: photo, name, role, assigned clients count, status (active, invited)
-- Seats used against the plan's `team_seats`
+- Team seats used against the seats he bought
 - Invite a helper (name, phone, role), change role, remove (with confirm)
 - Assign a client to a team member from the client file or the clients list; filter clients by team member
 - See "Coach team" under Roles and access for what each role can do
@@ -351,7 +353,7 @@ Not in phase one. Build it after coaches are using the app, so it learns from re
 
 - The AI only picks exercises from the library, so every exercise has a video and a clean name
 - It never gives medical advice. Injuries in a brief only mean "avoid these movements"
-- Each plan has a monthly AI limit set by the super admin, to control cost
+- A monthly AI limit per coach set by the super admin, to control cost
 - Show a small "AI draft" label until the coach edits or approves
 
 **Cost control**
@@ -412,7 +414,7 @@ Every screen goes through the core modules, never straight to the database. Slow
 1. **One app, split into modules.** One Next.js app now, but code lives in modules: auth and orgs, billing and plans, directory, clients and notes, training, nutrition, journey, check-ins, notifications, admin. Each module owns its tables and functions. Modules call each other's functions, never each other's tables. Later, any module can move out on its own.
 2. **Backend first, in Supabase.** Business rules live in Supabase: row rules, database functions (RPC), and Edge Functions for heavier work. The web app now and the mobile app later call the same backend, with the same Zod checks and types. Next.js server actions are only for web-only things, like admin tools. Nothing the client or coach needs may live only in Next.js.
 3. **Organizations from day one.** Every coach works inside an organization. A solo coach = an organization of one. Later a gym adds many coaches, a head coach, and assistants with no data changes. Every row carries org\_id, and security rules check membership.
-4. **Plan features, not fixed limits.** Plans give features: client\_limit, team\_seats, nutrition, directory\_listing, ai\_credits, branded\_app. Code asks "can this org do X?" in one place. When payments come, only the subscription source changes, not the checks.
+4. **Seats, not plans.** Every coach gets every feature; the subscription carries client\_seats and team\_seats, and code checks seats in one place. Prices live in one seat\_pricing row. When payments come, only the subscription source changes, not the checks.
 5. **Coach and client linked by their own table.** coach\_clients keeps start, end, and status. This gives full history, coach switching, and later more than one coach per client (trainer + nutritionist).
 6. **Events and background jobs.** Important actions write an event (workout\_logged, request\_sent, checkin\_sent). A job worker (Inngest or Trigger.dev) reacts: milestones, streaks, daily stats, notifications. The app stays fast, and AI, WhatsApp, or reports plug in later as new listeners.
 7. **Fast dashboards with summary tables.** Jobs keep daily\_client\_stats and journey numbers up to date, so the coach home and journey page don't scan every set ever logged. Indexes on (org\_id, client\_id, date).
@@ -457,10 +459,9 @@ Every main table also has id (uuid), org\_id where it applies, created\_at, upda
 | Auth + orgs | profiles | role, name, phone, avatar, language, time\_zone | One login for any role |
 | Auth + orgs | organizations | name, type (solo, gym), logo, city | Gyms with many coaches later |
 | Auth + orgs | org\_members | org\_id, profile\_id, role (owner, head\_coach, coach, assistant), status (active, removed) | Coach teams with roles |
-| Billing | plans | name, price\_piasters, currency, days | Prices in any currency |
-| Billing | plan\_features | plan\_id, key, value (client\_limit, team\_seats, nutrition, directory\_listing, ai\_credits, branded\_app) | New plans = new rows, no code |
-| Billing | subscriptions | org\_id, plan\_id, status, starts\_at, ends\_at, source (manual, paymob later) | Payments plug in later |
-| Billing | payments | org\_id, amount\_piasters, method, paid\_at, note, receipt\_url | Manual now, gateway later |
+| Billing | seat\_pricing | client\_seat\_piasters, team\_seat\_piasters, currency, period\_days, trial\_days, trial\_client\_seats (one row) | Prices in any currency, changed without code |
+| Billing | subscriptions | org\_id, client\_seats, team\_seats, status, starts\_at, ends\_at, source (manual, paymob later) | Payments plug in later |
+| Billing | payments | org\_id, amount\_piasters, method, paid\_at, note, receipt\_url, client\_seats, team\_seats, periods | Manual now, gateway later |
 | Billing | feature\_flags | org\_id, key, on | Test features with one coach first |
 | Directory | coach\_profiles | profile\_id, org\_id, bio, specialties, city, mode, gym, languages, years, certificates, price range, instagram, whatsapp, open\_for\_clients, listed, featured, slug (unique), headline, cover\_url, page\_published, show\_team | Public profile and landing page kept apart from private data |
 | Directory | coach\_packages | org\_id, coach\_id, name, price\_piasters, weeks, includes, highlighted, order | What the coach sells, on his landing page |
@@ -549,7 +550,7 @@ Phase one is all about the coach working fully, and the client seeing his journe
 
 **Week 2 (Oct 20 to 26): super admin + coach core**
 
-- [ ] Super admin: coaches, plans, manual payments, status, directory approval
+- [ ] Super admin: coaches, seat pricing, manual payments, status, directory approval
 - [ ] Coach: clients list, add client by invite, intake form, public profile, requests inbox
 - [ ] Client file: profile, health, food, coach notes
 - [ ] Workout plan builder + templates

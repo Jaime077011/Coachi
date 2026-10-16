@@ -4,7 +4,9 @@ export type NewCoach = {
   name: string;
   phone: string;
   email?: string;
-  plan_id: string;
+  /** New coaches start on the trial seats; the admin can change them. */
+  client_seats: number;
+  team_seats: number;
   starts_at: string;
   ends_at: string;
 };
@@ -15,7 +17,8 @@ export interface AdminApi {
   coaches(): Promise<AdminCoachRow[]>;
   addCoach(input: NewCoach): Promise<AdminCoachRow>;
   setStatus(orgId: string, status: Extract<Subscription["status"], "active" | "paused">): Promise<void>;
-  changePlan(orgId: string, planId: string): Promise<void>;
+  /** Change seats without a payment (e.g. a few extra clients until he renews). */
+  setSeats(orgId: string, seats: { client_seats: number; team_seats: number }): Promise<void>;
   /** Add days without a payment (goodwill, trial extension). */
   extend(orgId: string, days: number): Promise<void>;
   /** Soft delete: the coach disappears, nothing is erased. */

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { orgRole } from "./auth-orgs";
 import { coachPackage, coachProfile, coachRequest, coachResult } from "./directory";
 import { date, id, timestamp, url, weightKg } from "./common";
-import { plan, planFeature, subscription, subscriptionStatus } from "./billing";
+import { seatPricing, subscription, subscriptionStatus } from "./billing";
 import { exercise, program, programDay, programExercise } from "./training";
 import { food, macroTargets, meal, mealItem, mealLog, nutritionPlan } from "./nutrition";
 import { bodyMetric, checkin } from "./progress-checkins";
@@ -173,20 +173,13 @@ export type CoachLanding = z.infer<typeof coachLanding>;
 
 // ---------------------------------------------------------------- billing + admin
 
-export const planWithFeatures = z.object({
-  plan,
-  features: z.array(planFeature),
-  coaches_on_plan: z.number().int().nonnegative(),
-});
-export type PlanWithFeatures = z.infer<typeof planWithFeatures>;
-
+/** The coach's Subscription screen: seats bought vs used, and what a period costs. */
 export const coachSubscriptionView = z.object({
   subscription,
-  plan,
-  client_limit: z.number().int().nullable(),
+  pricing: seatPricing,
   client_count: z.number().int().nonnegative(),
-  team_seats: z.number().int().nullable(),
   team_count: z.number().int().nonnegative(),
+  period_piasters: z.number().int().nonnegative(),
   days_left: z.number().int(),
 });
 export type CoachSubscriptionView = z.infer<typeof coachSubscriptionView>;
@@ -196,7 +189,8 @@ export const adminCoachRow = z.object({
   org_id: id,
   name: z.string(),
   phone: z.string().nullable(),
-  plan_name: z.string(),
+  client_seats: z.number().int().nonnegative(),
+  team_seats: z.number().int().nonnegative(),
   client_count: z.number().int().nonnegative(),
   status: subscriptionStatus,
   ends_at: timestamp,

@@ -1,5 +1,6 @@
+import { periodPrice } from "@coachi/validation";
 import type { BillingApi } from "./api";
-import { coachClients, payments, planFeatures, plans, subscriptions } from "../mock/data";
+import { coachClients, payments, seatPricing, subscriptions } from "../mock/data";
 import { activeMembers } from "../mock/session";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 
@@ -11,41 +12,26 @@ const subOf = (orgId: string) => {
   return sub;
 };
 
-const featureValue = (planId: string, key: string) =>
-  planFeatures.find((f) => f.plan_id === planId && f.key === key)?.value ?? null;
-
-const withFeatures = (planId: string) => ({
-  plan: plans.find((p) => p.id === planId)!,
-  features: planFeatures.filter((f) => f.plan_id === planId),
-  coaches_on_plan: subscriptions.filter((s) => s.plan_id === planId && s.status !== "expired").length,
-});
+const pricing = () => seatPricing[0]!;
 
 export const mockBilling: BillingApi = {
-  plans: () => mockRead(() => plans.map((p) => withFeatures(p.id)), []),
+  pricing: () => mockRead(pricing),
 
-  updatePlanFeature: (planId, key, value) =>
+  savePricing: (input) =>
     mockWrite(() => {
-      const feature = planFeatures.find((f) => f.plan_id === planId && f.key === key);
-      if (feature) Object.assign(feature, { value, updated_at: nowIso() });
-      else
-        planFeatures.push({ id: newId(), plan_id: planId, key, value, created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
-      return withFeatures(planId);
+      Object.assign(pricing(), input);
+      return pricing();
     }),
 
   mySubscription: (orgId) =>
     mockRead(() => {
       const subscription = subOf(orgId);
-      const limit = featureValue(subscription.plan_id, "client_limit");
       return {
         subscription,
-        plan: plans.find((p) => p.id === subscription.plan_id)!,
-        client_limit: typeof limit === "number" ? limit : null,
+        pricing: pricing(),
         client_count: coachClients.filter((l) => l.org_id === orgId && !l.ended_at).length,
-        team_seats: (() => {
-          const seats = featureValue(subscription.plan_id, "team_seats");
-          return typeof seats === "number" ? seats : null;
-        })(),
         team_count: activeMembers(orgId).filter((m) => m.role !== "owner").length,
+        period_piasters: periodPrice(pricing(), subscription.client_seats, subscription.team_seats),
         days_left: Math.ceil((Date.parse(subscription.ends_at) - Date.now()) / DAY),
       };
     }),
@@ -56,7 +42,6 @@ export const mockBilling: BillingApi = {
   recordPayment: (input) =>
     mockWrite(() => {
       const subscription = subOf(input.org_id);
-      const plan = plans.find((p) => p.id === subscription.plan_id)!;
       const payment = {
         id: newId(),
         org_id: input.org_id,
@@ -66,23 +51,23 @@ export const mockBilling: BillingApi = {
         paid_at: new Date(`${input.paid_on}T12:00:00`).toISOString(),
         note: input.note ?? null,
         receipt_path: input.receipt_path ?? null,
+        client_seats: input.client_seats,
+        team_seats: input.team_seats,
+        periods: input.periods,
         created_at: nowIso(),
         updated_at: nowIso(),
         deleted_at: null,
       };
       payments.push(payment);
-      // Extend from the later of today or the current end date.
+      // The seats he paid for, from now on. Extend from the later of today or the current end date.
       const from = Math.max(Date.now(), Date.parse(subscription.ends_at));
-      subscription.ends_at = new Date(from + plan.days * DAY).toISOString();
-      subscription.status = "active";
-      subscription.updated_at = nowIso();
+      Object.assign(subscription, {
+        client_seats: input.client_seats,
+        team_seats: input.team_seats,
+        ends_at: new Date(from + input.periods * pricing().period_days * DAY).toISOString(),
+        status: "active",
+        updated_at: nowIso(),
+      });
       return { payment, subscription };
-    }),
-
-  can: (orgId, key) =>
-    mockRead(() => {
-      const sub = subOf(orgId);
-      if (sub.status === "expired" || sub.status === "paused") return false;
-      return featureValue(sub.plan_id, key);
     }),
 };

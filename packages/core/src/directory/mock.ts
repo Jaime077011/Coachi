@@ -10,7 +10,6 @@ import {
   coachRequests,
   coachResults,
   organizations,
-  planFeatures,
   profiles,
   subscriptions,
 } from "../mock/data";
@@ -182,11 +181,8 @@ export const mockDirectory: DirectoryApi = {
 
   brand: (orgId) =>
     mockRead(() => {
-      const sub = subscriptions.find((s) => s.org_id === orgId);
-      return {
-        logo_url: organizations.find((o) => o.id === orgId)?.logo_url ?? null,
-        branded_app: planFeatures.find((f) => f.plan_id === sub?.plan_id && f.key === "branded_app")?.value === true,
-      };
+      // Every coach gets every feature: the logo always shows in his clients' app.
+      return { logo_url: organizations.find((o) => o.id === orgId)?.logo_url ?? null, branded_app: true };
     }),
 
   setLogo: (orgId, logoUrl) =>

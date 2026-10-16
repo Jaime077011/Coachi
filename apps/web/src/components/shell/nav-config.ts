@@ -57,7 +57,7 @@ export const coachMore: NavItem[] = [
 export const adminNav: NavItem[] = [
   { href: "/admin/overview", label: "admin.overview", icon: LayoutDashboardIcon },
   { href: "/admin/coaches", label: "admin.coaches", icon: UsersRoundIcon },
-  { href: "/admin/plans", label: "admin.plans", icon: LayersIcon },
+  { href: "/admin/pricing", label: "admin.pricing", icon: LayersIcon },
   { href: "/admin/directory", label: "admin.directory", icon: BookUserIcon },
   { href: "/admin/libraries", label: "admin.libraries", icon: LibraryBigIcon },
   { href: "/admin/audit", label: "admin.audit", icon: ScrollTextIcon },

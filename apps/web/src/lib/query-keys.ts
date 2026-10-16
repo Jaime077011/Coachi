@@ -33,7 +33,7 @@ export const qk = {
   // Admin
   adminOverview: ["admin-overview"] as const,
   adminCoaches: ["admin-coaches"] as const,
-  plans: ["plans"] as const,
+  pricing: ["pricing"] as const,
   payments: (orgId: string) => ["payments", orgId] as const,
   directoryQueue: ["directory-queue"] as const,
   audit: ["audit"] as const,

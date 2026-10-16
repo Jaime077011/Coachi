@@ -1,16 +1,13 @@
 import type { TeamView } from "@coachi/validation";
 import type { TeamApi } from "./api";
-import { DEMO, coachClients, invites, orgMembers, planFeatures, profiles, subscriptions } from "../mock/data";
+import { DEMO, coachClients, invites, orgMembers, profiles, subscriptions } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 import { activeMembers, requireActiveSubscription, requireMember } from "../mock/session";
 
 const DAY = 86_400_000;
 
-const seatsLimit = (orgId: string) => {
-  const sub = subscriptions.find((s) => s.org_id === orgId);
-  const value = planFeatures.find((f) => f.plan_id === sub?.plan_id && f.key === "team_seats")?.value;
-  return typeof value === "number" ? value : value === null ? null : 0;
-};
+/** Team seats he bought (helpers; the owner doesn't take one). */
+const seatsLimit = (orgId: string): number | null => subscriptions.find((s) => s.org_id === orgId)?.team_seats ?? 0;
 
 const pendingInvites = (orgId: string) =>
   invites.filter((i) => i.org_id === orgId && i.kind === "team" && !i.used_by && !i.deleted_at && Date.parse(i.expires_at) > Date.now());

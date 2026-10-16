@@ -36,7 +36,7 @@ export function OverviewScreen() {
           <bdi>{c.name}</bdi>
         </p>
         <p className="text-xs text-hint">
-          {c.plan_name} · {t("clients", { count: c.client_count })} · {fmt.date(c.ends_at, "short")}
+          {tCoaches("seatsCell", { clients: c.client_seats, team: c.team_seats })} · {t("clients", { count: c.client_count })} · {fmt.date(c.ends_at, "short")}
         </p>
       </div>
       <StatusChip tone={subscriptionTone[c.status]}>{tSub(`status_${c.status}`)}</StatusChip>
