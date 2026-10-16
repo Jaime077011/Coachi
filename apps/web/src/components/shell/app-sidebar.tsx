@@ -62,7 +62,9 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
       side={side}
       variant="floating"
       collapsible="icon"
-      className="[&>[data-slot=sidebar-inner]]:rounded-2xl [&>[data-slot=sidebar-inner]]:border [&>[data-slot=sidebar-inner]]:border-sidebar-border [&>[data-slot=sidebar-inner]]:shadow-card [&>[data-slot=sidebar-inner]]:ring-0 [&>[data-slot=sidebar-inner]]:backdrop-blur-2xl [&>[data-slot=sidebar-inner]]:backdrop-saturate-150"
+      // Attached to the screen edge (left in English, right in Arabic): no gap and square corners on
+      // that side, rounded corners toward the page. Logical start/end mirror it in Arabic.
+      className="ps-0! [&>[data-slot=sidebar-inner]]:rounded-s-none [&>[data-slot=sidebar-inner]]:rounded-e-2xl [&>[data-slot=sidebar-inner]]:border [&>[data-slot=sidebar-inner]]:border-s-0 [&>[data-slot=sidebar-inner]]:border-sidebar-border [&>[data-slot=sidebar-inner]]:shadow-card [&>[data-slot=sidebar-inner]]:ring-0 [&>[data-slot=sidebar-inner]]:backdrop-blur-2xl [&>[data-slot=sidebar-inner]]:backdrop-saturate-150"
     >
       <SidebarHeader className="flex-row items-center justify-between gap-2 border-b border-sidebar-border p-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
         {collapsed ? (
@@ -147,14 +149,15 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      {/* Fold / unfold: a round arrow on the menu's inner edge, halfway down. */}
+      {/* Fold / unfold: a tab growing out of the menu's inner edge, halfway down. No border on the
+          side it joins (and 1px of overlap to cover the menu's edge line), so it reads as one shape. */}
       <button
         type="button"
         onClick={toggleSidebar}
         aria-label={collapsed ? tShell("expand") : tShell("collapse")}
         aria-expanded={!collapsed}
         title={collapsed ? tShell("expand") : tShell("collapse")}
-        className="absolute end-2 top-1/2 z-30 grid size-7 -translate-y-1/2 place-items-center rounded-full border border-sidebar-border bg-sidebar text-muted-foreground shadow-card backdrop-blur-2xl transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-1/2 rtl:-translate-x-1/2"
+        className="absolute end-2 top-1/2 z-30 grid h-12 w-7 -translate-y-1/2 place-items-center rounded-e-lg border border-s-0 border-sidebar-border bg-sidebar text-muted-foreground backdrop-blur-2xl transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
       >
         {/* Points the way the menu will move: in when open, out when folded (mirrored in Arabic). */}
         <ChevronLeftIcon aria-hidden className={cn("size-4 transition-transform duration-200 rtl:-scale-x-100", collapsed && "rotate-180")} />
