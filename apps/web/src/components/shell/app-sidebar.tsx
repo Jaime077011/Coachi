@@ -64,7 +64,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
       collapsible="icon"
       // Attached to the screen edge (left in English, right in Arabic): no gap and square corners on
       // that side, rounded corners toward the page. Logical start/end mirror it in Arabic.
-      className="ps-0! [&>[data-slot=sidebar-inner]]:rounded-s-none [&>[data-slot=sidebar-inner]]:rounded-e-2xl [&>[data-slot=sidebar-inner]]:border [&>[data-slot=sidebar-inner]]:border-s-0 [&>[data-slot=sidebar-inner]]:border-sidebar-border [&>[data-slot=sidebar-inner]]:shadow-card [&>[data-slot=sidebar-inner]]:ring-0 [&>[data-slot=sidebar-inner]]:backdrop-blur-2xl [&>[data-slot=sidebar-inner]]:backdrop-saturate-150"
+      className="ps-0! [&>[data-slot=sidebar-inner]]:relative [&>[data-slot=sidebar-inner]]:rounded-s-none [&>[data-slot=sidebar-inner]]:rounded-e-2xl [&>[data-slot=sidebar-inner]]:border [&>[data-slot=sidebar-inner]]:border-s-0 [&>[data-slot=sidebar-inner]]:border-sidebar-border [&>[data-slot=sidebar-inner]]:shadow-card [&>[data-slot=sidebar-inner]]:ring-0 [&>[data-slot=sidebar-inner]]:backdrop-blur-2xl [&>[data-slot=sidebar-inner]]:backdrop-saturate-150"
     >
       <SidebarHeader className="flex-row items-center justify-between gap-2 border-b border-sidebar-border p-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
         {collapsed ? (
@@ -156,7 +156,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
         aria-label={collapsed ? tShell("expand") : tShell("collapse")}
         aria-expanded={!collapsed}
         title={collapsed ? tShell("expand") : tShell("collapse")}
-        className="group/tab absolute end-2 top-1/2 z-30 grid h-14 w-[22px] -translate-y-1/2 place-items-center rounded-e-xl text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
+        className="group/tab absolute end-0 top-1/2 z-30 grid h-14 w-[22px] -translate-y-1/2 place-items-center rounded-e-xl text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-full rtl:-translate-x-full"
       >
         <CollapseTabShape />
         {/* Points the way the menu will move: in when open, out when folded. */}
