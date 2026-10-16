@@ -200,3 +200,8 @@
     visibility: hidden;
   }
 }
+
+/* Arabic headings: Cairo ExtraBold (the display font, Badeen, was hard to read). */
+:lang(ar) .font-display {
+  font-weight: 800;
+}

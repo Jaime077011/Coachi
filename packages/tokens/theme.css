@@ -121,7 +121,8 @@
 
 /* Arabic: Badeen Display + Cairo, and never any letter spacing (it breaks joined letters). */
 :lang(ar) {
-  --coachi-font-display: var(--font-badeen), "Badeen Display", var(--font-cairo), sans-serif;
+  /* Badeen Display was hard to read: Arabic headings use Cairo ExtraBold. */
+  --coachi-font-display: var(--font-cairo), "Cairo", sans-serif;
   --coachi-font-ui: var(--font-cairo), "Cairo", system-ui, sans-serif;
 }
 :lang(ar),

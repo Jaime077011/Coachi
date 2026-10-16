@@ -7,7 +7,7 @@ export const archivo = Archivo({
   subsets: ["latin"],
   variable: "--font-archivo",
 });
-export const cairo = Cairo({ weight: ["400", "600", "700"], subsets: ["arabic", "latin"], variable: "--font-cairo" });
+export const cairo = Cairo({ weight: ["400", "600", "700", "800"], subsets: ["arabic", "latin"], variable: "--font-cairo" });
 export const badeen = Badeen_Display({
   weight: "400",
   subsets: ["arabic"],
