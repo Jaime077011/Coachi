@@ -28,11 +28,13 @@ export function StatusChip({
     <span
       className={cn(
         "inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
+        // Arabic: Cairo, bigger and bolder. Arabic letters at 12 px are too small to read.
+        "rtl:gap-1.5 rtl:px-3 rtl:font-[family-name:var(--font-cairo)] rtl:text-sm rtl:leading-6 rtl:font-bold",
         tones[tone].className,
         className,
       )}
     >
-      <Icon className="size-3.5" aria-hidden />
+      <Icon className="size-3.5 rtl:size-4" aria-hidden />
       {children}
     </span>
   );

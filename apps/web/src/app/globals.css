@@ -205,3 +205,15 @@
 :lang(ar) .font-display {
   font-weight: 800;
 }
+
+/*
+ * Arabic: small text one step bigger, since Arabic letters at 12 px are hard to read.
+ * Tailwind's text-xs / text-sm read these variables, so this covers every small label at once.
+ * The font is Cairo for all Arabic text (set by --coachi-font-ui in theme.css).
+ */
+:lang(ar) {
+  --text-xs: 0.875rem; /* 14 px, was 12 */
+  --text-xs--line-height: 1.55;
+  --text-sm: 0.9375rem; /* 15 px, was 14 */
+  --text-sm--line-height: 1.6;
+}

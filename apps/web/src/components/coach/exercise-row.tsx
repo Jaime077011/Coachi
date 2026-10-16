@@ -167,7 +167,7 @@ export function ExerciseRow({
 function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-center text-[11px] font-semibold text-hint">{label}</span>
+      <span className="text-center text-[11px] font-semibold text-hint rtl:text-xs">{label}</span>
       {children}
     </label>
   );

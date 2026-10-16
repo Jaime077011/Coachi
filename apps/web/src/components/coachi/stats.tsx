@@ -106,7 +106,7 @@ export function WeekStrip({ days, className }: { days: WeekStripDay[]; className
         const Icon = d.state in dayIcons ? dayIcons[d.state as keyof typeof dayIcons] : null;
         return (
           <li key={d.date} className="flex flex-col items-center gap-1">
-            <span className={cn("text-[11px] font-semibold", d.state === "today" ? "text-primary" : "text-hint")}>
+            <span className={cn("text-[11px] font-semibold rtl:text-xs", d.state === "today" ? "text-primary" : "text-hint")}>
               {fmt.weekday(d.date, "narrow")}
             </span>
             <span
