@@ -169,11 +169,14 @@ function Sidebar({
   className,
   children,
   dir,
+  edge,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  /** Coachi: laptop only. Rendered beside the panel (outside its glass), e.g. the fold tab. */
+  edge?: React.ReactNode
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -259,6 +262,7 @@ function Sidebar({
         >
           {children}
         </div>
+        {edge}
       </div>
     </div>
   )
