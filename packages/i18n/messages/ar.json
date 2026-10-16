@@ -70,7 +70,20 @@
     "slow": "بطيء",
     "kit": "مكتبة المكونات",
     "reset": "رجّع البيانات التجريبية",
-    "teamRole": "دور في الفريق"
+    "teamRole": "دور في الفريق",
+    "colors": "الألوان ({mode})",
+    "colorsCopied": "اتنسخ الـ CSS. حطه في packages/tokens/theme.css",
+    "copyCss": "انسخ CSS",
+    "resetColors": "رجّع {mode}",
+    "color_background": "الخلفية",
+    "color_card": "الكروت",
+    "color_text": "النص",
+    "color_primary": "الأحمر (الأساسي)",
+    "color_secondary": "الأسطح",
+    "color_border": "الحدود",
+    "color_sidebar": "القايمة الجانبية",
+    "color_hint": "نص المساعدة",
+    "color_success": "النجاح"
   },
   "screens": {
     "login": "تسجيل الدخول",

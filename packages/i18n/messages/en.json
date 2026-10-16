@@ -70,7 +70,20 @@
     "slow": "Slow",
     "kit": "Component kit",
     "reset": "Reset demo data",
-    "teamRole": "Team role"
+    "teamRole": "Team role",
+    "colors": "Colors ({mode})",
+    "colorsCopied": "CSS copied. Paste it into packages/tokens/theme.css",
+    "copyCss": "Copy CSS",
+    "resetColors": "Reset {mode}",
+    "color_background": "Background",
+    "color_card": "Cards",
+    "color_text": "Text",
+    "color_primary": "Red (main)",
+    "color_secondary": "Surfaces",
+    "color_border": "Borders",
+    "color_sidebar": "Sidebar",
+    "color_hint": "Hint text",
+    "color_success": "Success"
   },
   "screens": {
     "login": "Log in",

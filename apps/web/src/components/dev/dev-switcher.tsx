@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { roleHome } from "@/lib/roles";
+import { DevColors, useDevColors } from "./dev-colors";
 
 /** Mock mode only: switch role, language, theme, and data state to test every screen fast. */
 export function DevSwitcher() {
@@ -36,6 +37,7 @@ export function DevSwitcher() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const { resolvedTheme, setTheme } = useTheme();
+  useDevColors();
 
   // Stored in localStorage, so unknown on the server (null) until the client renders.
   const role = useSyncExternalStore(subscribe, getMockRole, () => null);
@@ -81,7 +83,7 @@ export function DevSwitcher() {
           <span className="sr-only md:not-sr-only">{t("switcher")}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-80 gap-4 p-4">
+      <PopoverContent side="top" align="start" className="max-h-[calc(100dvh-6rem)] w-80 gap-4 overflow-y-auto p-4">
         <Row label={t("role")}>
           <ToggleGroup
             type="single"
@@ -141,6 +143,7 @@ export function DevSwitcher() {
             <ToggleGroupItem value="light">{t("light")}</ToggleGroupItem>
           </ToggleGroup>
         </Row>
+        <DevColors />
         <Row label={t("dataState")}>
           <ToggleGroup
             type="single"
