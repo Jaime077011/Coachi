@@ -73,7 +73,7 @@ function Journey({ data }: { data: JourneySummary }) {
         <div className="absolute inset-x-0 top-0 h-1 bg-fire" aria-hidden />
         <CardContent className="flex flex-col gap-2">
           <h1 className="font-display text-[34px] leading-[1.1] uppercase">
-            {/* Numbers always in Anton: Badeen Display would draw Arabic-Indic digit shapes. */}
+            {/* Numbers always in Anton, the stat font, in both languages. */}
             {t.rich("day", { n: data.day_number, num: (chunks) => <span className="font-stat">{chunks}</span> })}
           </h1>
           <p className="text-sm text-muted-foreground">

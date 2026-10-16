@@ -47,7 +47,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Display (Anton / Badeen Display) for big moments, UI (Archivo / Cairo) for everything else. */
+  /* Display (Anton / Cairo ExtraBold) for big moments, UI (Archivo / Cairo) for everything else. */
   --font-sans: var(--coachi-font-ui);
   --font-heading: var(--coachi-font-ui);
   --font-display: var(--coachi-font-display);

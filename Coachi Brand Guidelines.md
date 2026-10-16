@@ -91,7 +91,7 @@ Four fonts, two per language: a loud display font for big moments and a clean UI
 
 | Role | English | Arabic | Use for |
 | --- | --- | --- | --- |
-| Display | Anton 400, UPPERCASE | Badeen Display 400 | Logo, page heroes, H1, big stats |
+| Display | Anton 400, UPPERCASE | Cairo 800 (changed Oct 16: Badeen Display was hard to read; the logo artwork keeps its lettering) | Page heroes, H1, big stats |
 | UI and body | Archivo 400, 500, 600, 700 | Cairo 400, 600, 700 | H2 and down, body, buttons, forms, tagline |
 
 **English scale** (size in px, mobile / desktop)
@@ -115,8 +115,8 @@ Four fonts, two per language: a loud display font for big moments and a clean UI
 
 | Style | Font | Size | Line height |
 | --- | --- | --- | --- |
-| Display | Badeen Display | 44 / 68 | 1.3 |
-| H1 | Badeen Display | 34 / 48 | 1.35 |
+| Display | Cairo 800 | 44 / 68 | 1.3 |
+| H1 | Cairo 800 | 34 / 48 | 1.35 |
 | H2 | Cairo 700 | 24 / 30 | 1.5 |
 | H3 | Cairo 700 | 20 / 22 | 1.5 |
 | H4 | Cairo 600 | 17 / 18 | 1.55 |
@@ -131,7 +131,7 @@ Four fonts, two per language: a loud display font for big moments and a clean UI
 **Rules**
 
 - **Anton is uppercase only** and never under 24 px. Below that, use Archivo 700.
-- **Badeen Display never under 28 px.** Below that, use Cairo 700.
+- **Arabic display text is Cairo 800, never under 28 px.** Below that, use Cairo 700.
 - **No letter spacing on Arabic,** ever. It breaks the joined letters.
 - **Arabic needs more line height** than English (1.7 to 1.8 for body), because of dots and tails.
 - **Numbers:** use Western digits (1, 2, 3) in both languages for weights, reps, and dates. Turn on tabular numbers in tables and logs so columns line up.

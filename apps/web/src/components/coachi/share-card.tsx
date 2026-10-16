@@ -40,7 +40,7 @@ async function render(content: ShareContent, locale: string, madeWith: string) {
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
   const rtl = locale === "ar";
-  const display = rtl ? fontFamily("--font-badeen", "sans-serif") : fontFamily("--font-anton", "sans-serif");
+  const display = rtl ? fontFamily("--font-cairo", "sans-serif") : fontFamily("--font-anton", "sans-serif");
   const ui = rtl ? fontFamily("--font-cairo", "sans-serif") : fontFamily("--font-archivo", "sans-serif");
 
   // Ink background with a warm glow.
@@ -75,7 +75,7 @@ async function render(content: ShareContent, locale: string, madeWith: string) {
   ctx.fill();
 
   ctx.fillStyle = "#F4EFE6";
-  ctx.font = `400 ${rtl ? 84 : 92}px ${display}`;
+  ctx.font = `${rtl ? 800 : 400} ${rtl ? 84 : 92}px ${display}`;
   ctx.fillText(rtl ? content.caption : content.caption.toUpperCase(), W / 2, 930, W - 120);
 
   if (content.coachName) {

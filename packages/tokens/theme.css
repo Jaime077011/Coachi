@@ -62,7 +62,7 @@
   --sidebar-border: #ddd4c4;
   --sidebar-ring: #c8141e;
 
-  /* Fonts: next/font sets --font-anton, --font-archivo, --font-cairo, --font-badeen on <html>. */
+  /* Fonts: next/font sets --font-anton, --font-archivo, --font-cairo on <html>. */
   --coachi-font-display: var(--font-anton), "Anton", sans-serif;
   --coachi-font-ui: var(--font-archivo), "Archivo", system-ui, sans-serif;
 }
@@ -119,7 +119,7 @@
   --sidebar-ring: #ff7a45;
 }
 
-/* Arabic: Badeen Display + Cairo, and never any letter spacing (it breaks joined letters). */
+/* Arabic: Cairo for everything (ExtraBold for headings), and never any letter spacing (it breaks joined letters). */
 :lang(ar) {
   /* Badeen Display was hard to read: Arabic headings use Cairo ExtraBold. */
   --coachi-font-display: var(--font-cairo), "Cairo", sans-serif;
