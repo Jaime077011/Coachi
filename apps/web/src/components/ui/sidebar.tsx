@@ -89,11 +89,16 @@ function SidebarProvider({
   )
 
   // Coachi: restore the folded state saved in the cookie. Layouts are prerendered, so the
-  // server can't read it; this runs once after hydration.
-  React.useEffect(() => {
-    if (openProp !== undefined) return
-    const saved = document.cookie.match(new RegExp(`(?:^|; )${SIDEBAR_COOKIE_NAME}=(true|false)`))?.[1]
-    if (saved === "false") _setOpen(false)
+  // server can't read it. An inline script in the root layout marks <html data-sidebar-folded>
+  // before the first paint and CSS draws the menu folded; here (before the next paint) the real
+  // state takes over and the marker goes. So a folded menu never shows open first.
+  React.useLayoutEffect(() => {
+    const root = document.documentElement
+    if (openProp === undefined) {
+      const saved = document.cookie.match(new RegExp(`(?:^|; )${SIDEBAR_COOKIE_NAME}=(true|false)`))?.[1]
+      if (saved === "false") _setOpen(false)
+    }
+    root.removeAttribute("data-sidebar-folded")
   }, [openProp])
 
   // Helper to toggle the sidebar.

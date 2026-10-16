@@ -182,3 +182,21 @@
     --glass-strong: var(--popover);
   }
 }
+
+/*
+ * First paint of a folded side menu (laptop): same widths as the folded state, contents hidden
+ * until React takes over a moment later. Removed by SidebarProvider; no width change = no jump.
+ */
+@media (min-width: 1024px) {
+  html[data-sidebar-folded] [data-slot="sidebar-gap"] {
+    width: calc(var(--sidebar-width-icon) + 1rem);
+    transition: none;
+  }
+  html[data-sidebar-folded] [data-slot="sidebar-container"] {
+    width: calc(var(--sidebar-width-icon) + 1rem + 2px);
+    transition: none;
+  }
+  html[data-sidebar-folded] [data-slot="sidebar-inner"] > * {
+    visibility: hidden;
+  }
+}

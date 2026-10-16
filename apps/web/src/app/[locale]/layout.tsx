@@ -49,6 +49,14 @@ export default async function LocaleLayout({ children }: LayoutProps<"/[locale]"
 
   return (
     <html lang={locale} dir={dir} className={fontVariables} suppressHydrationWarning>
+      <head>
+        {/* Folded side menu: mark it before the first paint so it never opens then folds (see SidebarProvider). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(/(?:^|; )sidebar_state=false/.test(document.cookie))document.documentElement.setAttribute("data-sidebar-folded","")}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-dvh">
         <NextIntlClientProvider>
           <Providers dir={dir}>

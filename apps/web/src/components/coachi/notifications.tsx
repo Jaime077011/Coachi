@@ -50,7 +50,7 @@ export function NotificationBell() {
       <Link href={href} aria-label={unread ? t("bellUnread", { count: unread }) : t("title")}>
         <BellIcon className="size-6" aria-hidden />
         {unread > 0 && (
-          <span className="absolute end-1.5 top-1.5 grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] leading-5 font-bold text-primary-foreground tabular-nums">
+          <span className="absolute end-0 top-0 grid min-w-5 place-items-center rounded-full bg-primary px-1 ring-2 ring-background text-[11px] leading-5 font-bold text-primary-foreground tabular-nums">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

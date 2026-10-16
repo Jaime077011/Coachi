@@ -115,7 +115,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
                 asChild
                 isActive={isActive(pathname, "/coach/notifications")}
                 tooltip={{ children: tShell("notifications"), side: tipSide }}
-                className="relative h-10 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground data-active:bg-primary/12 data-active:text-foreground group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
+                className="relative h-10 overflow-visible rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground data-active:bg-primary/12 data-active:text-foreground group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:hidden"
               >
                 <Link href="/coach/notifications" aria-label={unread ? tShell("notificationsUnread", { count: unread }) : tShell("notifications")}>
                   <BellIcon aria-hidden className="size-5!" />
@@ -123,7 +123,7 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
                   {unread > 0 && (
                     <span
                       aria-hidden
-                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] leading-5 font-bold text-primary-foreground tabular-nums group-data-[collapsible=icon]:absolute! group-data-[collapsible=icon]:end-0.5 group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:flex!"
+                      className="grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] leading-5 font-bold text-primary-foreground tabular-nums group-data-[collapsible=icon]:absolute! group-data-[collapsible=icon]:-end-1 group-data-[collapsible=icon]:-top-1 group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:ring-2 group-data-[collapsible=icon]:ring-sidebar-accent"
                     >
                       {unread > 9 ? "9+" : unread}
                     </span>
@@ -149,20 +149,48 @@ function SidebarView({ nav, pathname }: { nav: NavSet; pathname: string | null }
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      {/* Fold / unfold: a tab growing out of the menu's inner edge, halfway down. No border on the
-          side it joins (and 1px of overlap to cover the menu's edge line), so it reads as one shape. */}
+      {/* Fold / unfold: a tab growing out of the menu's inner edge, halfway down (mirrored in Arabic). */}
       <button
         type="button"
         onClick={toggleSidebar}
         aria-label={collapsed ? tShell("expand") : tShell("collapse")}
         aria-expanded={!collapsed}
         title={collapsed ? tShell("expand") : tShell("collapse")}
-        className="absolute end-2 top-1/2 z-30 grid h-12 w-7 -translate-y-1/2 place-items-center rounded-e-lg border border-s-0 border-sidebar-border bg-sidebar text-muted-foreground backdrop-blur-2xl transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
+        className="group/tab absolute end-2 top-1/2 z-30 grid h-14 w-[22px] -translate-y-1/2 place-items-center rounded-e-xl text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ltr:translate-x-[calc(100%-1px)] rtl:-translate-x-[calc(100%-1px)]"
       >
-        {/* Points the way the menu will move: in when open, out when folded (mirrored in Arabic). */}
-        <ChevronLeftIcon aria-hidden className={cn("size-4 transition-transform duration-200 rtl:-scale-x-100", collapsed && "rotate-180")} />
+        <CollapseTabShape />
+        {/* Points the way the menu will move: in when open, out when folded. */}
+        <ChevronLeftIcon
+          aria-hidden
+          strokeWidth={2.5}
+          className={cn("relative size-[18px] transition-transform duration-200 rtl:-scale-x-100 group-hover/tab:-translate-x-px rtl:group-hover/tab:translate-x-px", collapsed && "rotate-180")}
+        />
       </button>
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+/**
+ * The tab's outline as one shape with the menu: concave curves where it joins (so the menu's
+ * border flows into it, like a browser tab) and rounded outer corners. Filled like the menu's
+ * glass (sidebar color over the page color) so the menu's edge line doesn't show through.
+ * Drawn left-to-right; flipped for Arabic. The joining edge (x = 0) has no stroke.
+ */
+function CollapseTabShape() {
+  const outline = "M0 0C0 5.52 4.48 10 10 10H12Q22 10 22 20V56Q22 66 12 66H10C4.48 66 0 70.48 0 76";
+  return (
+    <svg
+      aria-hidden
+      width="23"
+      height="76"
+      viewBox="0 0 23 76"
+      className="pointer-events-none absolute start-0 -top-2.5 overflow-visible rtl:-scale-x-100"
+    >
+      <path d={`${outline}Z`} fill="var(--background)" />
+      <path d={`${outline}Z`} fill="var(--sidebar)" />
+      <path d={`${outline}Z`} className="fill-foreground/0 transition-colors group-hover/tab:fill-foreground/5" />
+      <path d={outline} fill="none" stroke="var(--sidebar-border)" strokeWidth="1" />
+    </svg>
   );
 }
