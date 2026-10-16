@@ -107,6 +107,16 @@ A coach can run a small team: helpers who work inside his account on his clients
 - A helper belongs to one coach's team at a time.
 - When the subscription ends, helpers get the same read-only mode as the owner.
 
+## Coachi home page (added Oct 16)
+
+The public page at `coachi.app` for people who don't know Coachi yet. No login, found by search engines, Arabic and English.
+
+- Sections: hero ("Every client. One app."), what a coach gets, how it works (3 steps), prices from the super admin's plans, the "I'm a coach" form, questions, footer with About, Privacy, Terms
+- **I'm a coach form:** name, WhatsApp number, city, how many clients, message. Coaches still can't sign up alone: the form lands in the super admin's Overview under "Coach requests", with WhatsApp, Add coach (prefilled), and Dismiss
+- "Find a coach" opens the directory. Log in (or Open the app when signed in) in the header
+- The installed app skips this page: it opens at `/start`, which sends each role to its own area
+- Not found and crash pages in both languages, with a way back
+
 ## Super admin dashboard
 
 You run the business from here. Coaches pay you by hand, and you switch their access on and off in two clicks.
@@ -116,6 +126,7 @@ You run the business from here. Coaches pay you by hand, and you switch their ac
 - Cards: active coaches, total clients, workouts logged this week, subscriptions ending in the next 7 days
 - List: "Ending soon" coaches with a WhatsApp button to remind them
 - List: newest coaches and their client count
+- List: coach requests from the home page form (see Coachi home page)
 
 **Coaches**
 
@@ -177,6 +188,7 @@ In phase one the coach can run his whole business here: a full file on every cli
 Everything the coach knows about the client, built from his own notes and the client's intake form. Tabs:
 
 - **Profile:** age, gender, height, start weight, goal (fat loss, muscle, strength, health), target weight and date, job and daily activity, training days and time, gym or home, equipment
+- **Gym:** the machines and equipment in the client's own gym, as he listed them (see My gym). The coach can fix it
 - **Health and history:** injuries, pain areas, conditions the client shares, medicines (as text only), past training, sports
 - **Food:** likes, dislikes, foods he won't eat, meals per day, budget level, cooking at home or not, water, supplements
 - **Coach notes:** free notes with dates and tags (injury, mindset, food, family, work). Pin the important ones to the top of the file
@@ -194,6 +206,7 @@ Intake form: the client fills the profile, health and food parts when he joins. 
 - Drag to reorder. Copy a day, copy a week
 - Supersets and circuits by grouping exercises
 - Save any plan as a template, then assign it to many clients in one go
+- For a client's plan, the exercise list shows only what fits his gym (switch to show everything). Exercises already in the plan that need something his gym lacks get a "Not in his gym" tag. A "His gym" button shows his full list
 
 **Nutrition plan builder**
 
@@ -249,6 +262,7 @@ The client opens the app to see today's workout and meals, and to see how far he
 
 **Join**
 
+- First login with a number or email we don't know makes a client account; a welcome step asks his name, then he lands on Find a coach (or the intake form after an invite)
 - Two ways in: open a coach's invite link (joins that coach right away), or sign up alone and pick a coach from the directory
 - Logs in with a code sent to phone
 - Once he has a coach: fills the intake form (goal, weight, height, injuries, food likes and dislikes, training days)
@@ -301,6 +315,12 @@ This is what makes him stay. It shows where he started, how far he has come, and
 - **Goal bar:** start weight, now, and target, so he sees what is left
 - **Share card:** make a nice image of a milestone to share on Instagram or WhatsApp, with the coach's logo (free marketing for the coach)
 
+**My gym (added Oct 16)**
+
+- The client ticks what his gym has, grouped like a gym floor: free weights, racks and benches, cables, machines, cardio. Plus his gym's name, the heaviest dumbbell, machines not on the list, and a note ("leg press is busy after 7 pm")
+- Reached from Me, and offered at the end of the intake form for gym clients
+- Each library exercise lists the gym items it needs, so the coach's builder knows what fits
+
 **Check-in**
 
 - The coach's weekly questions, plus weight and photos. Takes under 2 minutes
@@ -311,7 +331,8 @@ This is what makes him stay. It shows where he started, how far he has come, and
 
 **Settings**
 
-- Language (Arabic or English), units (kg), reminder times, contact coach on WhatsApp
+- Language (Arabic or English), units (kg), reminder times (workout, meals, check-in, each on/off with a time), contact coach on WhatsApp, download my data (one JSON file, never the coach's notes)
+- **Notifications:** a bell on Today with the unread count. Coach replies, new plans, and request answers. The coach gets new requests, check-ins, and finished workouts, and turns alerts on or off in Settings. In-app now; push once the jobs worker is in
 
 ## AI helper for coaches (phase 2)
 
@@ -371,7 +392,7 @@ If a coach can't add a client and send a plan in his first 5 minutes, we failed.
 
 **Onboarding**
 
-- Coach: 3 steps on first login: add logo, add first client, assign a starter template
+- Coach: 3 steps on first login: add logo, add first client, assign a starter template. A card on Today ticks each step from real data and goes away when done or closed
 - Client: a short intake form (under 3 minutes), a Day 1 photo and weight, then straight to today
 
 **Testing**
@@ -448,9 +469,10 @@ Every main table also has id (uuid), org\_id where it applies, created\_at, upda
 | Clients | clients | profile\_id, status, goal, target\_weight, target\_date | The client himself |
 | Clients | coach\_clients | org\_id, coach\_id, client\_id, role (trainer, nutrition), status, started\_at, ended\_at, assigned\_member\_id | History, switching, team assignment |
 | Clients | client\_details | client\_id, age, gender, height, activity, training days, place, equipment, injuries, health notes, food likes and dislikes, meals per day, supplements | The client file |
+| Clients | client\_gyms | client\_id (unique), gym\_name, items (gym item keys), custom\_items, dumbbells\_max\_kg, note | What his gym has; the builder filters exercises by it |
 | Clients | coach\_notes | coach\_id, client\_id, author\_id, text, tags, pinned | Private notes (who wrote it), AI-ready later |
 | Clients | invites | org\_id, coach\_id, kind (client, team), member\_role, code, expires\_at, used\_by | Client and team invite links |
-| Training | exercises | org\_id (null = shared), name\_ar, name\_en, muscle, equipment, video\_url | Shared + own library |
+| Training | exercises | org\_id (null = shared), name\_ar, name\_en, muscle, equipment, gym\_items, video\_url | Shared + own library |
 | Training | programs | org\_id, coach\_id, client\_id (null = template), name, weeks, starts\_on, version | Templates and copies |
 | Training | program\_days | program\_id, week, day, title | Weeks and days |
 | Training | program\_exercises | program\_day\_id, exercise\_id, order, sets, reps, rest\_sec, target, tempo, note, group | Supersets via group |
@@ -468,8 +490,9 @@ Every main table also has id (uuid), org\_id where it applies, created\_at, upda
 | Journey | journey\_messages | coach\_id, client\_id, text, pinned | Coach's words |
 | Journey | daily\_client\_stats | client\_id, date, workouts, volume\_kg, meals\_on\_plan, streak | Fast dashboards |
 | Platform | events | org\_id, type, actor\_id, subject\_id, payload (json), processed\_at | Feeds jobs, AI, reports |
-| Platform | notifications | profile\_id, type, title, body, link, channel, read\_at | Push, email, WhatsApp later |
-| Platform | notification\_prefs | profile\_id, channel, type, on | User controls |
+| Platform | notifications | profile\_id, type, params, title, body, link, channel, read\_at | In-app now (words from type + params, in his language); title/body for push, email, WhatsApp later |
+| Platform | notification\_prefs | profile\_id, channel, type, on, time | Reminders with a time, alerts on/off |
+| Platform | coach\_leads | name, phone, city, clients\_count, message, status (new, contacted, added, dismissed) | "I'm a coach" form on the home page |
 | Platform | audit\_log | actor\_id, action, target, meta | Admin and support mode |
 | Chat (later) | conversations, messages | org\_id, members; conversation\_id, sender\_id, body, read\_at | Built on Realtime |
 | AI (later) | ai\_usage | org\_id, feature, tokens, cost | Metered by ai\_credits |

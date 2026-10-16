@@ -1,6 +1,7 @@
 import type { Messages } from "@coachi/i18n";
 import type { TeamPermission } from "@coachi/validation";
 import {
+  BellIcon,
   BookUserIcon,
   CalendarDaysIcon,
   ClipboardListIcon,
@@ -44,6 +45,7 @@ export const coachTabs: NavItem[] = [
 ];
 
 export const coachMore: NavItem[] = [
+  { href: "/coach/notifications", label: "coach.notifications", icon: BellIcon },
   { href: "/coach/library", label: "coach.library", icon: LibraryBigIcon },
   { href: "/coach/check-in-form", label: "coach.checkInForm", icon: ListChecksIcon, permission: "checkin_form" },
   { href: "/coach/profile", label: "coach.profile", icon: IdCardIcon, permission: "profile" },

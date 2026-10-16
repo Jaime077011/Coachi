@@ -5,9 +5,11 @@ import {
   getMockMemberRole,
   resetMockDatabase,
   getMockRole,
+  setMockClientProfile,
   setMockDataState,
   setMockMemberRole,
   setMockRole,
+  setMockSignedOut,
   type MockDataState,
   type MockMemberRole,
   type MockRole,
@@ -42,6 +44,8 @@ export function DevSwitcher() {
 
   const changeRole = (next: MockRole) => {
     setMockRole(next);
+    setMockClientProfile(null);
+    setMockSignedOut(false);
     notify();
     queryClient.clear();
     router.push(roleHome[next]);
@@ -49,6 +53,7 @@ export function DevSwitcher() {
 
   const changeMember = (next: MockMemberRole) => {
     setMockMemberRole(next);
+    setMockSignedOut(false);
     notify();
     queryClient.clear();
     router.push(roleHome.coach);

@@ -7,6 +7,7 @@ import { CalendarClockIcon, MessageCircleIcon, ReceiptIcon, UserPlusIcon, UsersR
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AddCoachDialog } from "@/components/admin/add-coach-dialog";
+import { CoachLeads } from "@/components/admin/coach-leads";
 import { RecordPaymentDialog } from "@/components/admin/record-payment-dialog";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
@@ -124,6 +125,7 @@ export function OverviewScreen() {
           </>
         )}
       </QueryState>
+      <CoachLeads />
       <AddCoachDialog open={adding} onOpenChange={setAdding} />
       <RecordPaymentDialog open={paying} onOpenChange={setPaying} />
     </div>

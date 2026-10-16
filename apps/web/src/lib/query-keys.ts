@@ -10,6 +10,7 @@ export const qk = {
   directory: (filters: object) => ["directory", filters] as const,
   coachPage: (coachId: string) => ["coach-page", coachId] as const,
   clientFile: (clientId: string) => ["client-file", clientId] as const,
+  clientGym: (clientId: string) => ["client-gym", clientId] as const,
   // Coach
   clients: (coachId: string) => ["clients", coachId] as const,
   coachToday: (coachId: string) => ["coach-today", coachId] as const,
@@ -36,4 +37,8 @@ export const qk = {
   payments: (orgId: string) => ["payments", orgId] as const,
   directoryQueue: ["directory-queue"] as const,
   audit: ["audit"] as const,
+  coachLeads: ["coach-leads"] as const,
+  // Everyone
+  notifications: ["notifications"] as const,
+  prefs: ["notification-prefs"] as const,
 };

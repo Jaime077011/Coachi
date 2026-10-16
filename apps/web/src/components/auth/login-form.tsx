@@ -46,6 +46,8 @@ export function LoginForm({ afterLogin }: { afterLogin?: (session: Session) => v
     onSuccess: (session) => {
       queryClient.setQueryData(sessionKey, session);
       if (afterLogin) afterLogin(session);
+      // First login (no name yet): the welcome step, then the directory to find a coach.
+      else if (!session.profile.name) router.replace("/welcome");
       else router.replace(roleHome[session.profile.role]);
     },
   });

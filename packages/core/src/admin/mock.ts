@@ -4,6 +4,7 @@ import {
   DEMO,
   auditLog,
   coachClients,
+  coachLeads,
   coachProfiles,
   coachRequests,
   orgMembers,
@@ -46,6 +47,16 @@ const findCoach = (coachId: string) => {
 };
 
 export const mockAdmin: AdminApi = {
+  coachLeads: () =>
+    mockRead(() => coachLeads.filter((l) => !l.deleted_at).sort((a, b) => b.created_at.localeCompare(a.created_at)), []),
+
+  setLeadStatus: (leadId, status) =>
+    mockWrite(() => {
+      const lead = coachLeads.find((l) => l.id === leadId);
+      if (!lead) throw new ApiError("not_found");
+      Object.assign(lead, { status, updated_at: nowIso() });
+    }),
+
   overview: () =>
     mockRead(
       () => {

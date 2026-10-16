@@ -8,7 +8,7 @@ import type {
   WorkoutSummary,
 } from "@coachi/validation";
 
-export type NewExercise = Pick<Exercise, "name_ar" | "name_en" | "muscle" | "equipment" | "video_url">;
+export type NewExercise = Pick<Exercise, "name_ar" | "name_en" | "muscle" | "equipment" | "gym_items" | "video_url">;
 export type SetInput = Pick<SetLog, "id" | "workout_log_id" | "exercise_id" | "set_no" | "weight_kg" | "reps" | "done"> & {
   note?: string | null;
 };

@@ -7,6 +7,7 @@ export * from "./auth-orgs";
 export * from "./billing";
 export * from "./directory";
 export * from "./team";
+export * from "./gym";
 export * from "./clients";
 export * from "./training";
 export * from "./nutrition";

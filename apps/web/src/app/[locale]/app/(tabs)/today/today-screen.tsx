@@ -28,6 +28,7 @@ import { useMe } from "@/hooks/use-session";
 import { Link } from "@/i18n/navigation";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
+import { NotificationBell } from "@/components/coachi/notifications";
 import { useNow } from "@/lib/use-now";
 
 export function TodayScreen() {
@@ -44,11 +45,14 @@ export function TodayScreen() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-1">
-        <p className="min-h-5 text-sm text-muted-foreground">{now && fmt.date(new Date(now).toISOString(), "long")}</p>
-        <h1 className="font-display text-[32px] leading-[1.1] uppercase">
-          {t.rich("greeting", { name: firstName, n: (chunks) => <bdi>{chunks}</bdi> })}
-        </h1>
+      <header className="flex items-start gap-3">
+        <div className="flex flex-1 flex-col gap-1">
+          <p className="min-h-5 text-sm text-muted-foreground">{now && fmt.date(new Date(now).toISOString(), "long")}</p>
+          <h1 className="font-display text-[32px] leading-[1.1] uppercase">
+            {t.rich("greeting", { name: firstName, n: (chunks) => <bdi>{chunks}</bdi> })}
+          </h1>
+        </div>
+        <NotificationBell />
       </header>
       <QueryState query={today} skeleton={<TodaySkeleton />}>
         {(data) =>

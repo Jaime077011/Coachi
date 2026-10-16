@@ -1,8 +1,9 @@
 "use client";
 
 import { api } from "@coachi/core";
-import type { WorkoutDay } from "@coachi/validation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { WorkoutDay, WorkoutSummary } from "@coachi/validation";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { enqueue, flush, outboxStore } from "@/lib/outbox";
 
 export type SetState = { id: string; weight: number | null; reps: number | null; done: boolean };
 
@@ -58,13 +59,26 @@ function initialSets(day: WorkoutDay): Record<string, SetState[]> {
   );
 }
 
+/** Finish screen numbers worked out on the phone, for a workout finished offline. */
+export function localSummary(state: WorkoutState): WorkoutSummary {
+  const done = Object.values(state.sets).flat().filter((s) => s.done);
+  return {
+    workout_log_id: state.logId ?? "",
+    duration_sec: Math.round((Date.now() - state.startedAt) / 1000),
+    volume_kg: done.reduce((sum, s) => sum + (s.weight ?? 0) * (s.reps ?? 0), 0),
+    sets_done: done.length,
+    personal_bests: [],
+    first_workout: false,
+  };
+}
+
 /**
  * The in-progress workout. Lives in localStorage so a locked phone or reload loses nothing,
- * and every set is sent to the API the moment it changes (Dexie + sync queue in Step 4).
+ * and every set goes through the outbox (lib/outbox): saved on the phone, sent when online.
  */
 export function useWorkoutSession(clientId: string, dayId: string, day: WorkoutDay | undefined) {
   const [state, setState] = useState<WorkoutState | null>(null);
-  const [pending, setPending] = useState(0);
+  const waiting = useSyncExternalStore(outboxStore.subscribe, outboxStore.getSnapshot, outboxStore.getServerSnapshot);
   const started = useRef(false);
 
   // Restore or create once the day has loaded.
@@ -87,24 +101,16 @@ export function useWorkoutSession(clientId: string, dayId: string, day: WorkoutD
     if (state) write(dayId, state);
   }, [dayId, state]);
 
-  // Start (or re-confirm) the log on the server once per visit. Idempotent by client_uuid,
-  // so a restored workout always points at a log the server knows.
+  // Start (or re-confirm) the log on the server once per visit. Idempotent by client_uuid.
+  // Offline it fails quietly: sets still queue, and the outbox starts the log when back online.
   useEffect(() => {
     if (!state || started.current || !clientId) return;
     started.current = true;
-    void api.training.startWorkout(clientId, dayId, state.clientUuid).then((log) => {
-      setState((s) => (s ? { ...s, logId: log.id } : s));
-      // Re-send what this phone already has (safe: each set saves by its own id).
-      for (const { item, exercise } of day?.exercises ?? []) {
-        (state.sets[item.id] ?? []).forEach((set, i) => {
-          if (!set.done) return;
-          void api.training
-            .logSet({ id: set.id, workout_log_id: log.id, exercise_id: exercise.id, set_no: i + 1, weight_kg: set.weight, reps: set.reps, done: true })
-            .catch(() => {});
-        });
-      }
-    });
-  }, [state, clientId, dayId, day]);
+    void api.training
+      .startWorkout(clientId, dayId, state.clientUuid)
+      .then((log) => setState((s) => (s ? { ...s, logId: log.id } : s)))
+      .catch(() => {});
+  }, [state, clientId, dayId]);
 
   const update = useCallback((fn: (s: WorkoutState) => WorkoutState) => setState((s) => (s ? fn(s) : s)), []);
 
@@ -115,31 +121,36 @@ export function useWorkoutSession(clientId: string, dayId: string, day: WorkoutD
         list[setIndex] = next;
         return { ...s, sets: { ...s.sets, [exerciseItemId]: list } };
       });
-      const logId = state?.logId;
-      if (!logId) return;
-      setPending((p) => p + 1);
-      void api.training
-        .logSet({
-          id: next.id,
-          workout_log_id: logId,
-          exercise_id: exerciseId,
-          set_no: setIndex + 1,
-          weight_kg: next.weight,
-          reps: next.reps,
-          done: next.done,
-          note: note ?? null,
-        })
-        .catch(() => {
-          // Kept locally; the Step 4 sync queue retries. Nothing is lost.
-        })
-        .finally(() => setPending((p) => p - 1));
+      const clientUuid = state?.clientUuid;
+      if (!clientUuid || !clientId) return;
+      void enqueue({
+        kind: "set",
+        ref: { clientId, dayId, clientUuid },
+        set: { id: next.id, exercise_id: exerciseId, set_no: setIndex + 1, weight_kg: next.weight, reps: next.reps, done: next.done, note: note ?? null },
+      });
     },
-    [state?.logId, update],
+    [state?.clientUuid, clientId, dayId, update],
   );
+
+  /**
+   * Online: send what's waiting, then finish on the server (for PBs and the real summary).
+   * Offline (or sets still waiting): queue the finish after the sets and return null.
+   */
+  const finishWorkout = useCallback(async (): Promise<WorkoutSummary | null> => {
+    if (!state) return null;
+    await flush();
+    const ref = { clientId, dayId, clientUuid: state.clientUuid };
+    if (!navigator.onLine || outboxStore.getSnapshot() > 0) {
+      await enqueue({ kind: "finish", ref });
+      return null;
+    }
+    const logId = state.logId ?? (await api.training.startWorkout(clientId, dayId, state.clientUuid)).id;
+    return api.training.finishWorkout(logId);
+  }, [state, clientId, dayId]);
 
   const clear = useCallback(() => write(dayId, null), [dayId]);
 
-  return { state, update, saveSet, saving: pending > 0, clear };
+  return { state, update, saveSet, saving: waiting > 0, waiting, finishWorkout, clear };
 }
 
 /** Keep the screen on during a workout, where the phone supports it. */

@@ -3,7 +3,7 @@
 import { api } from "@coachi/core";
 import type { WorkoutDay, WorkoutSummary } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeftIcon, ChevronRightIcon, CircleCheckIcon, FlagIcon, Loader2Icon, PlayCircleIcon, XIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, CircleCheckIcon, FlagIcon, Loader2Icon, PlayCircleIcon, WifiOffIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { use, useState } from "react";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import { QueryState } from "@/components/coachi/query-state";
 import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { RestTimer } from "@/components/coachi/rest-timer";
 import { SetRow } from "@/components/coachi/set-row";
-import { ErrorState, OfflineBanner } from "@/components/coachi/states";
+import { ErrorState, OfflineBanner, useOnline } from "@/components/coachi/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useFmt, useLocalName } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 import { WorkoutDone } from "./workout-done";
-import { useWakeLock, useWorkoutSession } from "./use-workout-session";
+import { localSummary, useWakeLock, useWorkoutSession } from "./use-workout-session";
 
 export function WorkoutScreen({ params }: { params: Promise<{ dayId: string }> }) {
   const { dayId } = use(params);
@@ -58,18 +58,22 @@ function WorkoutRunner({
   const name = useLocalName();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { state, update, saveSet, saving, clear } = useWorkoutSession(clientId, dayId, day);
+  const { state, update, saveSet, saving, waiting, finishWorkout, clear } = useWorkoutSession(clientId, dayId, day);
   const [rest, setRest] = useState<{ endsAt: number; total: number } | null>(null);
   const [leaving, setLeaving] = useState(false);
   useWakeLock(true);
+  const online = useOnline();
 
   const finish = useMutation({
-    mutationFn: () => api.training.finishWorkout(state!.logId!),
+    mutationFn: finishWorkout,
     onSuccess: (summary) => {
+      const done = summary ?? localSummary(state!);
+      // Finished offline: the outbox sends it later. Say so, so he doesn't redo it.
+      if (!summary) toast(t("savedOffline"));
       clear();
       void queryClient.invalidateQueries({ queryKey: qk.today(clientId) });
       void queryClient.invalidateQueries({ queryKey: qk.journey(clientId) });
-      onFinished(summary);
+      onFinished(done);
     },
     onError: () =>
       toast.error(tStates("errorTitle"), {
@@ -101,7 +105,12 @@ function WorkoutRunner({
             <div className="flex items-center justify-between text-xs font-semibold">
               <span>{t("progress", { current: index + 1, total })}</span>
               <span className="flex items-center gap-1 text-hint" aria-live="polite">
-                {saving ? (
+                {saving && !online ? (
+                  <>
+                    <WifiOffIcon className="size-3" aria-hidden />
+                    {t("waiting", { count: waiting })}
+                  </>
+                ) : saving ? (
                   <>
                     <Loader2Icon className="size-3 animate-spin" aria-hidden />
                     {t("saving")}
@@ -193,7 +202,7 @@ function WorkoutRunner({
           <ChevronLeftIcon className="rtl:rotate-180" />
         </Button>
         {isLast ? (
-          <Button className="flex-1" disabled={!state.logId || finish.isPending} onClick={() => finish.mutate()}>
+          <Button className="flex-1" disabled={finish.isPending} onClick={() => finish.mutate()}>
             {finish.isPending ? <Loader2Icon className="animate-spin" /> : <FlagIcon data-icon="inline-start" />}
             {t("finish")}
           </Button>
@@ -223,7 +232,7 @@ function WorkoutRunner({
               {t("keep")}
             </Button>
             <Button
-              disabled={!state.logId || finish.isPending}
+              disabled={finish.isPending}
               onClick={() => {
                 setLeaving(false);
                 finish.mutate();

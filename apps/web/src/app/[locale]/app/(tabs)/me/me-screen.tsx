@@ -2,55 +2,24 @@
 
 import { api } from "@coachi/core";
 import { useQuery } from "@tanstack/react-query";
-import { DownloadIcon, MessageCircleIcon } from "lucide-react";
+import { ChevronRightIcon, DumbbellIcon, MessageCircleIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSyncExternalStore } from "react";
-import { toast } from "sonner";
+import { ExportMyDataButton } from "@/components/coachi/export-buttons";
+import { IconTile } from "@/components/coachi/icon-tile";
+import { ReminderSettings } from "@/components/coachi/reminder-settings";
 import { ScreenHeader } from "@/components/coachi/screen-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { DisplaySettings, ProfileCard, SignOutButton } from "@/components/shell/account-settings";
 import { useMe } from "@/hooks/use-session";
+import { Link } from "@/i18n/navigation";
 import { qk } from "@/lib/query-keys";
 import { whatsappUrl } from "@/lib/whatsapp";
-
-/** Reminder switches live on the phone until notification_prefs is wired in Step 4. */
-const PREFS_EVENT = "coachi:prefs";
-function usePref(key: string, fallback: boolean) {
-  const value = useSyncExternalStore(
-    (cb) => {
-      window.addEventListener(PREFS_EVENT, cb);
-      return () => window.removeEventListener(PREFS_EVENT, cb);
-    },
-    () => {
-      try {
-        const v = localStorage.getItem(`coachi.pref.${key}`);
-        return v === null ? fallback : v === "1";
-      } catch {
-        return fallback;
-      }
-    },
-    () => fallback,
-  );
-  const set = (next: boolean) => {
-    try {
-      localStorage.setItem(`coachi.pref.${key}`, next ? "1" : "0");
-    } catch {
-      // ignore
-    }
-    window.dispatchEvent(new Event(PREFS_EVENT));
-  };
-  return [value, set] as const;
-}
 
 export function MeScreen() {
   const t = useTranslations("me");
   const { clientId } = useMe();
   const today = useQuery({ queryKey: qk.today(clientId), queryFn: () => api.journey.today(clientId), enabled: !!clientId });
-  const [workoutReminder, setWorkoutReminder] = usePref("workoutReminder", true);
-  const [mealReminder, setMealReminder] = usePref("mealReminder", false);
   const coach = today.data?.coach;
 
   return (
@@ -59,15 +28,11 @@ export function MeScreen() {
 
       <ProfileCard />
 
+      <GymLink clientId={clientId} />
+
       <DisplaySettings footer={<p className="text-sm text-muted-foreground">{t("units")}</p>} />
 
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          <p className="text-xs font-bold tracking-[0.12em] text-hint uppercase">{t("reminders")}</p>
-          <SwitchRow id="r-workout" label={t("workoutReminder")} checked={workoutReminder} onChange={setWorkoutReminder} />
-          <SwitchRow id="r-meal" label={t("mealReminder")} checked={mealReminder} onChange={setMealReminder} />
-        </CardContent>
-      </Card>
+      <ReminderSettings title={t("reminders")} keys={["workout_reminder", "meal_reminder", "checkin_reminder"]} />
 
       <div className="flex flex-col gap-2">
         {coach?.whatsapp && (
@@ -78,23 +43,30 @@ export function MeScreen() {
             </a>
           </Button>
         )}
-        <Button variant="secondary" className="justify-start" onClick={() => toast(t("exportToast"))}>
-          <DownloadIcon data-icon="inline-start" />
-          {t("export")}
-        </Button>
+        <ExportMyDataButton />
         <SignOutButton />
       </div>
     </div>
   );
 }
 
-function SwitchRow({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+/** Shortcut to My gym, with how much he has listed so far. */
+function GymLink({ clientId }: { clientId: string }) {
+  const t = useTranslations("gym");
+  const gym = useQuery({ queryKey: qk.clientGym(clientId), queryFn: () => api.clients.gym(clientId), enabled: !!clientId });
+  const count = gym.data ? gym.data.items.length + gym.data.custom_items.length : 0;
   return (
-    <div className="flex min-h-11 items-center justify-between gap-3">
-      <Label htmlFor={id} className="text-[15px] font-normal">
-        {label}
-      </Label>
-      <Switch id={id} checked={checked} onCheckedChange={onChange} />
-    </div>
+    <Link href="/app/me/gym" className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+      <Card className="transition-colors hover:border-primary/40">
+        <CardContent className="flex items-center gap-3">
+          <IconTile icon={DumbbellIcon} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{t("meLink")}</p>
+            <p className="text-sm text-muted-foreground">{gym.isSuccess ? t("count", { n: count }) : t("meLinkHint")}</p>
+          </div>
+          <ChevronRightIcon className="size-5 text-hint rtl:rotate-180" aria-hidden />
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

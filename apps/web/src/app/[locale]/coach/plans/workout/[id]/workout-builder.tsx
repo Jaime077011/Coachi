@@ -11,13 +11,14 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { api } from "@coachi/core";
-import type { Exercise, ProgramFull } from "@coachi/validation";
+import { fitsGym, type Exercise, type ProgramFull } from "@coachi/validation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookmarkPlusIcon,
   ClipboardCopyIcon,
   ClipboardPasteIcon,
   CopyPlusIcon,
+  DumbbellIcon,
   EllipsisVerticalIcon,
   MoonIcon,
   PlusIcon,
@@ -31,7 +32,9 @@ import { AssignToClientsDialog } from "@/components/coach/assign-dialogs";
 import { SaveIndicator } from "@/components/coach/save-indicator";
 import { EXERCISE_DRAG_TYPE, ExercisePicker } from "@/components/coach/exercise-picker";
 import { ExerciseRow } from "@/components/coach/exercise-row";
+import { GymSummary } from "@/components/coachi/gym-editor";
 import { QueryState } from "@/components/coachi/query-state";
+import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { BackLink } from "@/components/coachi/screen-header";
 import { EmptyState, ListSkeleton } from "@/components/coachi/states";
 import { Button } from "@/components/ui/button";
@@ -100,6 +103,12 @@ function Builder({ initial }: { initial: ProgramFull }) {
   const [clipboard, setClipboard] = useState<ops.DayFull | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [showGym, setShowGym] = useState(false);
+  const tGym = useTranslations("gym");
+  // A client's plan: build with what his gym has.
+  const clientId = initial.program.client_id;
+  const gymQuery = useQuery({ queryKey: qk.clientGym(clientId ?? ""), queryFn: () => api.clients.gym(clientId!), enabled: !!clientId });
+  const pickerClient = clientId && gymQuery.isSuccess ? { gym: gymQuery.data } : undefined;
 
   const status = useAutosave(draft, version, async (p) => {
     await api.training.saveProgram(p);
@@ -155,6 +164,12 @@ function Builder({ initial }: { initial: ProgramFull }) {
         />
         <SaveIndicator status={status} />
         <div className="ms-auto flex gap-2">
+          {pickerClient?.gym && (
+            <Button variant="secondary" onClick={() => setShowGym(true)}>
+              <DumbbellIcon data-icon="inline-start" />
+              {tGym("hisGym")}
+            </Button>
+          )}
           {isTemplate ? (
             <Button variant="secondary" onClick={() => setAssigning(true)}>
               <UsersRoundIcon data-icon="inline-start" />
@@ -343,6 +358,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
                             isFirst={i === 0}
                             isLast={i === day.items.length - 1}
                             groupedWithNext={!!x.item.group && day.items[i + 1]?.item.group === x.item.group}
+                            notInGym={!!pickerClient?.gym && !fitsGym(x.exercise, pickerClient.gym)}
                             onChange={(patch) => edit((p) => ops.patchItem(p, day.day.id, x.item.id, patch))}
                             onMove={(dir) => edit((p) => ops.moveItem(p, day.day.id, i, i + dir))}
                             onGroup={() => edit((p) => ops.groupWithNext(p, day.day.id, i))}
@@ -370,7 +386,7 @@ function Builder({ initial }: { initial: ProgramFull }) {
         <aside className="hidden lg:block">
           <div className="sticky top-4 flex h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-lg border bg-card">
             <p className="border-b px-3 py-2 text-xs font-bold tracking-[0.12em] text-hint uppercase">{t("library")}</p>
-            <ExercisePicker onPick={add} className="flex-1 bg-transparent" />
+            <ExercisePicker onPick={add} client={pickerClient} className="flex-1 bg-transparent" />
           </div>
         </aside>
       </div>
@@ -380,9 +396,17 @@ function Builder({ initial }: { initial: ProgramFull }) {
           <DrawerHeader className="text-start">
             <DrawerTitle>{t("addExercise")}</DrawerTitle>
           </DrawerHeader>
-          <ExercisePicker onPick={add} className="flex-1 bg-transparent px-2" />
+          <ExercisePicker onPick={add} client={pickerClient} className="flex-1 bg-transparent px-2" />
         </DrawerContent>
       </Drawer>
+
+      <ResponsiveDialog open={showGym} onOpenChange={setShowGym} title={tGym("hisGym")}>
+        {pickerClient?.gym && (
+          <div className="pb-4 lg:max-h-[65dvh] lg:overflow-y-auto">
+            <GymSummary gym={pickerClient.gym} />
+          </div>
+        )}
+      </ResponsiveDialog>
 
       <AssignToClientsDialog
         kind="workout"

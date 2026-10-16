@@ -4,6 +4,7 @@ import {
   DEMO,
   clients,
   coachClients,
+  coachLeads,
   coachPackages,
   coachProfiles,
   coachRequests,
@@ -15,6 +16,7 @@ import {
 } from "../mock/data";
 import { ApiError, getMockRole, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 import { activeMembers, requireMember } from "../mock/session";
+import { clientProfileId, notify } from "../mock/notify";
 
 const packagesOf = (coachId: string) =>
   coachPackages.filter((p) => p.coach_id === coachId && !p.deleted_at).sort((a, b) => a.order - b.order);
@@ -102,6 +104,13 @@ export const mockDirectory: DirectoryApi = {
       };
     }),
 
+  requestCoachAccess: (input) =>
+    mockWrite(() => {
+      const lead = { ...input, id: newId(), status: "new" as const, created_at: nowIso(), updated_at: nowIso(), deleted_at: null };
+      coachLeads.push(lead);
+      return lead;
+    }),
+
   sendRequest: (input) =>
     mockWrite(() => {
       const clientId = browsingClientId();
@@ -121,6 +130,7 @@ export const mockDirectory: DirectoryApi = {
         deleted_at: null,
       };
       coachRequests.push(request);
+      notify(coachProfiles.find((c) => c.id === request.coach_id)?.profile_id, "request_new", { name: request.client_name }, "/coach/requests");
       return request;
     }),
 
@@ -146,6 +156,12 @@ export const mockDirectory: DirectoryApi = {
       request.reply = reply ?? null;
       request.updated_at = nowIso();
       if (accept) linkClient(request);
+      notify(
+        clientProfileId(request.client_id),
+        "request_answered",
+        { coach: coachProfiles.find((c) => c.id === request.coach_id)?.name ?? "", accepted: accept ? "yes" : "no" },
+        accept ? "/app/intake" : "/app/coaches",
+      );
       return request;
     }),
 

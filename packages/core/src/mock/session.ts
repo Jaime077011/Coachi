@@ -3,18 +3,21 @@
  * row rules: the Supabase version gets the same answers from auth.uid() and org_members.
  */
 import { memberCan, type Session, type TeamPermission } from "@coachi/validation";
-import { DEMO, coachClients, coachProfiles, organizations, orgMembers, planFeatures, profiles, subscriptions } from "./data";
-import { ApiError, getMockMemberRole, getMockRole } from "./runtime";
+import { DEMO, clients, coachClients, coachProfiles, organizations, orgMembers, planFeatures, profiles, subscriptions } from "./data";
+import { ApiError, getMockClientProfile, getMockMemberRole, getMockRole } from "./runtime";
 
 export function mockSession(): Session {
   const role = getMockRole();
   if (role !== "coach") {
-    const profileId = role === "super_admin" ? DEMO.adminProfileId : DEMO.clientProfileId;
+    // Client: the demo client, or whoever logged in with another client's number (or signed up).
+    const chosen = role === "client" ? getMockClientProfile() : null;
+    const clientRow = chosen ? clients.find((c) => c.profile_id === chosen) : undefined;
+    const profileId = role === "super_admin" ? DEMO.adminProfileId : (clientRow?.profile_id ?? DEMO.clientProfileId);
     return {
       profile: profiles.find((p) => p.id === profileId)!,
       org_id: null,
       coach_id: null,
-      client_id: role === "client" ? DEMO.clientId : null,
+      client_id: role === "client" ? (clientRow?.id ?? DEMO.clientId) : null,
       member_id: null,
       member_role: null,
     };

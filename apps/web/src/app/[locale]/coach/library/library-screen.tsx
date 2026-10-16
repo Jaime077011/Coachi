@@ -1,12 +1,13 @@
 "use client";
 
 import { api } from "@coachi/core";
-import { equipment, muscleGroup, type Exercise, type Food } from "@coachi/validation";
+import { equipment, gymItem, muscleGroup, type Exercise, type Food, type GymItem } from "@coachi/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PlayCircleIcon, PlusIcon, SearchIcon, SearchXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useGymItemLabel } from "@/components/coachi/gym-editor";
 import { QueryState } from "@/components/coachi/query-state";
 import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { ScreenHeader } from "@/components/coachi/screen-header";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useFmt } from "@/lib/format";
 import { qk } from "@/lib/query-keys";
 
@@ -210,7 +212,9 @@ function Field({ id, label, children }: { id: string; label: string; children: R
 function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations("library");
   const queryClient = useQueryClient();
+  const gymLabel = useGymItemLabel();
   const [form, setForm] = useState({ name_ar: "", name_en: "", muscle: "chest", equipment: "dumbbell", video_url: "" });
+  const [gymItems, setGymItems] = useState<GymItem[]>([]);
   const add = useMutation({
     mutationFn: () =>
       api.training.addExercise({
@@ -218,6 +222,7 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         name_en: form.name_en.trim(),
         muscle: form.muscle as Exercise["muscle"],
         equipment: form.equipment as Exercise["equipment"],
+        gym_items: gymItems,
         video_url: form.video_url.trim() || null,
       }),
     onSuccess: () => {
@@ -225,6 +230,7 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       void queryClient.invalidateQueries({ queryKey: qk.exercises });
       onOpenChange(false);
       setForm((f) => ({ ...f, name_ar: "", name_en: "", video_url: "" }));
+      setGymItems([]);
     },
   });
   const valid = form.name_ar.trim() && form.name_en.trim();
@@ -275,6 +281,24 @@ function AddExerciseDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             </SelectContent>
           </Select>
         </Field>
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          {/* What the gym must have for this exercise, so client plans only show it when it fits. */}
+          <Label>{t("gymItems")}</Label>
+          <ToggleGroup
+            type="multiple"
+            variant="outline"
+            size="sm"
+            value={gymItems}
+            onValueChange={(v) => setGymItems(v as GymItem[])}
+            className="w-full flex-wrap justify-start"
+          >
+            {gymItem.options.map((item) => (
+              <ToggleGroupItem key={item} value={item} className="h-9 px-2.5 data-[state=on]:border-primary data-[state=on]:bg-primary/10">
+                {gymLabel(item)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
         <div className="sm:col-span-2">
           <Field id="ex-video" label={t("video")}>
             <Input id="ex-video" type="url" dir="ltr" placeholder="https://youtube.com/…" value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} />

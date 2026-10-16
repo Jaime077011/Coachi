@@ -21,13 +21,24 @@ const toE164 = (v: string) => {
 };
 
 /** Name, phone, email, plan, start and end. The app sends a login invite. */
-export function AddCoachDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function AddCoachDialog({
+  open,
+  onOpenChange,
+  initial,
+  onAdded,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Prefill from a home-page coach request. Remount (key) to change it. */
+  initial?: { name: string; phone: string };
+  onAdded?: () => void;
+}) {
   const t = useTranslations("admin.addCoach");
   const queryClient = useQueryClient();
   const plans = useQuery({ queryKey: qk.plans, queryFn: () => api.billing.plans(), enabled: open });
   const now = useNow();
   // Dates default to today and +14 days once the browser knows the time (never during prerender).
-  const [form, setForm] = useState({ name: "", phone: "", email: "", planId: "", starts: "", ends: "" });
+  const [form, setForm] = useState({ name: initial?.name ?? "", phone: initial?.phone ?? "", email: "", planId: "", starts: "", ends: "" });
   const planId = form.planId || plans.data?.[0]?.plan.id || "";
   const starts = form.starts || (now ? iso(new Date(now)) : "");
   const ends = form.ends || (now ? iso(new Date(now + 14 * 86_400_000)) : "");
@@ -46,6 +57,7 @@ export function AddCoachDialog({ open, onOpenChange }: { open: boolean; onOpenCh
       toast.success(t("added"));
       for (const key of [qk.adminCoaches, qk.adminOverview, qk.directoryQueue, qk.audit]) void queryClient.invalidateQueries({ queryKey: key });
       onOpenChange(false);
+      onAdded?.();
       setForm((f) => ({ ...f, name: "", phone: "", email: "" }));
     },
   });

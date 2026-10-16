@@ -7,7 +7,8 @@ export type Role = z.infer<typeof role>;
 /** One login for any role. Login works by phone code or email magic link, so either may be set. */
 export const profile = base.extend({
   role,
-  name: z.string().min(1).max(80),
+  /** "" right after the first login, until the welcome step asks for it. */
+  name: z.string().max(80),
   phone: phone.nullable(),
   email: email.nullable(),
   avatar_url: url.nullable(),

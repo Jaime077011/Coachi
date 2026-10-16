@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { useFmt, useLocalName } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { InstallGuide } from "@/components/coachi/install-guide";
 
 /** Time, total kg, sets, new PBs, a win message, and Share. The first workout ever gets a bigger moment. */
 export function WorkoutDone({ summary }: { summary: WorkoutSummary }) {
@@ -52,6 +53,9 @@ export function WorkoutDone({ summary }: { summary: WorkoutSummary }) {
           ))}
         </section>
       )}
+
+      {/* UI Spec: the iPhone "Add to home screen" guide shows after the first workout. */}
+      <InstallGuide />
 
       <div className="mt-auto flex flex-col gap-2">
         <Button size="lg" onClick={() => setSharing(true)}>

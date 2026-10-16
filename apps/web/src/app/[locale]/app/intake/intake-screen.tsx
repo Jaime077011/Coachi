@@ -114,6 +114,7 @@ export function IntakeScreen() {
 function IntakeForm({ clientId, initial }: { clientId: string; initial: FormIn }) {
   const t = useTranslations("intake");
   const tCommon = useTranslations("common");
+  const tGym = useTranslations("gym");
   const router = useRouter();
   // Resume where he stopped (stored per phone).
   const storedStep = useSyncExternalStore(() => () => {}, readStep, () => 0);
@@ -154,7 +155,7 @@ function IntakeForm({ clientId, initial }: { clientId: string; initial: FormIn }
           intake_completed_at: new Date().toISOString(),
         },
       ][stepIndex]!;
-      await api.clients.updateDetails(clientId, patch);
+      await api.clients.updateMyDetails(clientId, patch);
     },
   });
 
@@ -175,7 +176,17 @@ function IntakeForm({ clientId, initial }: { clientId: string; initial: FormIn }
         title={t("doneTitle")}
         body={t("doneBody")}
         className="mt-10 border-solid border-success/40"
-        action={<Button onClick={() => router.replace("/app/today")}>{tCommon("next")}</Button>}
+        action={
+          <div className="flex flex-col gap-2">
+            <Button onClick={() => router.replace("/app/today")}>{tCommon("next")}</Button>
+            {/* Gym clients: list the machines now, so the first plan already fits his gym. */}
+            {getValues().place !== "home" && (
+              <Button variant="secondary" onClick={() => router.replace("/app/me/gym")}>
+                {tGym("listNow")}
+              </Button>
+            )}
+          </div>
+        }
       />
     );
   }

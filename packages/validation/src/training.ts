@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { base, bilingual, date, id, timestamp, url, weightKg } from "./common";
+import { gymItem } from "./gym";
 
 export const muscleGroup = z.enum([
   "chest",
@@ -36,6 +37,8 @@ export const exercise = base.extend({
   ...bilingual,
   muscle: muscleGroup,
   equipment,
+  /** Everything the exercise needs; all of it must be in the gym. Empty = no equipment. */
+  gym_items: z.array(gymItem),
   video_url: url.nullable(),
   image_url: url.nullable(),
 });

@@ -1,16 +1,19 @@
 import { memberCan, type ClientSummary, type CoachToday } from "@coachi/validation";
-import type { ClientsApi } from "./api";
+import type { ClientExportRow, ClientsApi } from "./api";
 import {
   DEMO,
   bodyMetrics,
   checkins,
   clientDetails,
+  clientGyms,
   clients,
   coachClients,
   coachNotes,
   coachRequests,
   exercises,
   invites,
+  mealLogs,
+  milestones,
   orgMembers,
   planFeatures,
   profiles,
@@ -25,6 +28,17 @@ import { canSeeClient, mockSession, requireActiveSubscription, requireMember, vi
 /** Coach side: like a row rule, a team member only reads clients he may see. */
 const ensureVisible = (clientId: string) => {
   if (!canSeeClient(clientId)) throw new ApiError("forbidden");
+};
+
+/** The client himself, or a coach who may see him (and edit him, when asked). */
+const ensureOwnOrCoach = (clientId: string, edit: boolean) => {
+  const session = mockSession();
+  if (session.profile.role === "client") {
+    if (session.client_id !== clientId) throw new ApiError("forbidden");
+    return;
+  }
+  if (edit) requireMember("client_edit");
+  ensureVisible(clientId);
 };
 
 const assigneeOf = (clientId: string) => {
@@ -73,6 +87,66 @@ function summarize(clientId: string): ClientSummary {
 const myClientIds = (coachId: string) => visibleLinks(coachId).map((l) => l.client_id);
 
 export const mockClients: ClientsApi = {
+  exportMine: (clientId) =>
+    mockRead(() => {
+      ensureOwnOrCoach(clientId, false);
+      const { client, profile } = profileOf(clientId);
+      const logs = workoutLogs.filter((l) => l.client_id === clientId);
+      return {
+        exported_at: nowIso(),
+        profile,
+        client,
+        details: clientDetails.find((d) => d.client_id === clientId) ?? null,
+        gym: clientGyms.find((g) => g.client_id === clientId) ?? null,
+        workouts: logs.map((log) => ({ log, sets: setLogs.filter((s) => s.workout_log_id === log.id) })),
+        meal_logs: mealLogs.filter((m) => m.client_id === clientId),
+        body_metrics: bodyMetrics.filter((m) => m.client_id === clientId),
+        checkins: checkins.filter((c) => c.client_id === clientId),
+        milestones: milestones.filter((m) => m.client_id === clientId),
+      };
+    }),
+
+  exportClients: (coachId) =>
+    mockRead(
+      () =>
+        myClientIds(coachId).map((clientId): ClientExportRow => {
+          const { client, profile } = profileOf(clientId);
+          const d = clientDetails.find((x) => x.client_id === clientId);
+          const gym = clientGyms.find((g) => g.client_id === clientId);
+          const logs = workoutLogs.filter((l) => l.client_id === clientId && l.finished_at);
+          const weights = bodyMetrics.filter((m) => m.client_id === clientId && m.weight_kg !== null).sort((a, b) => a.date.localeCompare(b.date));
+          return {
+            name: profile.name,
+            phone: profile.phone,
+            status: client.status,
+            goal: client.goal,
+            started_at: coachClients.find((l) => l.client_id === clientId && !l.ended_at)?.started_at ?? null,
+            assigned_to: assigneeOf(clientId)?.name ?? null,
+            age: d?.age ?? null,
+            gender: d?.gender ?? null,
+            height_cm: d?.height_cm ?? null,
+            start_weight_kg: d?.start_weight_kg ?? null,
+            latest_weight_kg: weights.at(-1)?.weight_kg ?? null,
+            target_weight_kg: client.target_weight_kg,
+            training_days: d?.training_days ?? [],
+            place: d?.place ?? null,
+            gym_name: gym?.gym_name ?? null,
+            gym_items: gym ? [...gym.items, ...gym.custom_items] : [],
+            injuries: d?.injuries ?? null,
+            health_notes: d?.health_notes ?? null,
+            medicines: d?.medicines ?? null,
+            food_likes: d?.food_likes ?? null,
+            food_dislikes: d?.food_dislikes ?? null,
+            food_never: d?.food_never ?? null,
+            meals_per_day: d?.meals_per_day ?? null,
+            workouts_done: logs.length,
+            last_workout_at: logs.at(-1)?.finished_at ?? null,
+            notes: coachNotes.filter((n) => n.client_id === clientId && !n.deleted_at).map((n) => n.text),
+          };
+        }),
+      [],
+    ),
+
   list: (coachId) => mockRead(() => myClientIds(coachId).map(summarize), []),
 
   get: (clientId) =>
@@ -84,6 +158,7 @@ export const mockClients: ClientsApi = {
         client,
         profile: { name: profile.name, phone: profile.phone, avatar_url: profile.avatar_url },
         details: clientDetails.find((d) => d.client_id === clientId) ?? null,
+        gym: clientGyms.find((g) => g.client_id === clientId) ?? null,
         notes: coachNotes
           .filter((n) => n.client_id === clientId && !n.deleted_at)
           .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.created_at.localeCompare(a.created_at))
@@ -144,6 +219,34 @@ export const mockClients: ClientsApi = {
       client: profileOf(clientId).client,
       details: clientDetails.find((d) => d.client_id === clientId) ?? null,
     })),
+
+  updateMyDetails: (clientId, patch) =>
+    mockWrite(() => {
+      ensureOwnOrCoach(clientId, true);
+      const details = clientDetails.find((d) => d.client_id === clientId);
+      if (!details) throw new ApiError("not_found");
+      Object.assign(details, patch, { updated_at: nowIso() });
+      return details;
+    }),
+
+  gym: (clientId) =>
+    mockRead(() => {
+      ensureOwnOrCoach(clientId, false);
+      return clientGyms.find((g) => g.client_id === clientId) ?? null;
+    }, null),
+
+  saveGym: (clientId, input) =>
+    mockWrite(() => {
+      ensureOwnOrCoach(clientId, true);
+      const existing = clientGyms.find((g) => g.client_id === clientId);
+      if (existing) {
+        Object.assign(existing, input, { updated_at: nowIso() });
+        return existing;
+      }
+      const gym = { ...input, id: newId(), client_id: clientId, created_at: nowIso(), updated_at: nowIso(), deleted_at: null };
+      clientGyms.push(gym);
+      return gym;
+    }),
 
   updateMyGoal: (clientId, input) =>
     mockWrite(() => {

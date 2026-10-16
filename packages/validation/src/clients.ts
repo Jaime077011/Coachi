@@ -13,6 +13,7 @@ import {
   url,
   weightKg,
 } from "./common";
+import { clientGym } from "./gym";
 
 export const clientStatus = z.enum(["invited", "active", "paused", "archived"]);
 export type ClientStatus = z.infer<typeof clientStatus>;
@@ -148,6 +149,8 @@ export const clientFile = z.object({
   }),
   details: clientDetails.nullable(),
   notes: z.array(coachNoteView),
+  /** What his gym has. null = he hasn't listed it yet. */
+  gym: clientGym.nullable(),
   started_at: timestamp,
   assigned_member_id: id.nullable(),
 });

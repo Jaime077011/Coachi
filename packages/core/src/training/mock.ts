@@ -3,6 +3,7 @@ import type { TrainingApi } from "./api";
 import { DEMO, exercises, programDays, programExercises, programs, setLogs, workoutLogs } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 import { requireActiveSubscription, requireMember } from "../mock/session";
+import { clientProfileId, coachOfClient, nameOf, notify } from "../mock/notify";
 
 const stamp = () => ({ created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
 
@@ -98,6 +99,7 @@ export const mockTraining: TrainingApi = {
         const copy = copyProgram(buildProgram(programId), clientId);
         copy.program.starts_on = nowIso().slice(0, 10);
         replaceProgram(copy);
+        notify(clientProfileId(clientId), "plan_assigned", { coach: coachOfClient(clientId)?.name ?? "", plan: copy.program.name }, "/app/plan");
         return copy.program;
       });
     }),
@@ -162,6 +164,8 @@ export const mockTraining: TrainingApi = {
       const log = workoutLogs.find((l) => l.id === workoutLogId);
       if (!log) throw new ApiError("not_found");
       log.finished_at = nowIso();
+      const dayTitle = programDays.find((d) => d.id === log.program_day_id)?.title ?? "";
+      notify(coachOfClient(log.client_id)?.profile_id, "workout_done", { name: nameOf(clientProfileId(log.client_id)), workout: dayTitle }, `/coach/clients/${log.client_id}`);
       const sets = setLogs.filter((s) => s.workout_log_id === workoutLogId && s.done);
       const earlierLogIds = new Set(
         workoutLogs.filter((l) => l.client_id === log.client_id && l.id !== log.id).map((l) => l.id),

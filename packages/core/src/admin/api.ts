@@ -1,4 +1,4 @@
-import type { AdminCoachRow, AdminOverview, AppSettings, AuditEntry, DirectoryQueueItem, Subscription } from "@coachi/validation";
+import type { AdminCoachRow, AdminOverview, AppSettings, AuditEntry, CoachLead, CoachLeadStatus, DirectoryQueueItem, Subscription } from "@coachi/validation";
 
 export type NewCoach = {
   name: string;
@@ -26,6 +26,9 @@ export interface AdminApi {
   setListed(coachId: string, listed: boolean): Promise<void>;
   setFeatured(coachId: string, featured: boolean): Promise<void>;
   auditLog(): Promise<AuditEntry[]>;
+  /** Coaches who asked to join from the home page, newest first. */
+  coachLeads(): Promise<CoachLead[]>;
+  setLeadStatus(leadId: string, status: CoachLeadStatus): Promise<void>;
   startSupport(coachId: string): Promise<void>;
   endSupport(coachId: string): Promise<void>;
 }

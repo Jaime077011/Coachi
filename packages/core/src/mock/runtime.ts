@@ -76,6 +76,46 @@ export function setMockMemberRole(role: MockMemberRole) {
   }
 }
 
+const SIGNED_OUT_KEY = "coachi.dev.signedOut";
+
+/** Mock sign-out: getSession returns null until the next login (or a dev switcher role change). */
+export function isMockSignedOut() {
+  try {
+    return globalThis.localStorage?.getItem(SIGNED_OUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setMockSignedOut(signedOut: boolean) {
+  try {
+    if (signedOut) globalThis.localStorage?.setItem(SIGNED_OUT_KEY, "1");
+    else globalThis.localStorage?.removeItem(SIGNED_OUT_KEY);
+  } catch {
+    // Ignore.
+  }
+}
+
+const CLIENT_PROFILE_KEY = "coachi.dev.clientProfile";
+
+/** Client role only: which client is signed in (a demo number or a new sign-up). null = the demo client. */
+export function getMockClientProfile(): string | null {
+  try {
+    return globalThis.localStorage?.getItem(CLIENT_PROFILE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function setMockClientProfile(profileId: string | null) {
+  try {
+    if (profileId) globalThis.localStorage?.setItem(CLIENT_PROFILE_KEY, profileId);
+    else globalThis.localStorage?.removeItem(CLIENT_PROFILE_KEY);
+  } catch {
+    // Ignore.
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     /** inactive = the coach's subscription ended or is paused: read-only until renewed. */
@@ -115,6 +155,8 @@ export function onMockWrite(fn: () => void) {
 export async function mockWrite<T>(produce: () => T): Promise<T> {
   await sleep(dataState === "slow" ? 2500 : 300);
   if (dataState === "error") throw new ApiError("network");
+  // Like a real request: no connection, no write. Lets the offline set queue be tested in mock mode.
+  if (globalThis.navigator?.onLine === false) throw new ApiError("network", "offline");
   const result = structuredClone(produce());
   afterWrite?.();
   return result;

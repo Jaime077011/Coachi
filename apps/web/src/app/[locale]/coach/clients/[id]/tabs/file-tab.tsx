@@ -1,12 +1,14 @@
 "use client";
 
 import { api } from "@coachi/core";
-import type { ClientDetails, ClientFile } from "@coachi/validation";
+import type { ClientDetails, ClientFile, GymInput } from "@coachi/validation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PencilIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { GymEditor, GymSummary, toGymInput } from "@/components/coachi/gym-editor";
+import { ResponsiveDialog } from "@/components/coachi/responsive-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ type FieldDef =
 export function FileTab({ clientId, data }: { clientId: string; data: ClientFile }) {
   const t = useTranslations("clientFile");
   const tIntake = useTranslations("intake");
+  const tGym = useTranslations("gym");
   const opt = (values: readonly string[], prefix: string) =>
     values.map((v) => ({ value: v, label: tIntake(`${prefix}${v}` as Parameters<typeof tIntake>[0]) }));
 
@@ -85,6 +88,12 @@ export function FileTab({ clientId, data }: { clientId: string; data: ClientFile
           </AccordionContent>
         </AccordionItem>
       ))}
+      <AccordionItem value="gym" className="mb-3 rounded-lg border bg-card px-4 last:border-b">
+        <AccordionTrigger className="text-[17px] font-semibold hover:no-underline">{tGym("coachTitle")}</AccordionTrigger>
+        <AccordionContent>
+          <GymSection clientId={clientId} gym={data.gym} />
+        </AccordionContent>
+      </AccordionItem>
     </Accordion>
   );
 }
@@ -158,6 +167,56 @@ function Section({ clientId, details, fields }: { clientId: string; details: Cli
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/** What his gym has, as he listed it. The coach can fix it (same editor as the client's My gym). */
+function GymSection({ clientId, gym }: { clientId: string; gym: ClientFile["gym"] }) {
+  const t = useTranslations("gym");
+  const tCommon = useTranslations("common");
+  const queryClient = useQueryClient();
+  const canEdit = useCan()("client_edit");
+  const [editing, setEditing] = useState<GymInput | null>(null);
+
+  const save = useMutation({
+    mutationFn: (input: GymInput) => api.clients.saveGym(clientId, input),
+    onSuccess: () => {
+      setEditing(null);
+      toast.success(tCommon("saved"));
+      void queryClient.invalidateQueries({ queryKey: qk.clientFile(clientId) });
+      void queryClient.invalidateQueries({ queryKey: qk.clientGym(clientId) });
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+      {gym && gym.items.length + gym.custom_items.length > 0 ? <GymSummary gym={gym} /> : <p className="text-sm text-hint">{t("notListed")}</p>}
+      {canEdit && (
+        <div>
+          <Button size="sm" variant="secondary" onClick={() => setEditing(toGymInput(gym))}>
+            <PencilIcon data-icon="inline-start" />
+            {t("edit")}
+          </Button>
+        </div>
+      )}
+      <ResponsiveDialog
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        title={t("editTitle")}
+        footer={
+          <Button className="w-full sm:w-auto" disabled={save.isPending} onClick={() => editing && save.mutate(editing)}>
+            {save.isPending && <Loader2Icon className="animate-spin" />}
+            {tCommon("save")}
+          </Button>
+        }
+      >
+        {editing && (
+          <div className="pb-2 lg:-me-2 lg:max-h-[65dvh] lg:overflow-y-auto lg:pe-2">
+            <GymEditor value={editing} onChange={setEditing} />
+          </div>
+        )}
+      </ResponsiveDialog>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import type { CheckinsApi } from "./checkins/api";
 import type { ClientsApi } from "./clients/api";
 import type { DirectoryApi } from "./directory/api";
 import type { JourneyApi } from "./journey/api";
+import type { NotificationsApi } from "./notifications/api";
 import type { NutritionApi } from "./nutrition/api";
 import type { TeamApi } from "./team/api";
 import type { TrainingApi } from "./training/api";
@@ -19,6 +20,7 @@ import { mockCheckins } from "./checkins/mock";
 import { mockClients } from "./clients/mock";
 import { mockDirectory } from "./directory/mock";
 import { mockJourney } from "./journey/mock";
+import { mockNotifications } from "./notifications/mock";
 import { mockNutrition } from "./nutrition/mock";
 import { mockTeam } from "./team/mock";
 import { mockTraining } from "./training/mock";
@@ -35,6 +37,7 @@ export type Api = {
   checkins: CheckinsApi;
   billing: BillingApi;
   admin: AdminApi;
+  notifications: NotificationsApi;
 };
 
 export type DataSource = "mock" | "supabase";
@@ -53,26 +56,30 @@ export const api: Api = {
   checkins: mockCheckins,
   billing: mockBilling,
   admin: mockAdmin,
+  notifications: mockNotifications,
 };
 
 export type { AdminApi, NewCoach } from "./admin/api";
 export type { AuthApi, InviteLanding } from "./auth/api";
 export type { BillingApi } from "./billing/api";
 export type { CheckinInput, CheckinsApi } from "./checkins/api";
-export type { ClientsApi } from "./clients/api";
+export type { ClientExportRow, ClientsApi, MyDataExport } from "./clients/api";
 export type { DirectoryApi } from "./directory/api";
 export type { JourneyApi, NewBodyMetric } from "./journey/api";
 export type { MealLogInput, NewFood, NutritionApi } from "./nutrition/api";
 export type { NewExercise, SetInput, TrainingApi } from "./training/api";
 export type { TeamApi, TeamMemberOption } from "./team/api";
+export type { NotificationsApi } from "./notifications/api";
 export {
   ApiError,
   getMockDataState,
   getMockMemberRole,
   getMockRole,
+  setMockClientProfile,
   setMockDataState,
   setMockMemberRole,
   setMockRole,
+  setMockSignedOut,
   type MockDataState,
   type MockMemberRole,
   type MockRole,

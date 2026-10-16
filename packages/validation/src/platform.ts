@@ -29,9 +29,25 @@ export type AppEvent = z.infer<typeof event>;
 
 export const notificationChannel = z.enum(["in_app", "push", "email", "whatsapp"]);
 
+/** What happened. The screen words come from the type + params, in the reader's language. */
+export const notificationType = z.enum([
+  // Coach
+  "request_new",
+  "checkin_new",
+  "workout_done",
+  // Client
+  "request_answered",
+  "plan_assigned",
+  "checkin_reply",
+]);
+export type NotificationType = z.infer<typeof notificationType>;
+
 export const notification = base.extend({
   profile_id: id,
-  type: z.string(),
+  type: notificationType,
+  /** Names and values for the words, e.g. { name: "Omar" }. */
+  params: z.record(z.string(), z.string()),
+  /** Plain text for push, email, and WhatsApp, which can't use the app's translations. */
   title: z.string(),
   body: z.string(),
   link: z.string().nullable(),
@@ -40,13 +56,29 @@ export const notification = base.extend({
 });
 export type Notification = z.infer<typeof notification>;
 
+/** Reminders (client) and alerts (coach) a person can turn on or off. */
+export const prefKey = z.enum(["workout_reminder", "meal_reminder", "checkin_reminder", "request_new", "checkin_new", "workout_done"]);
+export type PrefKey = z.infer<typeof prefKey>;
+
 export const notificationPref = base.extend({
   profile_id: id,
   channel: notificationChannel,
-  type: z.string(),
+  type: prefKey,
   on: z.boolean(),
+  /** Daily reminders: when to send, "HH:MM" in his time zone. null for alerts. */
+  time: z.string().regex(/^\d{2}:\d{2}$/).nullable(),
 });
 export type NotificationPref = z.infer<typeof notificationPref>;
+
+/** Defaults until he changes them. */
+export const defaultPrefs: Record<PrefKey, { on: boolean; time: string | null }> = {
+  workout_reminder: { on: true, time: "18:00" },
+  meal_reminder: { on: false, time: "13:00" },
+  checkin_reminder: { on: true, time: "10:00" },
+  request_new: { on: true, time: null },
+  checkin_new: { on: true, time: null },
+  workout_done: { on: false, time: null },
+};
 
 export const auditEntry = z.object({
   id,
@@ -58,6 +90,24 @@ export const auditEntry = z.object({
   created_at: timestamp,
 });
 export type AuditEntry = z.infer<typeof auditEntry>;
+
+/** "I'm a coach" form on the Coachi home page. The super admin follows up on WhatsApp and adds the coach. */
+export const coachLeadStatus = z.enum(["new", "contacted", "added", "dismissed"]);
+export type CoachLeadStatus = z.infer<typeof coachLeadStatus>;
+export const clientsCount = z.enum(["under_10", "10_30", "over_30"]);
+
+export const coachLead = base.extend({
+  name: z.string().min(2).max(80),
+  phone,
+  city: z.string().max(60).nullable(),
+  clients_count: clientsCount,
+  message: z.string().max(500).nullable(),
+  status: coachLeadStatus,
+});
+export type CoachLead = z.infer<typeof coachLead>;
+
+export const newCoachLead = coachLead.pick({ name: true, phone: true, city: true, clients_count: true, message: true });
+export type NewCoachLead = z.infer<typeof newCoachLead>;
 
 /** Super admin Settings (one row). */
 export const appSettings = z.object({

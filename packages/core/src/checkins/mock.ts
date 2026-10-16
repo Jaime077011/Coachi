@@ -2,6 +2,7 @@ import type { CheckinsApi } from "./api";
 import { DEMO, checkinForms, checkins, coachClients } from "../mock/data";
 import { ApiError, mockRead, mockWrite, newId, nowIso } from "../mock/runtime";
 import { requireMember } from "../mock/session";
+import { clientProfileId, coachOfClient, nameOf, notify } from "../mock/notify";
 
 const stamp = () => ({ created_at: nowIso(), updated_at: nowIso(), deleted_at: null });
 
@@ -42,6 +43,7 @@ export const mockCheckins: CheckinsApi = {
       if (!form) throw new ApiError("not_found");
       const checkin = { ...input, ...stamp(), id: newId(), client_id: clientId, form_id: form.id, coach_reply: null, read_at: null };
       checkins.push(checkin);
+      notify(coachOfClient(clientId)?.profile_id, "checkin_new", { name: nameOf(clientProfileId(clientId)) }, `/coach/clients/${clientId}?tab=checkins`);
       return checkin;
     }),
 
@@ -52,6 +54,7 @@ export const mockCheckins: CheckinsApi = {
       if (!checkin) throw new ApiError("not_found");
       checkin.coach_reply = text;
       checkin.read_at ??= nowIso();
+      notify(clientProfileId(checkin.client_id), "checkin_reply", { coach: coachOfClient(checkin.client_id)?.name ?? "" }, "/app/check-in");
       return checkin;
     }),
 

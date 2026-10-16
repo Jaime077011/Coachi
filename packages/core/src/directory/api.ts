@@ -5,6 +5,8 @@ import type {
   CoachPage,
   CoachProfile,
   CoachRequest,
+  CoachLead,
+  NewCoachLead,
   DirectoryFilters,
   PackageInput,
   SendRequest,
@@ -17,6 +19,8 @@ export interface DirectoryApi {
   /** Public, no login: a published landing page of an active coach, else not_found. */
   landing(slug: string): Promise<CoachLanding>;
   sendRequest(input: SendRequest): Promise<CoachRequest>;
+  /** Public, no login: "I'm a coach" form on the Coachi home page. Rate limited in Step 3. */
+  requestCoachAccess(input: NewCoachLead): Promise<CoachLead>;
   myRequests(): Promise<CoachRequest[]>;
   /** Coach side. */
   inbox(coachId: string): Promise<CoachRequest[]>;

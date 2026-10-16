@@ -26,6 +26,7 @@ export function ExerciseRow({
   isFirst,
   isLast,
   groupedWithNext,
+  notInGym,
   onChange,
   onMove,
   onGroup,
@@ -37,6 +38,8 @@ export function ExerciseRow({
   isFirst: boolean;
   isLast: boolean;
   groupedWithNext: boolean;
+  /** The client's gym doesn't have what this exercise needs. */
+  notInGym?: boolean;
   onChange: (patch: Patch) => void;
   onMove: (dir: -1 | 1) => void;
   onGroup: () => void;
@@ -44,6 +47,7 @@ export function ExerciseRow({
   onRemove: () => void;
 }) {
   const t = useTranslations("builder");
+  const tGym = useTranslations("gym");
   const name = useLocalName();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
@@ -77,6 +81,11 @@ export function ExerciseRow({
           <GripVerticalIcon className="size-5" aria-hidden />
         </button>
         <p className="min-w-0 flex-1 truncate font-semibold">{name(exercise)}</p>
+        {notInGym && (
+          <Badge variant="outline" className="border-warning/40 text-warning">
+            {tGym("notInGym")}
+          </Badge>
+        )}
         {item.group && (
           <Badge variant="outline" className="border-primary/40 text-primary">
             {t("group")} {item.group}

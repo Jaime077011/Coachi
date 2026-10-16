@@ -16,6 +16,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddClientDialog } from "@/components/coach/add-client-dialog";
+import { OnboardingChecklist } from "@/components/coach/onboarding-checklist";
+import { InstallGuide } from "@/components/coachi/install-guide";
+import { NotificationBell } from "@/components/coachi/notifications";
 import { QueryState } from "@/components/coachi/query-state";
 import { ScreenHeader, SectionTitle } from "@/components/coachi/screen-header";
 import { EmptyState } from "@/components/coachi/states";
@@ -64,9 +67,12 @@ export function CoachTodayScreen() {
         title={t("title")}
         className="mb-0"
         action={
-          <div className="hidden gap-2 sm:flex">
-            {newPlan}
-            {addClient}
+          <div className="flex items-center gap-2">
+            <div className="hidden gap-2 sm:flex">
+              {newPlan}
+              {addClient}
+            </div>
+            <NotificationBell />
           </div>
         }
       />
@@ -76,6 +82,9 @@ export function CoachTodayScreen() {
           {newPlan}
         </div>
       )}
+
+      <OnboardingChecklist onAddClient={() => setAdding(true)} />
+      <InstallGuide />
 
       <QueryState query={today}>
         {(data) => (

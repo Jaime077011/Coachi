@@ -38,7 +38,8 @@
       "profile": "Profile",
       "subscription": "Subscription",
       "team": "Team",
-      "settings": "Settings"
+      "settings": "Settings",
+      "notifications": "Notifications"
     },
     "admin": {
       "overview": "Overview",
@@ -252,7 +253,7 @@
   },
   "auth": {
     "title": "Log in",
-    "subtitle": "We'll send you a 6-digit code.",
+    "subtitle": "New or returning, we'll send you a 6-digit code.",
     "byPhone": "Phone",
     "byEmail": "Email",
     "phone": "Mobile number",
@@ -268,7 +269,7 @@
     "wrongCode": "That code isn't right. Try again.",
     "invalidPhone": "Enter a valid Egyptian mobile number",
     "invalidEmail": "Enter a valid email",
-    "mockHint": "Demo: any 6 digits work (000000 shows the wrong-code error)."
+    "mockHint": "Demo: any 6 digits work (000000 shows the wrong-code error). Demo numbers sign in as that person, like 01111111101 (client) or 01001112233 (coach). Any other number makes a new account."
   },
   "join": {
     "invitedBy": "{coach} invited you to train with them on Coachi.",
@@ -323,7 +324,9 @@
     "noVideo": "No video yet",
     "saving": "Saving…",
     "saved": "Saved",
-    "notFound": "This workout isn't in your plan."
+    "notFound": "This workout isn't in your plan.",
+    "waiting": "{count, plural, one {# set waiting} other {# sets waiting}}",
+    "savedOffline": "Saved on this phone. It will sync when you're back online."
   },
   "done": {
     "title": "Workout done. Nice work",
@@ -428,11 +431,7 @@
     "themeLight": "Light",
     "themeSystem": "System",
     "reminders": "Reminders",
-    "workoutReminder": "Workout reminder",
-    "mealReminder": "Meal reminders",
     "contactCoach": "Message your coach on WhatsApp",
-    "export": "Download my data",
-    "exportToast": "Your data file is being prepared",
     "logout": "Log out",
     "units": "Units: kg, cm",
     "phone": "Phone"
@@ -840,7 +839,8 @@
     "eq_bodyweight": "Bodyweight",
     "eq_band": "Band",
     "eq_smith": "Smith",
-    "eq_other": "Other"
+    "eq_other": "Other",
+    "gymItems": "Needs (from the gym list)"
   },
   "checkinForm": {
     "title": "Check-in form",
@@ -1093,6 +1093,22 @@
     "supportBar": {
       "viewing": "Viewing as {name}. Every action is logged.",
       "exit": "Exit"
+    },
+    "leads": {
+      "title": "Coach requests",
+      "empty": "No new coach requests",
+      "emptyBody": "Coaches who fill the form on the home page show up here.",
+      "status_new": "New",
+      "status_contacted": "Contacted",
+      "status_added": "Added",
+      "status_dismissed": "Dismissed",
+      "clients_under_10": "under 10 clients",
+      "clients_10_30": "10 to 30 clients",
+      "clients_over_30": "over 30 clients",
+      "whatsapp": "WhatsApp",
+      "whatsappMessage": "Hi {name}, this is Coachi. Thanks for your interest! When is a good time to talk?",
+      "add": "Add coach",
+      "dismiss": "Dismiss"
     }
   },
   "team": {
@@ -1216,8 +1232,7 @@
   },
   "coachSettings": {
     "title": "Settings",
-    "export": "Export my clients' data",
-    "exportToast": "We're preparing your clients' data file"
+    "alerts": "Alerts"
   },
   "readOnly": {
     "expired": "Your subscription has ended. You can see everything, but can't add clients, helpers, or new plans until you renew.",
@@ -1230,5 +1245,346 @@
     "failed": "Something went wrong. Try again.",
     "noticeTitle": "Your subscription has ended",
     "noticeBody": "Renew to add clients and helpers again. Everything you have is safe."
+  },
+  "gym": {
+    "title": "My gym",
+    "intro": "Tick what your gym has. Your coach builds your workouts with these machines only.",
+    "gymName": "Gym name",
+    "gymNamePlaceholder": "e.g. Power Zone, Nasr City",
+    "group_free_weights": "Free weights",
+    "group_racks": "Racks and benches",
+    "group_cables": "Cables",
+    "group_machines": "Machines",
+    "group_cardio": "Cardio",
+    "dumbbellsMax": "Heaviest dumbbell (kg)",
+    "custom": "Other machines",
+    "customPlaceholder": "A machine that's not on the list",
+    "addCustom": "Add",
+    "removeCustom": "Remove {name}",
+    "note": "Anything your coach should know",
+    "notePlaceholder": "e.g. the leg press is always busy after 7 pm",
+    "save": "Save my gym",
+    "saved": "Your gym is saved. Your coach can see it now",
+    "count": "{n, plural, =0 {Nothing listed yet} one {# item} other {# items}}",
+    "meLink": "My gym",
+    "meLinkHint": "So your coach plans with what you have",
+    "listNow": "List my gym's machines",
+    "coachTitle": "Gym",
+    "notListed": "Not listed yet. Ask him to fill My gym in the app",
+    "upTo": "up to {kg}",
+    "edit": "Edit gym",
+    "editTitle": "Edit his gym",
+    "hisGym": "His gym",
+    "onlyHisGym": "Only what's in his gym",
+    "notInGym": "Not in his gym",
+    "noGymYet": "He hasn't listed his gym yet, so every exercise shows",
+    "item_barbell": "Barbell",
+    "item_ez_bar": "EZ bar",
+    "item_dumbbells": "Dumbbells",
+    "item_kettlebells": "Kettlebells",
+    "item_bands": "Resistance bands",
+    "item_squat_rack": "Squat rack",
+    "item_flat_bench": "Flat bench",
+    "item_adjustable_bench": "Adjustable bench",
+    "item_pull_up_bar": "Pull-up bar",
+    "item_dip_station": "Dip station",
+    "item_smith_machine": "Smith machine",
+    "item_cable_crossover": "Cable crossover",
+    "item_lat_pulldown": "Lat pulldown",
+    "item_seated_row": "Seated row",
+    "item_chest_press": "Chest press",
+    "item_pec_deck": "Pec deck",
+    "item_shoulder_press_machine": "Shoulder press machine",
+    "item_leg_press": "Leg press",
+    "item_hack_squat": "Hack squat",
+    "item_leg_extension": "Leg extension",
+    "item_leg_curl": "Leg curl",
+    "item_hip_thrust_machine": "Hip thrust machine",
+    "item_hip_abductor": "Hip abductor",
+    "item_calf_raise_machine": "Calf raise machine",
+    "item_assisted_pull_up": "Assisted pull-up",
+    "item_treadmill": "Treadmill",
+    "item_bike": "Bike",
+    "item_elliptical": "Elliptical",
+    "item_rower": "Rowing machine",
+    "item_stair_climber": "Stair climber"
+  },
+  "welcome": {
+    "title": "Welcome to Coachi",
+    "subtitle": "What should your coach call you?",
+    "name": "Your name",
+    "nameError": "Write your name (2 letters or more)",
+    "continue": "Continue",
+    "coachQ": "Are you a coach?",
+    "coachLink": "Tell us about you"
+  },
+  "home": {
+    "metaTitle": "Coachi: the app for fitness coaches in Egypt",
+    "metaDescription": "Client files, workout and meal plans, check-ins and progress. Arabic first, on your phone. Free for your clients.",
+    "eyebrow": "For fitness coaches in Egypt",
+    "heroTitle": "Every client. One app.",
+    "heroBody": "Client files, workout and meal plans, check-ins, and progress. In Arabic, on your phone. Your clients get their own app with your name on it.",
+    "ctaCoach": "I'm a coach",
+    "ctaClient": "Find a coach",
+    "heroNote": "14-day free trial. Free for your clients. Pay in EGP.",
+    "featuresTitle": "Everything a coach needs",
+    "featuresBody": "Stop juggling WhatsApp, Excel, and PDFs. Add a client and send a plan in your first five minutes.",
+    "feature_file_title": "The full client file",
+    "feature_file_body": "Intake, injuries, food likes, his gym's machines, and your private notes, all in one place.",
+    "feature_workouts_title": "Workout plans",
+    "feature_workouts_body": "Build on your phone or laptop. Supersets, templates, and only the exercises his gym can do.",
+    "feature_meals_title": "Meal plans",
+    "feature_meals_body": "Egyptian foods with live totals, swap options, and training and rest day versions.",
+    "feature_progress_title": "Check-ins and progress",
+    "feature_progress_body": "Weekly answers, weight, photos, and lift charts. See who needs you today.",
+    "feature_clientApp_title": "An app for your clients",
+    "feature_clientApp_body": "They log every set, tick meals, and watch their journey grow, with your name and logo on top.",
+    "feature_page_title": "Your own page",
+    "feature_page_body": "A public page with your packages for your Instagram bio. Requests land straight in your inbox.",
+    "howTitle": "How it works",
+    "step1_title": "Tell us about you",
+    "step1_body": "Fill the short form below. It takes a minute.",
+    "step2_title": "We set you up",
+    "step2_body": "We message you on WhatsApp and open your account with a free trial.",
+    "step3_title": "Invite your clients",
+    "step3_body": "Send each client a link on WhatsApp. They join, fill their intake, and start.",
+    "pricingTitle": "Simple prices in EGP",
+    "pricingBody": "No card needed. Pay monthly by InstaPay, Vodafone Cash, bank transfer, or cash. Always free for your clients.",
+    "pricingFallback": "Ask us for prices on WhatsApp using the form below.",
+    "popular": "Most popular",
+    "free": "Free",
+    "forDays": "for {n} days",
+    "perDays": "/ {n} days",
+    "planClients": "Up to {n} clients",
+    "planUnlimited": "Unlimited clients",
+    "planSeats": "{n, plural, one {# team member} other {# team members}}",
+    "planSolo": "Just you",
+    "planNutrition": "Meal plans",
+    "planDirectory": "Listed in Find a coach",
+    "planBranded": "Your logo in your clients' app",
+    "formTitle": "Coach? Let's talk",
+    "formBody": "Tell us a little about you. We'll message you on WhatsApp within a day and set up your account.",
+    "formName": "Your name",
+    "formNameError": "Write your name (2 letters or more)",
+    "formPhone": "WhatsApp number",
+    "formPhoneError": "Enter a valid Egyptian mobile number",
+    "formCity": "City (optional)",
+    "formClients": "How many clients do you have?",
+    "clients_under_10": "Under 10",
+    "clients_10_30": "10 to 30",
+    "clients_over_30": "Over 30",
+    "formMessage": "Anything else? (optional)",
+    "formMessagePlaceholder": "How you coach today, online or in the gym",
+    "formSend": "Send",
+    "formSentTitle": "Thanks, {name}!",
+    "formSentBody": "We'll message you on WhatsApp within a day.",
+    "faqTitle": "Questions",
+    "faq_clientsPay_q": "Do my clients pay anything?",
+    "faq_clientsPay_a": "No. Coachi is free for clients. Only the coach has a plan.",
+    "faq_howPay_q": "How do I pay?",
+    "faq_howPay_a": "Monthly, by InstaPay, Vodafone Cash, bank transfer, or cash. No card and no payment inside the app.",
+    "faq_arabic_q": "Is it in Arabic?",
+    "faq_arabic_a": "Arabic first, right to left, with English one tap away. Exercise and food names come in both.",
+    "faq_store_q": "Is there an app in the App Store?",
+    "faq_store_a": "Coachi works now from your phone's browser and installs on your home screen like an app. Store apps are coming.",
+    "faq_data_q": "Can I take my data with me?",
+    "faq_data_a": "Yes. Download all your clients' data any time from Settings.",
+    "login": "Log in",
+    "openApp": "Open the app",
+    "about": "About",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "footerNav": "Site",
+    "copyright": "© {year} Coachi"
+  },
+  "legal": {
+    "about": {
+      "title": "About Coachi",
+      "updated": "Made in Egypt, 2026",
+      "intro": "Coachi is a simple app for fitness coaches in Egypt to run every client from one place, and for their clients to follow their plan and see how far they've come.",
+      "sections": [
+        {
+          "title": "Why we built it",
+          "body": "Most coaches we know run their business on WhatsApp, Excel, and PDF files. The big coaching apps are built for the US, priced in dollars, and in English. Coachi is Arabic first, priced in EGP, and made for how coaches here actually work."
+        },
+        {
+          "title": "What it does",
+          "body": "A full file for every client, workout and meal plans, weekly check-ins, and progress for the coach. For the client: today's workout and meals, logging every set, and a journey page that keeps them going."
+        },
+        {
+          "title": "Talk to us",
+          "body": "Coaches can reach us through the form on the home page. Clients should talk to their coach first; for anything about your account or data, message us from the same form."
+        }
+      ],
+      "credit": "Arm icon from <link>game-icons.net</link>, <license>CC BY 3.0</license>."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "updated": "Last updated: October 16, 2026",
+      "intro": "This page explains what Coachi stores about you, why, and who can see it. We wrote it in plain words. If anything is unclear, ask us.",
+      "sections": [
+        {
+          "title": "What we store",
+          "body": "Your name, phone number or email, and language. If you are a client: what you write in the intake form (goal, body measurements, injuries and health notes you choose to share, food likes, your gym's equipment), your workouts, meals, weight, check-in answers, and any photos you add. If you are a coach: your public profile, your plans and templates, and your private notes about clients."
+        },
+        {
+          "title": "Why we store it",
+          "body": "Only to run the coaching between you and your coach: building plans, logging workouts, and showing progress. We don't sell your data and we don't show ads."
+        },
+        {
+          "title": "Who can see it",
+          "body": "A client's data is seen by the client and by their coach, plus any team member the coach assigns to them. Coach notes are private to the coach's team; the client never sees them. Progress photos are private and open only through short-lived links. The Coachi team can open an account only to help with a support request, and every such action is logged."
+        },
+        {
+          "title": "Health information",
+          "body": "Injuries and health notes are sensitive. Share only what helps your coach plan safely. You can edit or remove them any time from your intake answers or by asking your coach."
+        },
+        {
+          "title": "Where it's kept",
+          "body": "On our database provider's servers in Frankfurt, Germany. Data is encrypted in transit. Times are kept in UTC and shown in your time zone."
+        },
+        {
+          "title": "Your rights",
+          "body": "You can see, download, correct, or delete your data. Clients download their data from Me; coaches download their clients' data from Settings. To delete your account, ask us through the form on the home page. These rights follow Egypt's Personal Data Protection Law (No. 151 of 2020)."
+        },
+        {
+          "title": "Cookies and analytics",
+          "body": "We keep you logged in and remember settings like language and theme on your device. We count how features are used, without selling or sharing that data, to make the app better."
+        },
+        {
+          "title": "Changes",
+          "body": "If we change this page in a way that matters, we'll tell you in the app before it applies."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms",
+      "updated": "Last updated: October 16, 2026",
+      "intro": "These terms cover using Coachi as a coach or as a client. By using the app you agree to them.",
+      "sections": [
+        {
+          "title": "Accounts",
+          "body": "You log in with a code sent to your phone or email. Keep access to them safe; anyone who can read your codes can open your account. One person per account."
+        },
+        {
+          "title": "Coaches",
+          "body": "Coaches pay a monthly plan, by hand (InstaPay, Vodafone Cash, bank transfer, or cash). When a plan ends, the coach can still log in and see everything, but can't add clients or new plans until it's renewed. Nothing is deleted. Coaches are responsible for the advice and plans they give their clients."
+        },
+        {
+          "title": "Clients",
+          "body": "Coachi is free for clients. Your coach decides your plans; Coachi doesn't. You can stop working with a coach any time."
+        },
+        {
+          "title": "Not medical advice",
+          "body": "Coachi is a tool for coaching, not a medical service. Plans in the app are not medical advice. Talk to a doctor before starting a new program, especially with an injury or health condition, and stop if something hurts."
+        },
+        {
+          "title": "Fair use",
+          "body": "Don't use Coachi to harass anyone, share content you don't have the right to share, upload other people's photos without permission, or try to access accounts that aren't yours."
+        },
+        {
+          "title": "Your content",
+          "body": "Your data stays yours. Coaches can export their clients' data at any time, and clients can export their own. We use your content only to run the app for you."
+        },
+        {
+          "title": "Availability",
+          "body": "We work hard to keep Coachi running and your data safe, but we can't promise it will never be down. Workouts you log offline are kept on your phone and sent when you're back online."
+        },
+        {
+          "title": "Changes and law",
+          "body": "We may update these terms and will tell you in the app first. These terms follow the laws of Egypt."
+        }
+      ]
+    }
+  },
+  "errors": {
+    "notFoundTitle": "This page isn't here",
+    "notFoundBody": "The link may be old or mistyped.",
+    "openApp": "Go to the app",
+    "homePage": "Coachi home page",
+    "errorTitle": "Something went wrong",
+    "errorBody": "This screen hit a problem. Your saved data is safe. Try again, or go back to the app.",
+    "tryAgain": "Try again"
+  },
+  "onboarding": {
+    "title": "Get started in 3 steps",
+    "progress": "{done} of {total} done",
+    "dismiss": "Hide",
+    "doneLabel": "Done:",
+    "todoLabel": "To do:",
+    "logoTitle": "Add your logo",
+    "logoAction": "Add logo",
+    "clientTitle": "Add your first client",
+    "clientAction": "Add client",
+    "templateTitle": "Assign a starter template",
+    "templateAction": "Pick a template"
+  },
+  "export": {
+    "mine": "Download my data",
+    "clients": "Download clients' data (Excel)",
+    "done": "Downloaded",
+    "doneClients": "{count, plural, =0 {No clients to download yet} one {Downloaded # client} other {Downloaded # clients}}",
+    "col_name": "Name",
+    "col_phone": "Phone",
+    "col_status": "Status",
+    "col_goal": "Goal",
+    "col_started_at": "Started",
+    "col_assigned_to": "Assigned to",
+    "col_age": "Age",
+    "col_gender": "Gender",
+    "col_height_cm": "Height (cm)",
+    "col_start_weight_kg": "Start weight (kg)",
+    "col_latest_weight_kg": "Latest weight (kg)",
+    "col_target_weight_kg": "Target weight (kg)",
+    "col_training_days": "Training days",
+    "col_place": "Trains at",
+    "col_gym_name": "Gym",
+    "col_gym_items": "Gym equipment",
+    "col_injuries": "Injuries",
+    "col_health_notes": "Health notes",
+    "col_medicines": "Medicines",
+    "col_food_likes": "Food likes",
+    "col_food_dislikes": "Food dislikes",
+    "col_food_never": "Won't eat",
+    "col_meals_per_day": "Meals per day",
+    "col_workouts_done": "Workouts done",
+    "col_last_workout_at": "Last workout",
+    "col_notes": "Coach notes"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellUnread": "{count, plural, one {Notifications, # unread} other {Notifications, # unread}}",
+    "empty": "Nothing new",
+    "emptyBody": "Requests, check-ins, and replies show up here.",
+    "markAll": "Mark all as read",
+    "unread": "Unread",
+    "timeFor": "Time for {name}",
+    "request_new_title": "New client request",
+    "request_new_body": "{name} wants to train with you.",
+    "checkin_new_title": "New check-in",
+    "checkin_new_body": "{name} sent this week's check-in.",
+    "workout_done_title": "Workout done",
+    "workout_done_body": "{name} finished {workout}.",
+    "request_answered_title": "{accepted, select, yes {Request accepted} other {Request declined}}",
+    "request_answered_body": "{accepted, select, yes {{coach} is your coach now. Fill your intake so they can build your plan.} other {{coach} can't take you right now. Find another coach.}}",
+    "plan_assigned_title": "New plan",
+    "plan_assigned_body": "{coach} gave you {plan}.",
+    "checkin_reply_title": "Your coach replied",
+    "checkin_reply_body": "{coach} replied to your check-in.",
+    "pref_workout_reminder": "Workout reminder",
+    "pref_meal_reminder": "Meal reminder",
+    "pref_checkin_reminder": "Check-in reminder (on your coach's day)",
+    "pref_request_new": "New client requests",
+    "pref_checkin_new": "New check-ins",
+    "pref_workout_done": "When a client finishes a workout"
+  },
+  "install": {
+    "title": "Add Coachi to your home screen",
+    "body": "Opens like an app, full screen, one tap away.",
+    "close": "Not now",
+    "install": "Install the app",
+    "shareIcon": "Share",
+    "iosStep1": "Tap <icon></icon> Share at the bottom of Safari",
+    "iosStep2": "Choose <icon></icon> Add to Home Screen"
   }
 }

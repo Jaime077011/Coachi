@@ -10,7 +10,9 @@ import type {
   CheckinForm,
   Client,
   ClientDetails,
+  ClientGym,
   CoachClient,
+  CoachLead,
   CoachNote,
   CoachPackage,
   CoachProfile,
@@ -19,11 +21,14 @@ import type {
   DailyClientStats,
   Exercise,
   Food,
+  GymItem,
   Invite,
   JourneyMessage,
   Meal,
   MealItem,
   MealLog,
+  Notification,
+  NotificationPref,
   Milestone,
   NutritionPlan,
   Organization,
@@ -61,6 +66,7 @@ const KIND = {
   client: "e1",
   link: "e2",
   details: "e3",
+  gym: "e6",
   note: "e4",
   invite: "e5",
   exercise: "f1",
@@ -78,6 +84,8 @@ const KIND = {
   form: "a8",
   checkin: "a9",
   milestone: "aa",
+  lead: "ab",
+  notif: "ac",
   jmsg: "ab",
   stat: "ac",
   audit: "ad",
@@ -589,6 +597,47 @@ export const clientDetails: ClientDetails[] = [
   emptyDetails(uid(KIND.client, 8), 3, 1), // invited, intake not filled
 ];
 
+/** The demo client trains in a full gym; the home client has a few dumbbells and bands. */
+export const clientGyms: ClientGym[] = [
+  {
+    id: uid(KIND.gym, 1),
+    client_id: DEMO.clientId,
+    gym_name: "Power Zone, Nasr City",
+    items: [
+      "barbell",
+      "ez_bar",
+      "dumbbells",
+      "squat_rack",
+      "flat_bench",
+      "adjustable_bench",
+      "pull_up_bar",
+      "cable_crossover",
+      "lat_pulldown",
+      "seated_row",
+      "chest_press",
+      "leg_press",
+      "leg_extension",
+      "leg_curl",
+      "treadmill",
+      "bike",
+    ],
+    custom_items: ["تي بار رو"],
+    dumbbells_max_kg: 30,
+    note: "الليج برس بيبقى زحمة من 7 لـ 9 بالليل",
+    ...created(44),
+  },
+  {
+    id: uid(KIND.gym, 2),
+    client_id: uid(KIND.client, 4),
+    gym_name: null,
+    items: ["dumbbells", "bands", "adjustable_bench"],
+    custom_items: [],
+    dumbbells_max_kg: 12,
+    note: null,
+    ...created(58),
+  },
+];
+
 export const coachNotes: CoachNote[] = [
   {
     id: uid(KIND.note, 1),
@@ -640,45 +689,56 @@ export const invites: Invite[] = [
 
 // ---------------------------------------------------------------- training
 
-type ExSeed = [string, string, Exercise["muscle"], Exercise["equipment"]];
+/** [name_ar, name_en, muscle, equipment, gym items it needs] */
+type ExSeed = [string, string, Exercise["muscle"], Exercise["equipment"], GymItem[]];
 
 const exerciseSeeds: ExSeed[] = [
-  ["بنش بريس بالبار", "Barbell bench press", "chest", "barbell"],
-  ["بنش عالي بالدمبل", "Incline dumbbell press", "chest", "dumbbell"],
-  ["تفتيح كابل", "Cable fly", "chest", "cable"],
-  ["ضغط", "Push-up", "chest", "bodyweight"],
-  ["ضغط كتف بالدمبل", "Seated dumbbell shoulder press", "shoulders", "dumbbell"],
-  ["رفرفة جانبي", "Lateral raise", "shoulders", "dumbbell"],
-  ["ترايسبس بالكابل", "Triceps pushdown", "triceps", "cable"],
-  ["ترايسبس فوق الراس", "Overhead triceps extension", "triceps", "cable"],
-  ["عقلة", "Pull-up", "back", "bodyweight"],
-  ["سحب أمامي", "Lat pulldown", "back", "cable"],
-  ["تجديف بالبار", "Barbell row", "back", "barbell"],
-  ["سحب أرضي", "Seated cable row", "back", "cable"],
-  ["فيس بول", "Face pull", "shoulders", "cable"],
-  ["باي بالبار", "Barbell curl", "biceps", "barbell"],
-  ["هامر", "Hammer curl", "biceps", "dumbbell"],
-  ["سكوات بالبار", "Back squat", "quads", "barbell"],
-  ["رومانيان ديدليفت", "Romanian deadlift", "hamstrings", "barbell"],
-  ["ديدليفت", "Deadlift", "back", "barbell"],
-  ["ليج برس", "Leg press", "quads", "machine"],
-  ["رفرفة أمامي", "Leg extension", "quads", "machine"],
-  ["رفرفة خلفي", "Lying leg curl", "hamstrings", "machine"],
-  ["طعن بالمشي", "Walking lunge", "glutes", "dumbbell"],
-  ["هيب ثرست", "Hip thrust", "glutes", "barbell"],
-  ["سمانة واقف", "Standing calf raise", "calves", "machine"],
-  ["بلانك", "Plank", "core", "bodyweight"],
-  ["بطن بالكابل", "Cable crunch", "core", "cable"],
-  ["مشي على المشاية", "Treadmill incline walk", "cardio", "machine"],
+  ["بنش بريس بالبار", "Barbell bench press", "chest", "barbell", ["barbell", "flat_bench"]],
+  ["بنش عالي بالدمبل", "Incline dumbbell press", "chest", "dumbbell", ["dumbbells", "adjustable_bench"]],
+  ["تفتيح كابل", "Cable fly", "chest", "cable", ["cable_crossover"]],
+  ["ضغط", "Push-up", "chest", "bodyweight", []],
+  ["ضغط كتف بالدمبل", "Seated dumbbell shoulder press", "shoulders", "dumbbell", ["dumbbells", "adjustable_bench"]],
+  ["رفرفة جانبي", "Lateral raise", "shoulders", "dumbbell", ["dumbbells"]],
+  ["ترايسبس بالكابل", "Triceps pushdown", "triceps", "cable", ["cable_crossover"]],
+  ["ترايسبس فوق الراس", "Overhead triceps extension", "triceps", "cable", ["cable_crossover"]],
+  ["عقلة", "Pull-up", "back", "bodyweight", ["pull_up_bar"]],
+  ["سحب أمامي", "Lat pulldown", "back", "cable", ["lat_pulldown"]],
+  ["تجديف بالبار", "Barbell row", "back", "barbell", ["barbell"]],
+  ["سحب أرضي", "Seated cable row", "back", "cable", ["seated_row"]],
+  ["فيس بول", "Face pull", "shoulders", "cable", ["cable_crossover"]],
+  ["باي بالبار", "Barbell curl", "biceps", "barbell", ["barbell"]],
+  ["هامر", "Hammer curl", "biceps", "dumbbell", ["dumbbells"]],
+  ["سكوات بالبار", "Back squat", "quads", "barbell", ["barbell", "squat_rack"]],
+  ["رومانيان ديدليفت", "Romanian deadlift", "hamstrings", "barbell", ["barbell"]],
+  ["ديدليفت", "Deadlift", "back", "barbell", ["barbell"]],
+  ["ليج برس", "Leg press", "quads", "machine", ["leg_press"]],
+  ["رفرفة أمامي", "Leg extension", "quads", "machine", ["leg_extension"]],
+  ["رفرفة خلفي", "Lying leg curl", "hamstrings", "machine", ["leg_curl"]],
+  ["طعن بالمشي", "Walking lunge", "glutes", "dumbbell", ["dumbbells"]],
+  ["هيب ثرست", "Hip thrust", "glutes", "barbell", ["barbell", "flat_bench"]],
+  ["سمانة واقف", "Standing calf raise", "calves", "machine", ["calf_raise_machine"]],
+  ["بلانك", "Plank", "core", "bodyweight", []],
+  ["بطن بالكابل", "Cable crunch", "core", "cable", ["cable_crossover"]],
+  ["مشي على المشاية", "Treadmill incline walk", "cardio", "machine", ["treadmill"]],
+  ["تشست برس جهاز", "Machine chest press", "chest", "machine", ["chest_press"]],
+  ["بيك دك", "Pec deck fly", "chest", "machine", ["pec_deck"]],
+  ["ضغط كتف جهاز", "Machine shoulder press", "shoulders", "machine", ["shoulder_press_machine"]],
+  ["هاك سكوات", "Hack squat", "quads", "machine", ["hack_squat"]],
+  ["سكوات سميث", "Smith machine squat", "quads", "smith", ["smith_machine"]],
+  ["عقلة بالمساعدة", "Assisted pull-up", "back", "machine", ["assisted_pull_up"]],
+  ["أبدكتور", "Hip abduction machine", "glutes", "machine", ["hip_abductor"]],
+  ["تجديف بالدمبل", "One-arm dumbbell row", "back", "dumbbell", ["dumbbells", "flat_bench"]],
+  ["جوبلت سكوات", "Goblet squat", "quads", "dumbbell", ["dumbbells"]],
 ];
 
-export const exercises: Exercise[] = exerciseSeeds.map(([ar, en, muscle, equipment], i) => ({
+export const exercises: Exercise[] = exerciseSeeds.map(([ar, en, muscle, equipment, gymItems], i) => ({
   id: uid(KIND.exercise, i + 1),
   org_id: null,
   name_ar: ar,
   name_en: en,
   muscle,
   equipment,
+  gym_items: gymItems,
   video_url: null,
   image_url: null,
   ...created(150),
@@ -1116,3 +1176,42 @@ export const auditLog: AuditEntry[] = [
   support_mode: (action as string).startsWith("support"),
   created_at: daysAgo(ago as number),
 }));
+
+/** Coaches who asked to join from the Coachi home page. */
+export const coachLeads: CoachLead[] = [
+  {
+    id: uid(KIND.lead, 1),
+    name: "كوتش طارق منصور",
+    phone: "+201012345678",
+    city: "الإسكندرية",
+    clients_count: "10_30",
+    message: "عندي 18 عميل أونلاين وبتابعهم على واتساب وشيتات",
+    status: "new",
+    ...created(1),
+  },
+];
+
+const notif = (n: number, profileId: string, type: Notification["type"], params: Record<string, string>, link: string, text: [string, string], days: number, read: boolean): Notification => ({
+  id: uid(KIND.notif, n),
+  profile_id: profileId,
+  type,
+  params,
+  title: text[0],
+  body: text[1],
+  link,
+  channel: "in_app",
+  read_at: read ? daysAgo(days) : null,
+  ...created(days),
+});
+
+/** A few for the demo coach and the demo client, so the screens aren't empty. */
+export const notifications: Notification[] = [
+  notif(1, DEMO.coachProfileId, "checkin_new", { name: "عمر خالد" }, `/coach/clients/${DEMO.clientId}?tab=checkins`, ["New check-in", "عمر خالد sent this week's check-in."], 4, false),
+  notif(2, DEMO.coachProfileId, "request_new", { name: "Youssef Tarek" }, "/coach/requests", ["New client request", "Youssef Tarek wants to train with you."], 2, false),
+  notif(3, DEMO.coachProfileId, "workout_done", { name: "عمر خالد", workout: "Push" }, `/coach/clients/${DEMO.clientId}`, ["Workout done", "عمر خالد finished Push."], 1, true),
+  notif(4, DEMO.clientProfileId, "checkin_reply", { coach: "كوتش أحمد سمير" }, "/app/check-in", ["Your coach replied", "كوتش أحمد سمير replied to your check-in."], 10, true),
+  notif(5, DEMO.clientProfileId, "plan_assigned", { coach: "كوتش أحمد سمير", plan: "Push Pull Legs" }, "/app/plan", ["New plan", "كوتش أحمد سمير gave you Push Pull Legs."], 1, false),
+];
+
+/** Saved reminder and alert settings. Missing rows use defaultPrefs. */
+export const notificationPrefs: NotificationPref[] = [];

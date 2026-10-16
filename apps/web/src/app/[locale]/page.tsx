@@ -1,20 +1,17 @@
-"use client";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { HomePage } from "@/components/home/home-page";
 
-import { useEffect } from "react";
-import { useRouter } from "@/i18n/navigation";
-import { useSession } from "@/hooks/use-session";
-import { roleHome } from "@/lib/roles";
-import { BrandSplash } from "@/components/brand/brand-splash";
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("home");
+  return {
+    title: { absolute: t("metaTitle") },
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), type: "website" },
+  };
+}
 
-/** Entry point: send each role to its own area, or to login when signed out. */
-export default function EntryPage() {
-  const router = useRouter();
-  const { data: session, isSuccess } = useSession();
-
-  useEffect(() => {
-    if (!isSuccess) return;
-    router.replace(session ? roleHome[session.profile.role] : "/login");
-  }, [isSuccess, session, router]);
-
-  return <BrandSplash />;
+/** Coachi's own home page: what it is, pricing, and the "I'm a coach" form. The installed app opens at /start. */
+export default function Page() {
+  return <HomePage />;
 }

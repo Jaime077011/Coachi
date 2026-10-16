@@ -60,7 +60,13 @@ export function JoinScreen({ params }: { params: Promise<{ code: string }> }) {
                   : t("invitedBy", { coach: data.coach_name })}
               </p>
             </div>
-            <LoginForm afterLogin={() => (data.kind === "team" ? joinTeam.mutate() : router.replace("/app/intake"))} />
+            <LoginForm
+              afterLogin={(session) =>
+                data.kind === "team"
+                  ? joinTeam.mutate()
+                  : router.replace(session.profile.name ? "/app/intake" : { pathname: "/welcome", query: { next: "/app/intake" } })
+              }
+            />
           </div>
         )
       }

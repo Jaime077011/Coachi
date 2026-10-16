@@ -17,13 +17,18 @@ export function generateStaticParams() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("common");
+  const locale = await rootLocale();
   return {
     title: { default: t("appName"), template: `%s · ${t("appName")}` },
     description: t("tagline"),
     applicationName: "Coachi",
+    manifest: `/${locale}/manifest.webmanifest`,
     icons: {
       icon: "/brand/coachi-mark-dark-32-favicon.svg",
+      // iPhone ignores SVG here: it needs a PNG.
+      apple: { url: "/icons/apple-touch-icon.png", sizes: "180x180" },
     },
+    appleWebApp: { capable: true, title: t("appName"), statusBarStyle: "black-translucent" },
   };
 }
 
